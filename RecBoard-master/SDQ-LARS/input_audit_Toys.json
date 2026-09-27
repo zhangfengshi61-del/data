@@ -1,0 +1,44 @@
+{
+  "dataset": "Toys",
+  "passed": true,
+  "protocol": {
+    "raw": "Amazon Review 2014 5-core",
+    "split": "chronological per-user leave-two-out",
+    "max_history": 20,
+    "seed": 2025,
+    "beam": 30
+  },
+  "files": {
+    "/data/fszhang/RecBoard-master/data/processed/Toys/train.parquet": "8d57bef4397978498b9be2257c80c87271d85dd51a8367990f31d6cc43588e22",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Toys_550_LOU/train.txt": "52504f910460c341932fd10ce916f37b57d0b0010523be184f38fb3ca73dc044",
+    "/data/fszhang/RecBoard-master/data/processed/Toys/valid.parquet": "eec1bbda0d4e6368f5477b75f7388e0244d000de35f2eb0e11a7807aaa85b7b2",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Toys_550_LOU/valid.txt": "021b24092d3a5552da4ef94862064561ebe4953469c37f2030d918b8392e3648",
+    "/data/fszhang/RecBoard-master/data/processed/Toys/test.parquet": "ea9977284f9e25b6cc88f3983793dc4a7b0ce8926795eb79f589ff910c5c62c4",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Toys_550_LOU/test.txt": "dc307261c7571d2dbabe6ca6bd7a204cd90894e849c3166ed00d67eedef5fcd8",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Toys_550_LOU/item.txt": "bf48efd001d066ff81a98a8d71fda2e64ed3264840d4ad1ea661aea60e23b175",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Toys_550_LOU/sentence-t5-xl_title_categories_brand.pkl": "eefba0a202a395bcb54efd4df6f446b1996beba9bd82b7c550c828714e36e9de",
+    "/data/fszhang/RecBoard-master/SDQ-403/logs/SDQ/Amazon2014Toys_550_LOU/vae/config.json": "5404529d30505ce3fa1360b15bf1a6dff97fa5e90d01700292116ea1d5699929",
+    "/data/fszhang/RecBoard-master/SDQ-403/logs/SDQ-T5-VAE/Amazon2014Toys_550_LOU/t5vae/config.json": "3e40311fc4e222a3749238c1ff3bc07cbf53454b480b9035e30c5ef29b3bcfef",
+    "/data/fszhang/RecBoard-master/baseline_inputs/PROTOCOL_MANIFEST.json": "8521a504d1af67a758cd6d8e578a4ee239215ea53917703f8dcc1b0af60f818d",
+    "/data/fszhang/RecBoard-master/SDQ-403/train_sdq_vae.py": "dc312950f90c6b82c5c6c63e02f1cd871bbb16d88060825ce05fcfebfcc2ff74",
+    "/data/fszhang/RecBoard-master/SDQ-403/train_t5.py": "e2aaa59c61f27878059053b4a0e9e4ccdd1a1a1c77d7ec9ed206398429f9cf21",
+    "/data/fszhang/RecBoard-master/SDQ-403/quantizer.py": "e878ed60ff2eb5f5427bce1daaf1f0ce73616274084d9ffd2de4b791b53ee91c",
+    "/data/fszhang/RecBoard-master/SDQ-403/converter.py": "8fe17770b2e1b530046a683019cc5c5bfe89c3507e294ed8508cbced1e2c2491",
+    "/data/fszhang/RecBoard-master/SDQ-403/prepare_local_data.py": "17ee4658c7547ae956746bfe562b918fc9be0b6c8602431a8007d3eb749a06df",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/run_experiment.py": "fe01e051775a6377502f79968b5fa1de64e8910cc7dc0c2cc819752c63fd4d73",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/lars_quantizer.py": "a73975e3b86e924bfce49d52c456083f4cdcdecf665dce4951eda3176fa5e27d",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/lars_solver.py": "871f8dac5b79f5b244955eb0146230b9acfecda3ffefdb09d0850e2a4eece52c",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/test_lars.py": "70945000016ac9ccd0b2f48712941935af57c56338a3912dd44228fc4d3e07fc",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/audit.py": "15b0255a0e2f873fdf7e894b27c1e1b05f67424d9bcbd646473a3f52d0a2c5aa",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/train_lars_vae.py": "b1d88bcf025f795f94334ed46e91cf8bf18aa1902b3e6a274d3aa5048f3710af"
+  },
+  "users": 19412,
+  "items": 11924,
+  "interactions": 167597,
+  "versions": {
+    "torch": "2.7.1+cu126",
+    "freerec": "0.9.7",
+    "transformers": "5.17.0",
+    "sklearn": "1.9.1"
+  }
+}

@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+ .ruff_cache/
+ .coverage
+ coverage.xml
+ htmlcov/
+ 
+ # Python packaging
+ build/
+ dist/
+ *.egg-info/
+ .eggs/
+ 
+ # Virtual envs
+ .venv/
+ venv/
+ env/
+ .env/
+ 
+ # Logs
+ *.log
+ *.out
+ 
+ # Byte-sized local configs
+ .envrc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IPython
+.ipython/
+
+# VS Code
+.vscode/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+
+# macOS/Linux temp
+*.swp
+*.swo
+*~
+
+# Experiments / logs
+ckpt/
+rqvae/ckpt/
+swanlog/
+rqvae/swanlog/
+wandb/
+
+# TensorBoard
+runs/
+tb_logs/
+
+# Model checkpoints / weights
+*.pth
+*.pt
+*.bin
+*.ckpt
+
+# Data artifacts
+*.parquet
+*.csv
+*.tsv
+*.npy
+*.npz
+
+# Local datasets / embeddings (do not publish raw data)
+dataset/**
+!dataset/.gitkeep
+!dataset/prepare_cf_emb.py
+!dataset/prepare_cf_emb_beauty.sh
+!dataset/process.ipynb

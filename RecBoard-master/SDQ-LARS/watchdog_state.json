@@ -1,0 +1,58 @@
+{
+  "rounds": [
+    {
+      "run": "20260923_trust",
+      "variant": "trust_region",
+      "datasets": [
+        "Toys"
+      ]
+    },
+    {
+      "run": "20260923_trust_div",
+      "variant": "trust_region",
+      "datasets": [
+        "Beauty",
+        "Sports"
+      ]
+    }
+  ],
+  "escalation": 0,
+  "last_tick": "2026-09-24 16:12:04",
+  "rows": [
+    {
+      "run": "20260923_trust",
+      "variant": "trust_region",
+      "dataset": "Toys",
+      "status": "complete",
+      "stage": "t5",
+      "epoch": null,
+      "ndcg10": 0.03887069262617916,
+      "path": "/data/fszhang/RecBoard-master/SDQ-LARS/runs/20260923_trust/trust_region/Toys"
+    },
+    {
+      "run": "20260923_trust_div",
+      "variant": "trust_region",
+      "dataset": "Beauty",
+      "status": "complete",
+      "stage": "t5",
+      "epoch": null,
+      "ndcg10": 0.04064382996528572,
+      "path": "/data/fszhang/RecBoard-master/SDQ-LARS/runs/20260923_trust_div/trust_region/Beauty"
+    },
+    {
+      "run": "20260923_trust_div",
+      "variant": "trust_region",
+      "dataset": "Sports",
+      "status": "training_t5",
+      "stage": "t5",
+      "epoch": null,
+      "ndcg10": null,
+      "path": "/data/fszhang/RecBoard-master/SDQ-LARS/runs/20260923_trust_div/trust_region/Sports"
+    }
+  ],
+  "best_ndcg10": {
+    "Beauty": 0.04107275146299559,
+    "Sports": 0.026651101539433553,
+    "Toys": 0.038893435733780866
+  }
+}

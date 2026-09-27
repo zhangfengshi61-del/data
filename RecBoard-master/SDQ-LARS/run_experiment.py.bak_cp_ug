@@ -1,0 +1,205 @@
+#!/usr/bin/env python
+"""Run both stages with effective SDQ baseline configuration verification."""
+import argparse
+import json
+import os
+import pickle
+import re
+import subprocess
+import sys
+import time
+from collections import Counter
+from pathlib import Path
+
+from audit import BASE, ROOT, audit_inputs, compare_config, sha256
+
+HERE = Path(__file__).resolve().parent
+
+
+def atomic_json(path, obj):
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2))
+    tmp.replace(path)
+
+
+def run(args):
+    ds = f"Amazon2014{args.dataset}_550_LOU"
+    out = HERE / "runs" / args.run_name / args.variant / args.dataset
+    out.mkdir(parents=True, exist_ok=False)
+    state = {"dataset": args.dataset, "variant": args.variant, "gpu": args.gpu,
+             "pid": os.getpid(), "started": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+             "status": "auditing", "output": str(out)}
+
+    def update(**kwargs):
+        state.update(kwargs)
+        atomic_json(out / "status.json", state)
+
+    child = None
+    try:
+        audit = audit_inputs(args.dataset)
+        atomic_json(out / "input_audit.json", audit)
+        desc = f"LARS-{args.run_name}-{args.variant}"
+        env = os.environ.copy()
+        env.update(CUDA_VISIBLE_DEVICES=str(args.gpu), TOKENIZERS_PARALLELISM="false",
+                   OMP_NUM_THREADS="4", MKL_NUM_THREADS="4")
+        sparse, bridge, accept_margin, gate_sparse = {
+            "main": (0.1, 0.1, 1.0, False),
+            "no_bridge": (0.1, 0.0, 1.0, False),
+            "control": (0.0, 0.0, 1.0, False),
+            "gated_margin": (0.1, 0.1, 0.9, True),
+            "trust_region": (0.08, 0.08, 0.9, True),
+            "trust_strong": (0.05, 0.05, 0.95, True),
+            "trust_coarse": (0.08, 0.04, 0.9, True),
+            # Utility-hier disables the old hard bridge and uses the
+            # cumulative prefix objective plus soft LAR teacher bridge.
+            "utility_hier": (0.03, 0.0, 1.0, True),
+            # TC-UG-HLARS keeps the SDQ basin conservative after utility_hier
+            # reduced PPL but increased full-SID collisions.
+            "tc_ug": (0.015, 0.0, 1.0, True),
+        }[args.variant]
+        # The repository's SDQ/T5 baseline exports the final epoch SID.  Use
+        # the matching final model for a fair warm start; best.pt is an
+        # earlier PPL checkpoint and would change the tokenizer protocol.
+        init_checkpoint = BASE / "logs" / "SDQ" / ds / "vae" / "model.pt"
+        sid = HERE / "logs" / desc / ds / "vae/sid_vocab.json"
+        commands = {
+            "vae": [sys.executable, "-u", str(HERE / "train_lars_vae.py"),
+                    "--config", str(BASE / "configs/sdq" / f"{ds}.yaml"),
+                    "--root", str(BASE / "data"), "--description", desc,
+                    "--id", "vae", "--device", "0", "--epochs", "100", "--seed", "2025",
+                    "--lars-steps", "3", "--stage-lars-steps", "3,2,1",
+                    "--stage-weights", "1.0,0.5,0.25",
+                    "--sparse-weight", str(sparse),
+                    "--bridge-weight", str(bridge), "--lars-warmup", "10",
+                    "--accept-margin", str(accept_margin), "--gate-sparse", str(gate_sparse)],
+            "t5": [sys.executable, "-u", str(BASE / "train_t5.py"),
+                   "--config", str(BASE / "configs/t5" / f"{ds}.yaml"),
+                   "--root", str(BASE / "data"), "--sid-vocab-file", str(sid),
+                   "--description", desc + "-T5", "--id", "t5", "--device", "0",
+                   "--num-beams", "30", "--epochs", "200", "--seed", "2025"],
+        }
+        if args.variant in {"trust_region", "trust_strong", "trust_coarse"}:
+            trust_args = {
+                "trust_region": ("3,2,1", "1.0,0.5,0.25", "0.5", "0.05", "0.02", "0.05", "0.05"),
+                "trust_strong": ("2,1,1", "1.0,0.25,0.1", "1.0", "0.15", "0.05", "0.02", "0.03"),
+                "trust_coarse": ("3,1,1", "1.0,0.15,0.1", "0.8", "0.10", "0.04", "0.03", "0.03"),
+            }[args.variant]
+            steps, weights, anchor, sid_anchor, diversity, margin, sequence = trust_args
+            commands["vae"] += ["--stage-lars-steps", steps, "--stage-weights", weights,
+                                 "--anchor-weight", anchor, "--sid-anchor-weight", sid_anchor,
+                                 "--diversity-weight", diversity, "--diversity-margin", margin,
+                                 "--sequence-weight", sequence,
+                                 "--sequence-temperature", "0.05",
+                                 "--init-checkpoint", str(init_checkpoint)]
+        if args.variant == "utility_hier":
+            commands["vae"] += [
+                "--stage-lars-steps", "3,2,1",
+                "--stage-weights", "1.0,0.5,0.25",
+                "--soft-bridge-weight", "0.05",
+                "--soft-temperature", "0.07",
+                "--hier-weight", "0.05",
+                "--collision-weight", "0.02",
+                "--collision-margin", "0.05",
+                "--utility-gate", "True",
+                "--utility-temperature", "0.05",
+                "--utility-margin", "0.0",
+                "--anchor-weight", "0.5",
+                "--sid-anchor-weight", "0.10",
+                "--init-checkpoint", str(init_checkpoint),
+            ]
+        if args.variant == "tc_ug":
+            commands["vae"] += [
+                "--stage-lars-steps", "3,2,1",
+                "--stage-weights", "1.0,0.5,0.25",
+                "--soft-bridge-weight", "0.03",
+                "--soft-temperature", "0.07",
+                "--hier-weight", "0.02",
+                "--collision-weight", "0.10",
+                "--collision-margin", "0.01",
+                "--diversity-weight", "0.05",
+                "--diversity-margin", "0.01",
+                "--utility-gate", "True",
+                "--utility-temperature", "0.02",
+                "--utility-margin", "0.03",
+                "--anchor-weight", "0.75",
+                "--sid-anchor-weight", "0.25",
+                "--usage-balance-weight", "0.02",
+                "--init-checkpoint", str(init_checkpoint),
+            ]
+        atomic_json(out / "commands.json", {"cwd": str(HERE), "commands": commands,
+                                            "environment": {k: env[k] for k in
+                                                ["CUDA_VISIBLE_DEVICES", "TOKENIZERS_PARALLELISM",
+                                                 "OMP_NUM_THREADS", "MKL_NUM_THREADS"]}})
+        for stage, command in commands.items():
+            stage_desc = desc if stage == "vae" else desc + "-T5"
+            log_dir = HERE / "logs" / stage_desc / ds / stage
+            if log_dir.exists():
+                raise FileExistsError(f"Refusing to overwrite {log_dir}")
+            update(status=f"training_{stage}", stage=stage, stage_log=str(out / f"{stage}.log"),
+                   model_log=str(log_dir))
+            with (out / f"{stage}.log").open("w") as log:
+                child = subprocess.Popen(command, cwd=HERE, env=env, stdout=log, stderr=subprocess.STDOUT)
+                update(child_pid=child.pid)
+                config = log_dir / "config.json"
+                verified = False
+                while child.poll() is None:
+                    if config.exists() and not verified:
+                        try:
+                            result = compare_config(config, args.dataset, stage)
+                        except json.JSONDecodeError:
+                            time.sleep(1)
+                            continue
+                        atomic_json(out / f"{stage}_config_audit.json", result)
+                        verified = True
+                    time.sleep(5)
+                if child.returncode:
+                    raise RuntimeError(f"{stage} exited {child.returncode}; inspect {out / (stage + '.log')}")
+                if not verified:
+                    atomic_json(out / f"{stage}_config_audit.json", compare_config(config, args.dataset, stage))
+            if stage == "vae":
+                vocab = json.loads(sid.read_text())
+                if set(vocab) != {f"item_{i}" for i in range(audit["items"])}:
+                    raise ValueError("SID coverage differs from canonical item catalog")
+                for codes in vocab.values():
+                    if len(codes) != 3:
+                        raise ValueError("SID length must be exactly 3 before collision suffix")
+                    for level, token in enumerate(codes):
+                        match = re.fullmatch(r"<sid_(\d+)_(\d+)>", token)
+                        if not match or int(match[1]) != level or not 0 <= int(match[2]) < 256:
+                            raise ValueError(f"Invalid semantic token {token}")
+                counts = Counter(tuple(v) for v in vocab.values())
+                atomic_json(out / "sid_audit.json", {
+                    "passed": True, "items": len(vocab), "semantic_length": 3,
+                    "collision_rate": 1 - len(counts) / len(vocab),
+                    "max_collision_group": max(counts.values()), "sha256": sha256(sid),
+                    "path": str(sid), "export_policy": "last_epoch_100_as_existing_baseline",
+                })
+        with (log_dir / "data/best.pkl").open("rb") as f:
+            scores = pickle.load(f)
+        # FreeRec 'best' is test at validation-selected checkpoint; 'test' is last epoch.
+        atomic_json(out / "result.json", {"dataset": args.dataset, "variant": args.variant,
+                    "selection": "validation_NDCG@10", "test": scores["best"],
+                    "validation_best": scores["valid"], "source": str(log_dir / "data/best.pkl")})
+        update(status="complete", finished=time.strftime("%Y-%m-%dT%H:%M:%S%z"))
+    except BaseException as exc:
+        if child is not None and child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait()
+        update(status="failed", error=str(exc), finished=time.strftime("%Y-%m-%dT%H:%M:%S%z"))
+        raise
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", required=True, choices=["Beauty", "Sports", "Toys"])
+    parser.add_argument("--gpu", required=True, type=int)
+    parser.add_argument("--variant", default="main", choices=["main", "no_bridge", "control", "gated_margin", "trust_region", "trust_strong", "trust_coarse", "utility_hier", "tc_ug"])
+    parser.add_argument("--run-name", required=True)
+    args = parser.parse_args()
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", args.run_name):
+        parser.error("run-name may contain letters, digits, underscore, and hyphen")
+    run(args)

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "train_loss": 7.1322784423828125,
+  "batch_size": 512,
+  "candidate_shape": [
+    16,
+    30
+  ],
+  "roundtrip_items": 12101,
+  "parameters": 3237376,
+  "num_sid_tokens_with_collision_suffix": 4,
+  "semantic_vocab": "/data/fszhang/RecBoard-master/SDQ-LARS/logs/LARS-SMOKE/Amazon2014Beauty_550_LOU/numerical-check/sid_vocab.json"
+}

@@ -1,0 +1,44 @@
+{
+  "dataset": "Sports",
+  "passed": true,
+  "protocol": {
+    "raw": "Amazon Review 2014 5-core",
+    "split": "chronological per-user leave-two-out",
+    "max_history": 20,
+    "seed": 2025,
+    "beam": 30
+  },
+  "files": {
+    "/data/fszhang/RecBoard-master/data/processed/Sports/train.parquet": "c55b281cec3cf3879afe7e725c58c3057563ac2b2dd9589bed2fb6bde1b6f6f4",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Sports_550_LOU/train.txt": "0594ba727ddf3cb4db98f479ae7c8a87df01105bc922e4c2380d8e562957778b",
+    "/data/fszhang/RecBoard-master/data/processed/Sports/valid.parquet": "2bf8e8147b25c9cf90fbb45f4eac19c6aca2e6d116ba45dfc12c6e2ea7ac3000",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Sports_550_LOU/valid.txt": "e44f1f848d0efbbfa48e35736528c12cbc18623431832688ddf892f7913da8d2",
+    "/data/fszhang/RecBoard-master/data/processed/Sports/test.parquet": "1b285dbbe2eb8e2934b8eb23e3497e1043fb32256b74d1cf0d46c46ac9f3ce3e",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Sports_550_LOU/test.txt": "3bb12bc0d2fd292a5f45c877bacd57c7f6331bf285de7bc566aaf7b2c7090796",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Sports_550_LOU/item.txt": "e2bb578be2ca06d8284c340049ac6fdcf613f9478d32ac30badcd3d4b1f848be",
+    "/data/fszhang/RecBoard-master/SDQ-403/data/Processed/Amazon2014Sports_550_LOU/sentence-t5-xl_title_categories_brand.pkl": "0d9a3e9b02595c72daf02dd93fcc5088e82a61ddabd82c2734b4ef636faec122",
+    "/data/fszhang/RecBoard-master/SDQ-403/logs/SDQ/Amazon2014Sports_550_LOU/vae/config.json": "13c64e5e5d53ad6a1ba79e013338df49a463239df648fa54beba981fa1bd87e7",
+    "/data/fszhang/RecBoard-master/SDQ-403/logs/SDQ-T5-VAE/Amazon2014Sports_550_LOU/t5vae/config.json": "fccc15fab14c997e2382c9b58fd3f627b5517ce761859c0be02d1ca66d85a418",
+    "/data/fszhang/RecBoard-master/baseline_inputs/PROTOCOL_MANIFEST.json": "8521a504d1af67a758cd6d8e578a4ee239215ea53917703f8dcc1b0af60f818d",
+    "/data/fszhang/RecBoard-master/SDQ-403/train_sdq_vae.py": "dc312950f90c6b82c5c6c63e02f1cd871bbb16d88060825ce05fcfebfcc2ff74",
+    "/data/fszhang/RecBoard-master/SDQ-403/train_t5.py": "e2aaa59c61f27878059053b4a0e9e4ccdd1a1a1c77d7ec9ed206398429f9cf21",
+    "/data/fszhang/RecBoard-master/SDQ-403/quantizer.py": "e878ed60ff2eb5f5427bce1daaf1f0ce73616274084d9ffd2de4b791b53ee91c",
+    "/data/fszhang/RecBoard-master/SDQ-403/converter.py": "8fe17770b2e1b530046a683019cc5c5bfe89c3507e294ed8508cbced1e2c2491",
+    "/data/fszhang/RecBoard-master/SDQ-403/prepare_local_data.py": "17ee4658c7547ae956746bfe562b918fc9be0b6c8602431a8007d3eb749a06df",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/run_experiment.py": "fe01e051775a6377502f79968b5fa1de64e8910cc7dc0c2cc819752c63fd4d73",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/lars_quantizer.py": "a73975e3b86e924bfce49d52c456083f4cdcdecf665dce4951eda3176fa5e27d",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/lars_solver.py": "871f8dac5b79f5b244955eb0146230b9acfecda3ffefdb09d0850e2a4eece52c",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/test_lars.py": "70945000016ac9ccd0b2f48712941935af57c56338a3912dd44228fc4d3e07fc",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/audit.py": "15b0255a0e2f873fdf7e894b27c1e1b05f67424d9bcbd646473a3f52d0a2c5aa",
+    "/data/fszhang/RecBoard-master/SDQ-LARS/train_lars_vae.py": "b1d88bcf025f795f94334ed46e91cf8bf18aa1902b3e6a274d3aa5048f3710af"
+  },
+  "users": 35598,
+  "items": 18357,
+  "interactions": 296337,
+  "versions": {
+    "torch": "2.7.1+cu126",
+    "freerec": "0.9.7",
+    "transformers": "5.17.0",
+    "sklearn": "1.9.1"
+  }
+}

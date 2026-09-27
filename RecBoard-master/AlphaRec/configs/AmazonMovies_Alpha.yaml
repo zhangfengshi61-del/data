@@ -1,0 +1,22 @@
+# Data
+root: ../../data
+dataset: AmazonMovies_Alpha
+tasktag: Matching
+
+# Model
+embedding_dim: 64
+num_layers: 2
+tau: 0.15
+num_negs: 256
+projector: mlp
+
+# Training
+epochs: 500
+batch_size: 4096
+optimizer: adam
+lr: 5.e-4
+weight_decay: 1.e-6
+
+# Evaluation
+monitors: [LOSS, HitRate@1, HitRate@5, HitRate@10, HitRate@20, HitRate@50, NDCG@5, NDCG@10, NDCG@20, NDCG@50]
+which4best: NDCG@10
