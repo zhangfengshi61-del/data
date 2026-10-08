@@ -1,0 +1,10 @@
+[
+ {"name":"u0_verify_wd5e-3","lr":5e-5,"dropout":0.0,"weight_decay":5e-3},
+ {"name":"u1_wd7e-3","lr":5e-5,"dropout":0.0,"weight_decay":7e-3},
+ {"name":"u2_wd1e-2","lr":5e-5,"dropout":0.0,"weight_decay":1e-2},
+ {"name":"u3_lr7e-5_wd5e-3","lr":7e-5,"dropout":0.0,"weight_decay":5e-3},
+ {"name":"u4_lr1e-4_wd5e-3","lr":1e-4,"dropout":0.0,"weight_decay":5e-3},
+ {"name":"u5_lr3e-5_wd5e-3","lr":3e-5,"dropout":0.0,"weight_decay":5e-3},
+ {"name":"u6_wd4e-3","lr":5e-5,"dropout":0.0,"weight_decay":4e-3},
+ {"name":"u7_wd6e-3","lr":5e-5,"dropout":0.0,"weight_decay":6e-3}
+]

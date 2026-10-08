@@ -1,0 +1,13 @@
+[
+ {"name":"s0_lr7e-5","lr":7e-5,"dropout":0.0,"weight_decay":1e-4},
+ {"name":"s1_lr5e-5","lr":5e-5,"dropout":0.0,"weight_decay":1e-4},
+ {"name":"s2_wd3e-4","lr":1e-4,"dropout":0.0,"weight_decay":3e-4},
+ {"name":"s3_wd1e-3","lr":1e-4,"dropout":0.0,"weight_decay":1e-3},
+ {"name":"s4_d0.05","lr":1e-4,"dropout":0.05,"weight_decay":1e-4},
+ {"name":"s5_beauty_ref","lr":5e-4,"dropout":0.0,"weight_decay":0.0},
+ {"name":"s6_bridge0.02","lr":1e-4,"dropout":0.0,"weight_decay":1e-4,"bridge_weight":0.02},
+ {"name":"s7_bridge0.05","lr":1e-4,"dropout":0.0,"weight_decay":1e-4,"bridge_weight":0.05},
+ {"name":"s8_sparse0.05","lr":1e-4,"dropout":0.0,"weight_decay":1e-4,"sparse_weight":0.05},
+ {"name":"s9_warmup20","lr":1e-4,"dropout":0.0,"weight_decay":1e-4,"lars_warmup":20},
+ {"name":"s10_steps4","lr":1e-4,"dropout":0.0,"weight_decay":1e-4,"lars_steps":4}
+]

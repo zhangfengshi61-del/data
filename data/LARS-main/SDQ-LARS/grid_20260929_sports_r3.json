@@ -1,0 +1,10 @@
+[
+ {"name":"t0_lr5e-5_wd1e-3","lr":5e-5,"dropout":0.0,"weight_decay":1e-3},
+ {"name":"t1_lr3e-5","lr":3e-5,"dropout":0.0,"weight_decay":1e-4},
+ {"name":"t2_lr2e-5","lr":2e-5,"dropout":0.0,"weight_decay":1e-4},
+ {"name":"t3_lr4e-5","lr":4e-5,"dropout":0.0,"weight_decay":1e-4},
+ {"name":"t4_wd3e-3","lr":5e-5,"dropout":0.0,"weight_decay":3e-3},
+ {"name":"t5_wd5e-3","lr":5e-5,"dropout":0.0,"weight_decay":5e-3},
+ {"name":"t6_lr8e-5_wd1e-3","lr":8e-5,"dropout":0.0,"weight_decay":1e-3},
+ {"name":"t7_wd5e-4","lr":5e-5,"dropout":0.0,"weight_decay":5e-4}
+]

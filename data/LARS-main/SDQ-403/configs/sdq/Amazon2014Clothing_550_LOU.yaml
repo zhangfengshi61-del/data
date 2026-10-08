@@ -1,0 +1,33 @@
+# Data
+root: ../data
+tasktag: NEXTITEM
+dataset: Amazon2014Clothing_550_LOU
+sem_feat_file: sentence-t5-xl_title_categories_brand.pkl
+
+# Model
+num_codewords: 256
+num_codebooks: 3
+codebook_dim: 128
+apply_shared_codebook: False
+hidden_dims: 512,128
+sk_epsilons: 0.,0.,0.003
+commit_weight: 1.
+dropout_rate: 0.
+
+# Training
+epochs: 100
+batch_size: 256
+optimizer: AdamW
+lr: 5.e-4
+weight_decay: 0.
+
+# Inference
+partition_method: full
+resolution: 1.
+ufactor: 7999
+ngroups: 16
+
+# Evaluation
+eval_freq: 10
+CHECKPOINT_FREQ: 10
+which4best: PPL

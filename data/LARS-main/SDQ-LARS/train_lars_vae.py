@@ -1,0 +1,735 @@
+import math
+import json
+import os
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "SDQ-403"))
+from itertools import chain
+from typing import Dict, Tuple, Union
+
+import freerec
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from converter import SemIDConverter
+from partition import Mope
+from lars_quantizer import LARSStructureDiffusionQuantizer as StructureDiffusionQuantizer
+
+freerec.declare(version="1.0.1")
+
+cfg = freerec.parser.Parser()
+cfg.add_argument("--num-codebooks", type=int, default=3, help="number of codebooks")
+cfg.add_argument(
+    "--num-codewords",
+    type=int,
+    default=256,
+    help="number of codewords per codebook",
+)
+cfg.add_argument("--codebook-dim", type=int, default=128, help="dimension of codebook vector")
+cfg.add_argument(
+    "--apply-shared-codebook",
+    type=eval,
+    default=False,
+    help="whether sharing the codebook",
+)
+cfg.add_argument("--sk-epsilons", type=str, default="0.,0.,0.003", help="epsilon for sinkhorn iteration")
+cfg.add_argument("--sk-iters", type=float, default=50, help="number of iterations for sinkhorn iteration")
+
+cfg.add_argument("--hidden-dims", type=str, default="512,128", help="hidden sizes")
+cfg.add_argument("--commit-weight", type=float, default=1.0, help="weight for commitment loss")
+cfg.add_argument("--dropout-rate", type=float, default=0.0, help="dropout rate")
+
+# ode solver
+cfg.add_argument(
+    "--solver", type=str, 
+    choices=('euler', 'rk4', 'dopri5'),
+    default="dopri5"
+)
+
+# graph partition
+cfg.add_argument("--partition-method", type=str, default="full")
+cfg.add_argument("--ngroups", type=int, default=16, help="spectral & metis")
+cfg.add_argument("--ufactor", type=int, default=7999, help="metis")
+cfg.add_argument("--resolution", type=float, default=1.0, help="for louvain & leiden")
+
+cfg.add_argument("--sem-feat-file", type=str, default="sentence-t5-xl_title_categories_brand.pkl", help="file of semantic features")
+
+cfg.set_defaults(
+    description="SDQ",
+    root="../../data",
+    dataset="Amazon2014Beauty_550_LOU",
+    epochs=200,
+    batch_size=256,
+    optimizer="AdamW",
+    lr=5.0e-4,
+    weight_decay=0.0,
+    seed=1,
+)
+cfg.add_argument("--lars-steps", type=int, default=3)
+cfg.add_argument("--stage-lars-steps", type=str, default="", help="optional comma-separated sparse budgets")
+cfg.add_argument("--stage-weights", type=str, default="", help="optional comma-separated coarse-to-fine weights")
+cfg.add_argument("--sparse-weight", type=float, default=0.1)
+cfg.add_argument("--bridge-weight", type=float, default=0.1)
+cfg.add_argument("--lars-ridge", type=float, default=1e-7)
+cfg.add_argument("--lars-warmup", type=int, default=10)
+cfg.add_argument("--accept-margin", type=float, default=1.0)
+cfg.add_argument("--gate-sparse", type=eval, default=False)
+cfg.add_argument("--anchor-weight", type=float, default=0.0,
+                 help="directional trust-region penalty after loading an SDQ checkpoint")
+cfg.add_argument("--init-checkpoint", type=str, default="",
+                 help="optional SDQ/LARS state_dict used as a warm start")
+cfg.add_argument("--sequence-weight", type=float, default=0.0,
+                 help="weight of the transition-aware soft SID objective")
+cfg.add_argument("--sequence-temperature", type=float, default=0.05)
+cfg.add_argument("--soft-bridge-weight", type=float, default=0.0,
+                 help="weight of the LAR teacher distribution bridge")
+cfg.add_argument("--soft-temperature", type=float, default=0.07,
+                 help="temperature used for sparse teacher distributions")
+cfg.add_argument("--hier-weight", type=float, default=0.0,
+                 help="weight of cumulative prefix transition loss")
+cfg.add_argument("--collision-weight", type=float, default=0.0,
+                 help="weight of dissimilar-item full SID collision penalty")
+cfg.add_argument("--collision-margin", type=float, default=0.05)
+cfg.add_argument("--utility-gate", type=eval, default=False,
+                 help="gate sparse bridge by in-batch transition utility")
+cfg.add_argument("--utility-temperature", type=float, default=0.05)
+cfg.add_argument("--utility-margin", type=float, default=0.0)
+cfg.add_argument("--utility-levels", type=int, default=3,
+                 help="number of prefix levels eligible for utility bridge")
+cfg.add_argument("--sid-anchor-weight", type=float, default=0.0,
+                 help="weight of the frozen baseline SID cross-entropy anchor")
+cfg.add_argument("--sid-marginal-weight", type=float, default=0.0,
+                 help="weight preserving baseline per-level SID marginals")
+cfg.add_argument("--sid-hinge-weight", type=float, default=0.0,
+                 help="weight for hard nearest-code baseline assignment margin")
+cfg.add_argument("--sid-hinge-margin", type=float, default=0.05)
+cfg.add_argument("--freeze-warmup-epochs", type=int, default=0,
+                 help="freeze encoder/codebooks for the first N epochs")
+cfg.add_argument("--diversity-weight", type=float, default=0.0,
+                 help="weight of dissimilar-item full-SID collision penalty")
+cfg.add_argument("--diversity-margin", type=float, default=0.05)
+cfg.add_argument("--usage-balance-weight", type=float, default=0.0,
+                 help="KL-to-uniform penalty on batch marginal soft SID usage")
+cfg.compile()
+
+cfg.hidden_dims = list(map(int, cfg.hidden_dims.split(",")))
+cfg.sk_epsilons = list(map(float, cfg.sk_epsilons.split(",")))
+cfg.stage_lars_steps = (list(map(int, cfg.stage_lars_steps.split(",")))
+                        if cfg.stage_lars_steps.strip() else [cfg.lars_steps] * cfg.num_codebooks)
+cfg.stage_weights = (list(map(float, cfg.stage_weights.split(",")))
+                     if cfg.stage_weights.strip() else [1.0] * cfg.num_codebooks)
+if len(cfg.stage_lars_steps) != cfg.num_codebooks:
+    raise ValueError("--stage-lars-steps must have num-codebooks entries")
+if len(cfg.stage_weights) != cfg.num_codebooks:
+    raise ValueError("--stage-weights must have num-codebooks entries")
+
+
+class SDQ(freerec.models.RecSysArch):
+    def __init__(self, dataset: freerec.data.datasets.RecDataSet) -> None:
+        super().__init__(dataset)
+
+        self.Item.add_module(
+            "embeddings",
+            nn.Embedding.from_pretrained(
+                self.normalize(
+                    freerec.utils.import_pickle(
+                        os.path.join(
+                            self.dataset.path,
+                            cfg.sem_feat_file,
+                        )
+                    )
+                ),
+                freeze=True,
+            ),
+        )
+
+        dims = [self.Item.embeddings.weight.size(1)] + cfg.hidden_dims + [cfg.codebook_dim]
+        ACT = nn.SiLU
+
+        self.encoder = nn.Sequential()
+        for l, (input_dim, output_dim) in enumerate(zip(dims[:-1], dims[1:]), start=1):
+            self.encoder.append(nn.Dropout(cfg.dropout_rate))
+            self.encoder.append(nn.Linear(input_dim, output_dim, bias=False))
+            if l < len(dims) - 1:
+                self.encoder.append(ACT())
+
+        self.quantizer = StructureDiffusionQuantizer(
+            self.dataset, cfg.codebook_dim,
+            features=None, solver=cfg.solver,
+            num_codebooks=cfg.num_codebooks,
+            num_codewords=cfg.num_codewords,
+            apply_shared_codebook=cfg.apply_shared_codebook,
+            commit_weight=cfg.commit_weight,
+            sk_iters=cfg.sk_iters,
+            sk_epsilons=cfg.sk_epsilons,
+            lars_steps=cfg.stage_lars_steps,
+            stage_weights=cfg.stage_weights,
+            sparse_weight=cfg.sparse_weight,
+            bridge_weight=cfg.bridge_weight,
+            lars_ridge=cfg.lars_ridge,
+            accept_margin=cfg.accept_margin,
+            gate_sparse=cfg.gate_sparse,
+            anchor_weight=cfg.anchor_weight,
+            sequence_weight=cfg.sequence_weight,
+            sequence_temperature=cfg.sequence_temperature,
+            soft_bridge_weight=cfg.soft_bridge_weight,
+            soft_temperature=cfg.soft_temperature,
+        )
+
+        self.decoder, dims = nn.Sequential(), dims[::-1]
+        for l, (input_dim, output_dim) in enumerate(zip(dims[:-1], dims[1:]), start=1):
+            self.decoder.append(nn.Dropout(cfg.dropout_rate))
+            self.decoder.append(nn.Linear(input_dim, output_dim, bias=False))
+            if l < len(dims) - 1:
+                self.decoder.append(ACT())
+
+        self.partition = Mope(
+            dataset,
+            edge_index=self.quantizer.edge_index,
+            edge_weight=self.quantizer.edge_weight,
+            method=cfg.partition_method,
+            resolution=cfg.resolution,
+            ngroups=cfg.ngroups,
+            ufactor=cfg.ufactor,
+        )
+        self.register_buffer(
+            "groups",
+            torch.from_numpy(self.partition(cfg.seed)).long()
+        )
+
+        self.criterion = nn.MSELoss(reduction="sum")
+        self.last_sequence_loss = 0.0
+        self.last_hier_loss = 0.0
+        self.last_soft_bridge_loss = 0.0
+        self.last_collision_loss = 0.0
+        self.last_utility_gain = []
+        self.last_utility_gate = []
+        self.last_sid_anchor_loss = 0.0
+        self.last_diversity_loss = 0.0
+        self.last_usage_balance_loss = 0.0
+        self._encoder_anchor_ready = False
+        self._sid_anchor_ready = False
+
+        self.reset_parameters()
+
+    def normalize(self, feats: torch.Tensor) -> torch.Tensor:
+        return F.normalize(
+            feats - feats.mean(dim=0, keepdim=True),
+            dim=-1
+        )
+
+    @freerec.utils.timemeter
+    def reset_parameters(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_normal_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0)
+
+        # codebook initialization
+        with torch.no_grad():
+            for codebook in self.quantizer.codebooks:
+                codebook.requires_kmeans_init_ = True
+            
+            self.encoder.to(cfg.device)
+            self.quantizer.to(cfg.device)
+
+            num_samples = min(self.Item.count, cfg.num_codewords * 5)
+            items = torch.randperm(
+                self.Item.count,
+            )[:num_samples]
+            items, _ = torch.sort(items)
+
+            self.quantizer.reset_local_graph(items.clone().to(cfg.device))
+            x = self.Item.embeddings(items).to(cfg.device)
+            z = self.encode(x)
+
+            self.quantizer(z)
+
+    def sure_trainpipe(self, batch_size: int = 512):
+        return (
+            self.dataset
+            .train()
+            .shuffled_seqs_source(maxlen=50)
+            .batch_(batch_size)
+        )
+
+    def encode(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        z = self.encoder(x)  # (B, D)
+        return z
+
+    def decode(self, q: torch.Tensor):
+        x_hat = self.decoder(q)  # (B, D)
+        return F.normalize(x_hat, dim=-1)  # normalization !!!
+
+    @torch.no_grad()
+    def set_encoder_anchor(self):
+        """Keep the warm-start encoder in the same SID decision basin."""
+        for idx, parameter in enumerate(self.encoder.parameters()):
+            name = f"_anchor_encoder_{idx}"
+            if name in self._buffers:
+                self._buffers[name] = parameter.detach().clone()
+            else:
+                self.register_buffer(name, parameter.detach().clone())
+        self._encoder_anchor_ready = True
+
+    def encoder_anchor_loss(self):
+        if not self._encoder_anchor_ready or cfg.anchor_weight <= 0:
+            return self.Item.embeddings.weight.new_zeros(())
+        losses = []
+        for idx, parameter in enumerate(self.encoder.parameters()):
+            anchor = getattr(self, f"_anchor_encoder_{idx}")
+            losses.append(F.mse_loss(parameter, anchor))
+        return cfg.anchor_weight * torch.stack(losses).mean()
+
+    @torch.no_grad()
+    def set_sid_anchor(self, sid_ids: torch.Tensor):
+        if sid_ids.ndim != 2 or sid_ids.size(1) != cfg.num_codebooks:
+            raise ValueError("baseline SID anchor has an invalid shape")
+        self.register_buffer("sid_anchor_ids", sid_ids.long().clone())
+        self._sid_anchor_ready = True
+
+    def fit(self, data: Dict[freerec.data.fields.Field, torch.Tensor]) -> Union[torch.Tensor, Tuple[torch.Tensor]]:
+        self.last_sequence_loss = 0.0
+        self.last_hier_loss = 0.0
+        self.last_soft_bridge_loss = 0.0
+        self.last_collision_loss = 0.0
+        self.last_utility_gain = []
+        self.last_utility_gate = []
+        self.last_sid_anchor_loss = 0.0
+        self.last_diversity_loss = 0.0
+        self.last_usage_balance_loss = 0.0
+        items = set(chain(*data[self.ISeq]))
+        items = torch.tensor(list(items), dtype=torch.long, device=self.device)
+        items, _ = torch.sort(items)
+        self.quantizer.reset_local_graph(items)
+
+        x = self.Item.embeddings(items)
+        z = self.encode(x)
+        q, auxiliary_loss, current_ids = self.quantizer(z)
+        x_hat = self.decode(q)
+
+        recon_loss = self.criterion(x_hat, x) / len(items)
+        if self.training and self.quantizer.loss_scale > 0:
+            auxiliary_loss = auxiliary_loss + self.quantizer.loss_scale * self.encoder_anchor_loss()
+        if (self.training and self.quantizer.loss_scale > 0 and
+                self._sid_anchor_ready and cfg.sid_anchor_weight > 0 and
+                self.quantizer.last_soft_assignments):
+            targets = self.sid_anchor_ids[items]
+            sid_loss = x.new_zeros(())
+            for level, probs in enumerate(self.quantizer.last_soft_assignments):
+                sid_loss = sid_loss + F.nll_loss(
+                    (probs.clamp_min(1e-8)).log(), targets[:, level]
+                )
+            sid_loss = sid_loss / len(self.quantizer.last_soft_assignments)
+            self.last_sid_anchor_loss = float(sid_loss.detach())
+            auxiliary_loss = auxiliary_loss + self.quantizer.loss_scale * cfg.sid_anchor_weight * sid_loss
+            if cfg.sid_marginal_weight > 0:
+                marginal_loss = x.new_zeros(())
+                for level, probs in enumerate(self.quantizer.last_soft_assignments):
+                    target = F.one_hot(targets[:, level], num_classes=probs.size(1)).float().mean(dim=0)
+                    pred = probs.mean(dim=0).clamp_min(1e-8)
+                    target = target.clamp_min(1e-8)
+                    marginal_loss = marginal_loss + F.kl_div(pred.log(), target, reduction="sum")
+                marginal_loss = marginal_loss / len(self.quantizer.last_soft_assignments)
+                auxiliary_loss = auxiliary_loss + self.quantizer.loss_scale * cfg.sid_marginal_weight * marginal_loss
+            if cfg.sid_hinge_weight > 0:
+                hinge_loss = x.new_zeros(())
+                for level, probs in enumerate(self.quantizer.last_soft_assignments):
+                    target_prob = probs.gather(1, targets[:, level].unsqueeze(1)).squeeze(1)
+                    other = probs.clone()
+                    other.scatter_(1, targets[:, level].unsqueeze(1), 0.0)
+                    max_other = other.max(dim=1).values
+                    hinge_loss = hinge_loss + F.relu(
+                        cfg.sid_hinge_margin - (target_prob - max_other)
+                    ).mean()
+                hinge_loss = hinge_loss / len(self.quantizer.last_soft_assignments)
+                auxiliary_loss = auxiliary_loss + self.quantizer.loss_scale * cfg.sid_hinge_weight * hinge_loss
+        # Keep the marginal soft SID usage close to the baseline's balanced
+        # alphabet.  Utility gating can otherwise improve reconstruction by
+        # concentrating probability mass on a few frequent prefixes, which
+        # raises full-SID collisions and hurts T5 generalization.
+        if (self.training and self.quantizer.loss_scale > 0
+                and cfg.usage_balance_weight > 0
+                and self.quantizer.last_soft_assignments):
+            usage_loss = x.new_zeros(())
+            level_weights = []
+            for level, probs in enumerate(self.quantizer.last_soft_assignments):
+                marginal = probs.mean(dim=0).clamp_min(1e-8)
+                k = marginal.numel()
+                usage_loss = usage_loss + (0.5 ** level) * (marginal * (marginal.log() + math.log(k))).sum()
+                level_weights.append(0.5 ** level)
+            usage_loss = usage_loss / sum(level_weights)
+            self.last_usage_balance_loss = float(usage_loss.detach())
+            auxiliary_loss = auxiliary_loss + self.quantizer.loss_scale * cfg.usage_balance_weight * usage_loss
+        if (self.training and cfg.diversity_weight > 0 and
+                self.quantizer.last_soft_assignments and len(items) > 1):
+            # Sample pairs to keep the O(N^2) uniqueness signal bounded.  The
+            # product of per-level code overlaps estimates the probability
+            # that two items receive the same complete SID.
+            pair_count = min(4096, len(items) * (len(items) - 1) // 2)
+            left = torch.randint(len(items), (pair_count,), device=self.device)
+            right = torch.randint(len(items), (pair_count,), device=self.device)
+            valid = left != right
+            left, right = left[valid], right[valid]
+            if len(left):
+                semantic_similarity = (x[left] * x[right]).sum(dim=-1)
+                # Continuous dissimilarity weighting avoids the old empty
+                # (<0.2) filter, which produced no collision signal on Sports.
+                # Keep a nonzero signal even for semantically similar items:
+                # prefix collisions are harmful regardless of cosine similarity.
+                overlap = x.new_ones((len(left),))
+                for probs in self.quantizer.last_soft_assignments:
+                    overlap = overlap * (probs[left] * probs[right]).sum(dim=-1)
+                diversity_loss = F.relu(overlap - cfg.diversity_margin).mean()
+                self.last_diversity_loss = float(diversity_loss.detach())
+                auxiliary_loss = auxiliary_loss + cfg.diversity_weight * diversity_loss
+
+        # Hierarchical recommendation-aware tokenizer signal.  The previous
+        # implementation compared every level independently.  This variant
+        # scores cumulative prefixes so the first level can share behavior
+        # while later levels retain item discrimination.
+        if (self.training and self.quantizer.loss_scale > 0 and cfg.hier_weight > 0
+                and self.quantizer.last_soft_assignments):
+            positions = {int(item): pos for pos, item in enumerate(items.tolist())}
+            src, dst = [], []
+            for seq in data[self.ISeq]:
+                seq = [int(item) for item in seq]
+                for a, b in zip(seq[:-1], seq[1:]):
+                    if a in positions and b in positions and a != b:
+                        src.append(positions[a])
+                        dst.append(positions[b])
+            if src:
+                src = torch.tensor(src, dtype=torch.long, device=self.device)
+                dst = torch.tensor(dst, dtype=torch.long, device=self.device)
+                p = self.quantizer.last_soft_assignments
+                sims = [level @ level.transpose(0, 1) for level in p]
+                prefix = x.new_ones((len(items), len(items)))
+                hier_loss = x.new_zeros(())
+                prefix_losses = []
+                for level, sim in enumerate(sims):
+                    prefix = prefix * sim
+                    level_loss = F.cross_entropy(
+                        prefix[src] / max(cfg.sequence_temperature, 1e-6), dst
+                    )
+                    prefix_losses.append(level_loss)
+                    hier_loss = hier_loss + (0.5 ** level) * level_loss
+                hier_loss = hier_loss / sum(0.5 ** i for i in range(len(sims)))
+                self.last_hier_loss = float(hier_loss.detach())
+                auxiliary_loss = auxiliary_loss + self.quantizer.loss_scale * cfg.hier_weight * hier_loss
+
+                # Utility gate: replace one prefix level with the LAR teacher
+                # distribution and keep it only when the in-batch transition
+                # loss improves. This is a cheap, leakage-free proxy for the
+                # downstream next-token objective.
+                if (cfg.utility_gate and self.quantizer.last_sparse_assignments
+                        and len(self.quantizer.last_sparse_assignments) == len(p)):
+                    q = self.quantizer.last_sparse_assignments
+                    p_prefix = x.new_ones((len(items), len(items)))
+                    gates, gains = [], []
+                    soft_bridge = x.new_zeros(())
+                    bridge_den = 0.0
+                    for level, (p_level, q_level, sim) in enumerate(zip(p, q, sims)):
+                        p_prefix = p_prefix * sim
+                        if level >= cfg.utility_levels:
+                            continue
+                        q_sim = q_level @ p_level.transpose(0, 1)
+                        mixed = p_prefix / sim.clamp_min(1e-8)
+                        mixed = mixed * q_sim
+                        base_loss = F.cross_entropy(
+                            p_prefix[src] / max(cfg.sequence_temperature, 1e-6), dst
+                        )
+                        sparse_loss = F.cross_entropy(
+                            mixed[src] / max(cfg.sequence_temperature, 1e-6), dst
+                        )
+                        gain = (base_loss - sparse_loss).detach()
+                        # A bridge is active only when sparse routing is a
+                        # measured positive transition signal.  Sigmoid alone
+                        # gives ~0.5 at zero gain and silently pushes useless
+                        # prefixes, which caused the Sports collapse.
+                        gate = torch.sigmoid(
+                            (gain - cfg.utility_margin)
+                            / max(cfg.utility_temperature, 1e-6)
+                        ) * (gain > cfg.utility_margin).to(gain.dtype)
+                        gates.append(gate)
+                        gains.append(gain)
+                        log_p = p_level.clamp_min(1e-8).log()
+                        kl = F.kl_div(log_p, q_level, reduction="batchmean")
+                        soft_bridge = soft_bridge + (0.5 ** level) * gate * kl
+                        bridge_den += 0.5 ** level
+                    if bridge_den > 0:
+                        soft_bridge = soft_bridge / bridge_den
+                    self.last_soft_bridge_loss = float(soft_bridge.detach())
+                    self.last_utility_gain = [float(v) for v in gains]
+                    self.last_utility_gate = [float(v) for v in gates]
+                    auxiliary_loss = auxiliary_loss + self.quantizer.loss_scale * cfg.soft_bridge_weight * soft_bridge
+
+                if cfg.collision_weight > 0 and len(items) > 1:
+                    pair_count = min(4096, len(items) * (len(items) - 1) // 2)
+                    left = torch.randint(len(items), (pair_count,), device=self.device)
+                    right = torch.randint(len(items), (pair_count,), device=self.device)
+                    valid = left != right
+                    left, right = left[valid], right[valid]
+                    if len(left):
+                        # Full-SID overlap is penalized directly.  The old
+                        # semantic filter missed the high-similarity prefix
+                        # collisions that dominate Sports.
+                        overlap = prefix[left, right]
+                        collision_loss = F.relu(overlap - cfg.collision_margin).mean()
+                        self.last_collision_loss = float(collision_loss.detach())
+                        auxiliary_loss = auxiliary_loss + self.quantizer.loss_scale * cfg.collision_weight * collision_loss
+
+        # Recommendation-aware tokenizer signal.  For each observed adjacent
+        # transition i -> j in the current minibatch, make i's soft code
+        # distribution assign high probability to j among the batch items.
+        # This is differentiable through the codebook and encoder, while the
+        # actual hard SID export remains unchanged.
+        if cfg.sequence_weight > 0 and cfg.hier_weight <= 0 and self.quantizer.last_soft_assignments:
+            positions = {int(item): pos for pos, item in enumerate(items.tolist())}
+            src, dst = [], []
+            for seq in data[self.ISeq]:
+                seq = [int(item) for item in seq]
+                for a, b in zip(seq[:-1], seq[1:]):
+                    if a in positions and b in positions and a != b:
+                        src.append(positions[a])
+                        dst.append(positions[b])
+            if src:
+                src = torch.tensor(src, dtype=torch.long, device=self.device)
+                dst = torch.tensor(dst, dtype=torch.long, device=self.device)
+                transition_loss = x.new_zeros(())
+                for probs in self.quantizer.last_soft_assignments:
+                    similarity = probs[src] @ probs.transpose(0, 1)
+                    transition_loss = transition_loss + F.cross_entropy(
+                        similarity / cfg.sequence_temperature, dst
+                    )
+                transition_loss = transition_loss / len(self.quantizer.last_soft_assignments)
+                self.last_sequence_loss = float(transition_loss.detach())
+                auxiliary_loss = auxiliary_loss + cfg.sequence_weight * transition_loss
+
+        return recon_loss, auxiliary_loss
+
+    @torch.no_grad()
+    def generate_sem_ids(self):
+        is_training = self.training
+        self.eval()
+        try:
+            sem_ids = torch.zeros((self.Item.count, cfg.num_codebooks), dtype=torch.long)
+            for group in self.groups.unique():
+                items = torch.where(self.groups == group)[0]
+                items, _ = torch.sort(items.flatten())
+                self.quantizer.reset_local_graph(items)
+
+                x = self.Item.embeddings(items)
+                z = self.encode(x)
+                _, _, ids = self.quantizer(z)
+                sem_ids[items] = ids.detach().cpu()
+            return sem_ids
+        finally:
+            self.train(is_training)
+
+
+class CoachForSDQ(freerec.launcher.Coach):
+    @freerec.ddp.main_process_only
+    def save_sid_vocab(self) -> None:
+        sem_ids = self.get_res_sys_arch().generate_sem_ids()
+        sid_vocab = {}
+        for item_id, sids in enumerate(sem_ids.tolist()):
+            sids = [SemIDConverter.SID_FORMAT.format(level=level, id=sid) for level, sid in enumerate(sids)]
+            sid_vocab[SemIDConverter.format(item_id)] = tuple(sids)
+        vocab_file = os.path.join(self.cfg.LOG_PATH, "sid_vocab.json")
+        with open(vocab_file, "w", encoding="utf-8") as file:
+            json.dump(sid_vocab, file)
+
+    def set_other(self):
+        self.register_metric("RECON_LOSS", lambda x: x, best_caster=min)
+        self.register_metric("COMMIT_LOSS", lambda x: x, best_caster=min)
+        self.register_metric("PPL", lambda x: x, best_caster=max)
+        self.register_metric("COLLISION_RATE", lambda x: x, best_caster=min)
+        for i in range(self.cfg.num_codebooks):
+            self.register_metric(f"PPL#{i}", lambda x: x, best_caster=max)
+
+    def train_per_epoch(self, epoch: int):
+        quantizer = self.get_res_sys_arch().quantizer
+        quantizer.loss_scale = min(1.0, epoch / max(1, self.cfg.lars_warmup))
+        # Keep the baseline SID decision basin fixed while the decoder and
+        # sparse teacher warm up.  Re-enable encoder/codebook gradients only
+        # after the guard period; this prevents early prefix collapse.
+        if self.cfg.freeze_warmup_epochs > 0:
+            train_sid = epoch > self.cfg.freeze_warmup_epochs
+            for parameter in self.model.encoder.parameters():
+                parameter.requires_grad_(train_sid)
+            for parameter in quantizer.parameters():
+                parameter.requires_grad_(train_sid)
+        epoch_diagnostics = []
+        sequence_losses = []
+        hier_losses = []
+        soft_bridge_losses = []
+        collision_losses = []
+        utility_gains = []
+        utility_gates = []
+        sid_anchor_losses = []
+        diversity_losses = []
+        usage_balance_losses = []
+
+        for data in self.dataloader:
+            data = self.dict_to_device(data)
+            recon_loss, auxiliary_loss = self.model(data)
+            loss = recon_loss + auxiliary_loss
+            if not torch.isfinite(loss):
+                raise FloatingPointError(f"Nonfinite objective at epoch {epoch}")
+            if quantizer.last_diagnostics:
+                epoch_diagnostics.append(torch.stack(quantizer.last_diagnostics).detach())
+            if self.model.last_sequence_loss:
+                sequence_losses.append(self.model.last_sequence_loss)
+            if self.model.last_hier_loss:
+                hier_losses.append(self.model.last_hier_loss)
+            if self.model.last_soft_bridge_loss:
+                soft_bridge_losses.append(self.model.last_soft_bridge_loss)
+            if self.model.last_collision_loss:
+                collision_losses.append(self.model.last_collision_loss)
+            if self.model.last_utility_gain:
+                utility_gains.append(self.model.last_utility_gain)
+            if self.model.last_utility_gate:
+                utility_gates.append(self.model.last_utility_gate)
+            if self.model.last_sid_anchor_loss:
+                sid_anchor_losses.append(self.model.last_sid_anchor_loss)
+            if self.model.last_diversity_loss:
+                diversity_losses.append(self.model.last_diversity_loss)
+            if self.model.last_usage_balance_loss:
+                usage_balance_losses.append(self.model.last_usage_balance_loss)
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            self.monitor(
+                recon_loss.item(),
+                n=1,
+                reduction="mean",
+                mode="train",
+                pool=["RECON_LOSS"],
+            )
+            self.monitor(
+                auxiliary_loss.item(),
+                n=1,
+                reduction="mean",
+                mode="train",
+                pool=["COMMIT_LOSS"],
+            )
+
+        if epoch_diagnostics:
+            mean = torch.stack(epoch_diagnostics).mean(dim=0).cpu().tolist()
+            names = ["sparse_mse", "bridge_mse", "hard_mse", "sparse_relative_mse",
+                     "bridge_relative_mse", "active_per_item", "dictionary_coverage", "teacher_acceptance"]
+            record = {"epoch": epoch, "loss_scale": quantizer.loss_scale,
+                      "stages": [dict(zip(names, values)) for values in mean]}
+            if sequence_losses:
+                record["sequence_loss"] = sum(sequence_losses) / len(sequence_losses)
+            if hier_losses:
+                record["hier_loss"] = sum(hier_losses) / len(hier_losses)
+            if soft_bridge_losses:
+                record["soft_bridge_loss"] = sum(soft_bridge_losses) / len(soft_bridge_losses)
+            if collision_losses:
+                record["collision_loss"] = sum(collision_losses) / len(collision_losses)
+            if utility_gains:
+                record["utility_gain"] = [sum(v[i] for v in utility_gains) / len(utility_gains)
+                                           for i in range(len(utility_gains[0]))]
+            if utility_gates:
+                record["utility_gate"] = [sum(v[i] for v in utility_gates) / len(utility_gates)
+                                           for i in range(len(utility_gates[0]))]
+            if sid_anchor_losses:
+                record["sid_anchor_loss"] = sum(sid_anchor_losses) / len(sid_anchor_losses)
+            if diversity_losses:
+                record["diversity_loss"] = sum(diversity_losses) / len(diversity_losses)
+            if usage_balance_losses:
+                record["usage_balance_loss"] = sum(usage_balance_losses) / len(usage_balance_losses)
+            with open(os.path.join(self.cfg.LOG_PATH, "lars_diagnostics.jsonl"), "a") as file:
+                file.write(json.dumps(record) + "\n")
+            freerec.infoLogger("[LARS] " + json.dumps(record))
+
+        if epoch % self.cfg.eval_freq == 0:
+            self.save_sid_vocab()
+
+    def evaluate(self, epoch, step=-1, mode="valid"):
+        sem_ids = self.get_res_sys_arch().generate_sem_ids().cpu()
+        counts = torch.zeros((cfg.num_codewords, cfg.num_codebooks))
+        counts.scatter_add_(0, sem_ids, torch.ones_like(sem_ids, dtype=torch.float))
+        uniques = set([tuple(id_) for id_ in sem_ids.tolist()])
+
+        freqs = counts.div(counts.sum(dim=0, keepdim=True))
+        perplexity = ((freqs + 1.0e-8).log() * freqs).sum(dim=0).neg().exp().tolist()
+
+        ppls = []
+        for i, ppl in enumerate(perplexity):
+            ppls.append(ppl)
+            self.monitor(ppl, n=1, mode="valid", pool=[f"PPL#{i}"])
+
+        self.monitor(
+            sum(ppls),
+            n=len(ppls),
+            mode=mode,
+            reduction="sum",
+            pool=["PPL"],
+        )
+        self.monitor(
+            (self.Item.count - len(uniques)) / self.Item.count,
+            n=1,
+            mode=mode,
+            pool=["COLLISION_RATE"],
+        )
+
+
+def main():
+
+    dataset: freerec.data.datasets.RecDataSet
+    try:
+        dataset = getattr(freerec.data.datasets, cfg.dataset)(root=cfg.root)
+    except AttributeError:
+        dataset = freerec.data.datasets.RecDataSet(
+            cfg.root,
+            cfg.dataset,
+            tasktag=cfg.tasktag,
+        )
+
+    model = SDQ(dataset)
+    if cfg.init_checkpoint:
+        checkpoint = torch.load(cfg.init_checkpoint, map_location="cpu")
+        missing, unexpected = model.load_state_dict(checkpoint, strict=False)
+        if unexpected:
+            raise RuntimeError(f"unexpected checkpoint keys: {unexpected}")
+        # The baseline alphabet is the trust-region reference.  Loading it
+        # before the Coach is important: the first generated SID remains
+        # comparable to SDQ even when the sparse objective is still warming up.
+        model.quantizer.set_codebook_anchor()
+        model.set_encoder_anchor()
+        sid_path = Path(cfg.init_checkpoint).with_name("sid_vocab.json")
+        if sid_path.exists():
+            with sid_path.open("r", encoding="utf-8") as file:
+                raw = json.load(file)
+            sid_ids = torch.tensor([
+                [int(token.rsplit("_", 1)[1].rstrip(">")) for token in raw[f"item_{i}"]]
+                for i in range(model.Item.count)
+            ])
+            model.set_sid_anchor(sid_ids)
+            freerec.infoLogger(f"[LARS] SID anchor loaded from {sid_path}")
+        freerec.infoLogger(
+            f"[LARS] warm-started from {cfg.init_checkpoint}; missing={list(missing)}"
+        )
+
+    # datapipe
+    trainpipe = model.sure_trainpipe(cfg.batch_size)
+
+    coach = CoachForSDQ(
+        dataset=dataset,
+        trainpipe=trainpipe,
+        validpipe=trainpipe,
+        testpipe=None,
+        model=model,
+        cfg=cfg,
+    )
+    coach.fit()
+
+
+if __name__ == "__main__":
+    main()
