@@ -27,8 +27,8 @@
 %% TODO markers (remove all before submission)
 \newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 
-%% Draft reproducibility note: the table values may include synthetic or
-%% historical configurations. Reconfirm checkpoint provenance and the
+%% Provenance note: author-provided summary means/SDs have not been linked to
+%% seed-level training logs and checkpoints. Check provenance before the
 %% no-direct-pair-anchor implementation before making performance claims.
 
 %% ===== convenience macros =====
@@ -654,7 +654,7 @@ distillation to ranking objectives; SmartGR exploits SID-specific distillation s
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
 
-Table~\ref{tab:main-all} compares \method\ with conventional recommendation distillation, general generative distillation, and SID-based generative recommendation distillation across three datasets and three student architectures. We evaluate all methods using held-out Recall and NDCG under the same student architectures and decoding configurations. % RESULTS VERIFICATION REQUIRED before submission: insert validated
+Table~\ref{tab:main-all} compares \method\ with conventional recommendation distillation, general generative distillation, and SID-based generative recommendation distillation across three datasets and three student architectures. The table reports author-provided Recall and NDCG summaries for the stated student architectures and decoding configurations; the seed-wise checkpoints and logs still require verification. % RESULTS VERIFICATION REQUIRED before submission: insert validated
 % new-objective NDCG@10 and Recall results for 3 datasets x 3 students.
 % Do not publish synthetic or historical configurations as measured results.
 
