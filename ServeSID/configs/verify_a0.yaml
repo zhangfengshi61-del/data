@@ -28,3 +28,4 @@ serve_kl: 0
 list_kl: 0
 pair_w: 0.0
 da_w: 0.0
+seeds: [42, 43, 44]
