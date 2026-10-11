@@ -1,0 +1,47 @@
+% Editable fallback overview. Replace with Figures/main_method.pdf when final artwork is available.
+% Avoid any claims about measured latency/accuracy in this schematic.
+\begin{figure*}[t]
+\centering
+\IfFileExists{Figures/main_method.pdf}{%
+  \includegraphics[width=0.98\textwidth,height=53mm,keepaspectratio]{Figures/main_method.pdf}%
+}{%
+\begin{tikzpicture}[
+  >=stealth,
+  every node/.style={font=\sffamily\fontsize{7.4}{9}\selectfont},
+  frame/.style={draw=black!28,rounded corners=3pt,minimum height=10mm,align=center,inner xsep=5pt,inner ysep=3pt},
+  bluebox/.style={frame,fill=catTrad,draw=blue!32},
+  orangebox/.style={frame,fill=catGen,draw=orange!35},
+  greenbox/.style={frame,fill=catSID,draw=green!32},
+  graybox/.style={frame,fill=datasetgray},
+  flow/.style={->,draw=black!52,line width=0.75pt},
+  training/.style={->,draw=blue!50!black,line width=0.75pt},
+]
+\node[graybox,text width=37mm] (teacher) at (2.0,0)
+  {\textbf{Frozen TIGER teacher}\\Top-$M$ SID candidates and scores};
+\node[graybox,text width=37mm] (support) at (8.1,0)
+  {\textbf{Shared candidate support}\\Complete-SID scores and valid prefixes};
+\node[graybox,text width=32mm] (student) at (14.1,0)
+  {\textbf{Lightweight student}\\MLP / GRU / CNN};
+
+\node[bluebox,text width=59mm,minimum height=17mm] (hserve) at (4.4,-1.75)
+  {\textbf{HServe: hierarchical preferences}\\Candidate distribution $\rightarrow$ shared-prefix marginals\\Multi-level KL (including leaf depth)};
+\node[orangebox,text width=59mm,minimum height=17mm] (da) at (11.8,-1.75)
+  {\textbf{DA-CDRS: depth-wise relative scores}\\Teacher-ordered pairs $\rightarrow$ single-depth replacement\\Detached attribution $\rightarrow$ weighted Huber};
+\node[greenbox,text width=75mm,minimum height=9mm] (joint) at (8.1,-3.35)
+  {\textbf{Joint student training:} digit CE $+$ HServe $+$ DA-CDRS};
+
+\draw[flow] (teacher.east) -- (support.west);
+\draw[flow] (support.east) -- (student.west);
+\draw[flow] (support.south) -- ++(0,-0.25) -| (hserve.north);
+\draw[flow] (support.south) -- ++(0,-0.25) -| (da.north);
+\draw[training] (hserve.south) |- (joint.west);
+\draw[training] (da.south) |- (joint.east);
+\draw[training] (joint.east) -- ++(5.15,0) |- (student.south);
+\node[font=\sffamily\fontsize{6.8}{7.8}\selectfont,text=black!55,anchor=east] at (16.2,-3.9)
+  {Offline training only; no extra inference module};
+\end{tikzpicture}%
+}
+\caption{Overview of \method. HServe aligns complete-candidate and prefix-level preferences; DA-CDRS weights depth-wise relative-score matching using detached single-depth attribution. Both objectives update the same lightweight student offline.}
+\Description{Training-only teacher candidate supervision branches into hierarchical candidate-marginal alignment and direction-attributed depth-wise Huber distillation. The jointly trained student retains its original inference architecture.}
+\label{fig:method-overview}
+\end{figure*}
