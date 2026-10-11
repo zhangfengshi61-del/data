@@ -697,7 +697,9 @@ def train_baseline(args):
     beam_t5 = beam_loader = beam_vt = None
     if args.epochs >= 5:
         beam_t5 = t5
-        split = "val" if "val" in teacher_pipe.tokenized_datasets else "test"
+        if "val" not in teacher_pipe.tokenized_datasets:
+            raise RuntimeError("Baseline checkpoint selection requires validation data; refusing test fallback")
+        split = "val"
         beam_loader = DataLoader(teacher_pipe.tokenized_datasets[split], batch_size=args.val_batch_size,
                                  shuffle=False, collate_fn=teacher_pipe.tokenizer.collate_fn[split], num_workers=0)
         beam_vt = vt
@@ -706,6 +708,9 @@ def train_baseline(args):
     log(f"train={len(train_ds)} val={len(val_ds)} ckpt_dir={ckpt_dir}")
 
     loss_impl = LOSS_FN[method]
+    best_val_ndcg10 = float("-inf")
+    best_val_epoch = None
+    best_path = os.path.join(ckpt_dir, f"{save_prefix}_best_val_ndcg10.pth")
     for epoch in range(1, args.epochs + 1):
         model.train()
         train_losses = []
@@ -748,6 +753,18 @@ def train_baseline(args):
                 max_batches=(5 if args.test else None)
                 if not getattr(args, "beam_val_max_batches", None)
                 else int(args.beam_val_max_batches))
+            if beam_metrics.get("total", 0) > 0 and float(beam_metrics["ndcg10"]) > best_val_ndcg10:
+                best_val_ndcg10 = float(beam_metrics["ndcg10"])
+                best_val_epoch = epoch
+                torch.save({
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "args": _checkpoint_args(args),
+                    "selection_metric": "val_ndcg10",
+                    "selection_value": best_val_ndcg10,
+                    "model_type": "SID-MLP",
+                }, best_path)
+                log(f"BEST_VAL epoch={epoch} ndcg10={best_val_ndcg10:.6f} checkpoint={best_path}")
         comp_str = " ".join(f"{k}={comp_sums[k] / max(comp_counts[k], 1):.4f}" for k in sorted(comp_sums))
         log(f"epoch={epoch} train_loss={np.mean(train_losses):.6f} "
             f"val_loss={digit_metrics['loss']:.6f} "
