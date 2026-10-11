@@ -44,8 +44,8 @@
 \definecolor{secondCell}{HTML}{ECEDEF}
 \definecolor{datasetgray}{RGB}{242,244,247}
 \definecolor{rowAlt}{HTML}{FAFBFC}
-\newcommand{\catrect}[3]{\tikz[baseline=(x.center)]\node[fill=#1,rounded corners=2.1pt,minimum width=72pt,minimum height=#2,align=left,inner sep=1pt,text width=67pt] (x) {\fontsize{6.2}{7}\selectfont\bfseries #3};}
-\newcommand{\ablatag}[2]{\tikz[baseline=(x.base)]\node[fill=#1,rounded corners=1.8pt,minimum width=91pt,minimum height=10.5pt,text width=88pt,align=left,inner sep=1pt] (x) {\fontsize{6.5}{7.4}\selectfont #2};}
+\newcommand{\catrect}[3]{\tikz[baseline=(x.center)]\node[fill=#1,rounded corners=2.1pt,minimum width=72pt,minimum height=#2,align=left,inner sep=1pt,text width=67pt] (x) {\fontsize{6.7}{7.6}\selectfont\bfseries #3};}
+\newcommand{\ablatag}[2]{\tikz[baseline=(x.base)]\node[fill=#1,rounded corners=1.8pt,minimum width=91pt,minimum height=10.5pt,text width=88pt,align=left,inner sep=1pt] (x) {\fontsize{6.8}{7.8}\selectfont #2};}
 \newcommand{\second}[1]{\tikz[baseline=(x.base)]\node[fill=secondCell,rounded corners=1.2pt,minimum width=25pt,minimum height=9pt,inner sep=0pt] (x) {#1};}
 \newcommand{\jac}{\mathrm{Jac}}
 \newcommand{\C}{\mathcal{C}}
@@ -550,7 +550,7 @@ attribution still requires $r_d>0$. The replacement is a local score
 calculation, not a causal intervention on model parameters. We do not
 backpropagate through $\ell_{\mathrm{pair}}$ or directly minimize it.
 
-\textbf{Scale-normalized relative-score correction.} With
+\textbf{Scale-normalized correction.} With
 depth-specific standard deviations computed from valid \emph{training}
 pairs, we set
 \begin{equation}
@@ -583,8 +583,8 @@ We construct teacher proposal lists, candidate scores, pair relations,
 and teacher increment statistics from training requests only. The frozen teacher's data are cached; student scores, marginals, replacements, and attribution weights are computed during optimization. No validation or test request contributes teacher targets to the training loss.
 
 At deployment, all teacher-dependent caches and distillation
-computations are discarded. The student retains one history-encoding
-pass, depth-wise SID prediction, validity masking, and constrained
+computations are discarded. The student encodes history once and retains
+depth-wise SID prediction, validity masking, and constrained
 beam expansion. Consequently, the deployed student retains the original verify-free inference graph without introducing teacher-dependent scoring, auxiliary prediction heads, or reranking stages. The proposed objectives modify only the offline training procedure and do not constitute a new decoding algorithm. Offline cache
 generation, storage, and additional student scoring nevertheless
 increase training-side cost; they should be reported separately from
@@ -599,12 +599,11 @@ of every teacher Top-$K$ item.
 \input{Figures/table_main_results.tex}
 \input{Figures/table_ablation.tex}
 
-We evaluate \method\ along three questions: (RQ1) Does structure-aware
-distillation improve next-item recommendation across datasets and
-student architectures? (RQ2) Does HServe add value beyond
-complete-candidate, leaf-only distribution matching? (RQ3) Does
-depth-attributed supervision improve upon both uniform weighting and
-a direct complete-pair ranking control when combined with HServe?
+We investigate three questions: (RQ1) Does structure-aware
+distillation improve recommendation across datasets and students?
+(RQ2) Does HServe improve on leaf-only complete-candidate matching?
+(RQ3) Does depth attribution outperform uniform weighting and
+direct pair-ranking supervision when combined with HServe?
 
 \subsection{Experimental Setup}
 \label{sec:exp-setup}
