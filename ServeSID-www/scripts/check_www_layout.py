@@ -17,9 +17,12 @@ with fitz.open(pdf) as doc:
     aux=pdf.with_suffix(".aux")
     body_end=None
     if aux.is_file():
-        mat=re.search(r"\\\\newlabel\\{www:body-end\\}\\{\\{[^{}]*\\}\\{(\\d+)\\}",aux.read_text(errors="replace"))
-        if mat:
-            body_end=int(mat.group(1))
+        for line in aux.read_text(errors="replace").splitlines():
+            if "newlabel{www:body-end}" in line:
+                mat = re.search(r"}{(\\d+)}", line)
+                if mat:
+                    body_end = int(mat.group(1))
+                break
     pass_body = body_end is not None and body_end <= 8
     ok = pass_body and total <= 12
     out = [
