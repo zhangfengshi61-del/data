@@ -15,8 +15,10 @@ if [[ "$MODE" != "sidmlp" ]]; then
   exit 2
 fi
 : "${CATEGORY:?Usage: $0 sidmlp <Beauty|Toys|Video_Games> [GPU_INDEX]}"
-DATASET="${DATASET:-Amazon2014}"
-if [[ "$CATEGORY" == "Video_Games" && -z "${DATASET_OVERRIDE:-}" ]]; then DATASET="AmazonReviews2023"; fi
+if [[ -z "${DATASET:-}" ]]; then
+  if [[ "$CATEGORY" == "Video_Games" ]]; then DATASET="AmazonReviews2023";
+  else DATASET="Amazon2014"; fi
+fi
 : "${GRAPH_DIR:?Set GRAPH_DIR to the prepared teacher caches and packed datasets}"
 : "${MODEL_DIR:?Set MODEL_DIR to the TIGER checkpoints and semantic-ID inventory}"
 : "${BEAM_DUMP:?Set BEAM_DUMP to the matching TRAIN-request teacher beam dump}"
@@ -31,7 +33,15 @@ LOG_DIR="${LOG_DIR:-$GRAPH_DIR/SID-MLP/logs}"
 for file in "$CONFIG" "$BEAM_DUMP" "$TIGER_CKPT" "$SEM_IDS"; do
   if [[ ! -f "$file" ]]; then echo "Missing required file: $file" >&2; exit 3; fi
 done
+# Normalize asset paths BEFORE switching to the repository root.
+CONFIG="$(realpath "$CONFIG")"
+BEAM_DUMP="$(realpath "$BEAM_DUMP")"
+TIGER_CKPT="$(realpath "$TIGER_CKPT")"
+SEM_IDS="$(realpath "$SEM_IDS")"
+GRAPH_DIR="$(realpath "$GRAPH_DIR")"
 mkdir -p "$CKPT_DIR" "$LOG_DIR"
+CKPT_DIR="$(realpath "$CKPT_DIR")"
+LOG_DIR="$(realpath "$LOG_DIR")"
 cd "$REPO_ROOT"
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export CUDA_VISIBLE_DEVICES="$DEVICE"
