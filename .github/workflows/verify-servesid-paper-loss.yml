@@ -1,0 +1,24 @@
+name: Verify ServeSID paper loss
+
+on:
+  push:
+    paths:
+      - "ServeSID/**"
+      - ".github/workflows/verify-servesid-paper-loss.yml"
+  pull_request:
+    paths:
+      - "ServeSID/**"
+      - ".github/workflows/verify-servesid-paper-loss.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python syntax
+        run: python -m compileall -q ServeSID/sid_mlp ServeSID/tests
+      - name: Paper objective contract tests
+        run: python -m unittest discover -s ServeSID/tests -p "test_paper_loss_contract.py" -v
