@@ -642,51 +642,39 @@ NDCG@10, rather than using test metrics for selection.
 \textbf{Baselines.} We compare against representative distillation
 objectives: RD and RRD transfer ranking structure; GKD and DistiLLM-2
 provide generation-aware distillation; RCE-KD adapts cross-entropy
-distillation to ranking objectives; SmartGR exploits SID-specific distillation signals. Each method keeps its core supervision principle under the same teacher, tokenizer, backbone, and protocol; adaptations are detailed in the supplementary material. All baseline adaptations use the same next-item evaluation protocol and validation-based checkpoint selection rule. This controls for differences in student architecture and evaluation setup when comparing supervision objectives derived from ranking-based, generation-based, and SID-specific distillation methods.
+distillation to ranking objectives; SmartGR exploits SID-specific distillation signals. Each method keeps its core supervision principle under the same teacher, tokenizer, backbone, and protocol; adaptations are detailed in the supplementary material. Within each student architecture, comparisons retain the same evaluation protocol and backbone.
 
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
 
-Table~\ref{tab:main-all} reports Recall and NDCG for three datasets
-and three fixed student architectures; full author-reported means and
-SDs are provided in the Supplement. Relative to base KD, \method\
-improves NDCG@10 in all nine settings: by 3.7\%, 2.8\%, and 15.4\%
-for Beauty MLP/GRU/CNN; 4.8\%, 12.8\%, and 18.8\% for Toys; and
-3.5\%, 2.6\%, and 10.4\% for Video Games. The strongest relative gain
-occurs on Toys--CNN. Recall@10 also rises from 0.0580 to 0.0686 on
-Beauty--CNN and from 0.0870 to 0.0944 on Video Games--CNN. These
-metrics are computed against held-out next items, rather than teacher
-agreement. Improvements among competing ranking- and
-generation-oriented baselines vary with the dataset and backbone.
-The particularly large CNN gains describe the tested architecture;
-the three backbones do not constitute a controlled capacity series.
-Reported SDs are aggregate summaries and are not used here to claim
-statistical significance.
+Table~\ref{tab:main-all} reports held-out recommendation metrics; full
+mean/SD summaries appear in the Supplement. Compared with base KD,
+\method\ improves NDCG@10 for all nine dataset--student settings:
+3.7\%, 2.8\%, and 15.4\% for Beauty MLP/GRU/CNN; 4.8\%, 12.8\%,
+and 18.8\% for Toys; and 3.5\%, 2.6\%, and 10.4\% for Video Games.
+Recall@10 also increases from 0.0580 to 0.0686 on Beauty--CNN and
+0.0870 to 0.0944 on Video Games--CNN. Gains across other distillation
+baselines vary by architecture and dataset. Larger gains on CNN do
+not establish a general dependence on model capacity. The aggregate
+SDs alone do not substantiate statistical significance.
 
 \subsection{Ablation Study}
 \label{sec:exp-ablation}
 
-Table~\ref{tab:ablation} isolates hierarchical preference alignment
-and decision-attributed depth supervision. HServe-only exceeds
-leaf-only (\emph{d4-only KL}) alignment in all 36
-dataset--student--metric comparisons, supporting explicit multi-depth
-marginal constraints beyond complete-candidate distribution matching.
-For example, NDCG@10 rises from 0.0305 to 0.0320 on Toys--CNN.
-
-The direct complete-pair Softplus control (\emph{HServe + Plain Pair})
-does not consistently improve HServe-only: it improves 11 metrics,
-ties 4, and lowers 21. Unlike this control, DA-CDRS uses the
-complete-pair Softplus function only to construct detached weights
-for depth-wise increment matching; it does not directly optimize
-that pairwise loss. Full \method\ outperforms both Plain Pair and
-uniform depth weighting in all 36 reported metric comparisons.
-On Video Games--GRU, NDCG@10 is 0.0506 for Plain Pair, 0.0510
-for Uniform, and 0.0512 for full \method. Joint training also
-improves on either individual structural objective in every reported
-configuration. These observations support the evaluated weighting
-design over the supplied controls, but do not establish superiority
-over an untested positive-residual weighting rule or prove
-statistical significance without paired run-level evidence.
+Table~\ref{tab:ablation} isolates the two structural objectives.
+HServe-only outperforms leaf-only KL in all 36 reported metric
+comparisons (e.g., Toys--CNN NDCG@10: 0.0320 vs.\ 0.0305).
+Direct Softplus optimization (\emph{HServe + Plain Pair}) does not
+consistently improve HServe-only: 11 metrics improve, 4 tie, and 21
+decline. Full \method\ exceeds both Plain Pair and uniform depth
+weighting in all 36 comparisons; Video Games--GRU NDCG@10 is
+0.0506, 0.0510, and 0.0512, respectively. Unlike Plain Pair,
+DA-CDRS uses Softplus only for detached attribution weights and
+optimizes depth-wise Huber correction, not a direct pairwise loss.
+Full \method\ also exceeds both single-objective variants.
+These comparisons support the tested weighting design but do
+not isolate its advantage over an untested positive-residual
+weighting control or establish statistical significance.
 
 \subsection{Training Cost and Scope}
 \label{sec:exp-cost}
