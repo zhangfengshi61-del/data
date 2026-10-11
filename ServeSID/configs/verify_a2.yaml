@@ -1,0 +1,31 @@
+dataset: Amazon2014
+category: null
+dataset_tag: null
+val_dataset_tag: null
+
+num_heads: 4
+attn_dim: 384
+ffn_dim: 1024
+head_hidden: 512
+head_layers: 1
+dropout: 0.2
+loss: ce
+temperature: 1.0
+alpha: 0.7
+d4_teacher: combined
+
+lr: 5e-5
+weight_decay: 1e-4
+epochs: 200
+batch_size: 512
+val_batch_size: 32
+beam_size: 50
+final_top_n: 50
+grad_clip: 1.0
+storage_fp16: false
+seed: 42
+serve_kl: 0
+list_kl: 4
+list_temp: 1.0
+pair_w: 0.0
+da_w: 0.0

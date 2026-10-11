@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.log
+runs/
+logs/
+ckpt/
+checkpoints/
+outputs/
+cache/
+packed_cache/
+downloaded_models/
+*.pt
+*.pth
+*.ckpt
