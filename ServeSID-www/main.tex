@@ -37,6 +37,13 @@
 \definecolor{secondCell}{HTML}{ECEDEF}
 \definecolor{datasetgray}{RGB}{242,244,247}
 \definecolor{rowAlt}{HTML}{FAFBFC}
+%% Ablation palette: subtle blue (HServe), sand (DA-CDRS), coral (Full).
+%% Backgrounds are intentionally lighter than method-label tags.
+\definecolor{ablHServeTag}{HTML}{DCEAF8}
+\definecolor{ablHServeRow}{HTML}{F3F8FE}
+\definecolor{ablDATag}{HTML}{F9E9C9}
+\definecolor{ablDARow}{HTML}{FFFAF0}
+\definecolor{ablRule}{HTML}{DDE2E9}
 \newcommand{\catrect}[3]{\tikz[baseline=(x.center)]\node[fill=#1,rounded corners=2.1pt,minimum width=72pt,minimum height=#2,align=left,inner sep=1pt,text width=67pt] (x) {\fontsize{6.7}{7.6}\selectfont\bfseries #3};}
 \newcommand{\ablatag}[2]{\tikz[baseline=(x.base)]\node[fill=#1,rounded corners=1.8pt,minimum width=91pt,minimum height=10.5pt,text width=88pt,align=left,inner sep=1pt] (x) {\fontsize{6.8}{7.8}\selectfont #2};}
 \newcommand{\second}[1]{\tikz[baseline=(x.base)]\node[fill=secondCell,rounded corners=1.2pt,minimum width=25pt,minimum height=9pt,inner sep=0pt] (x) {#1};}

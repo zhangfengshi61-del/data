@@ -31,9 +31,9 @@ This document adapts principles from six publicly available paper-layout Skills 
 
 - Table 1: `Figures/table_main_results.tex` (8 methods × 3 datasets) and Table 2: `Figures/table_ablation.tex` (7 arms × 3 datasets).
 - **Both are generated from** `scripts/gen_tables.py`. Any table typography change must update the generator and committed `.tex` consistently.
-- Preserve 4-decimal means, 5-decimal reported SDs, grouping, and tie-aware highlighting. The single source for the supplied ablation statistics is `data/ablation_user_supplied_mean_sd.csv`; never silently alter numerical entries.
+- Keep 4-decimal means in **both body tables**, with all reported SDs in the two full Supplement tables only. The mean-only body ablation groups HServe-related controls in soft blue, DA-CDRS-related controls in soft gold, and Full in coral, separated by pale rules. Preserve tie-aware highlighting. The ablation SD source is `data/ablation_user_supplied_mean_sd.csv`; never silently alter numerical entries.
 - Color is supportive only: best is bold, second-best gray, full ServeSID coral, and group labels show the method family in words.
-- Provenance (2026-10-11): the author confirms 288 main-table and 252 ablation mean/SD entries as real results. Raw per-seed logs and checkpoint IDs remain to be linked for independent replication. The main and ablation SDs disagree for 67 of 72 duplicate Base-KD / Full metrics; keep both sources unchanged until reconciled.
+- Provenance (2026-10-11): the author confirms 288 main-table and 252 ablation mean/SD entries as reported results. Raw per-seed logs and checkpoint IDs remain to be linked for independent replication. Duplicate Base-KD/Full SDs have already been reconciled to the second (ablation) summary; `scripts/gen_tables.py` enforces all 72 shared cells.
 
 ## Mandatory checks after any layout change
 
