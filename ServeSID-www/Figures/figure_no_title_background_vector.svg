@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1950" height="690" viewBox="0 0 1950 690">
+<svg xmlns="http://www.w3.org/2000/svg" width="1950" height="740" viewBox="0 0 1950 740">
 <defs><linearGradient id="blue" x2="0" y2="1"><stop offset="0%" stop-color="#2F83C6"/><stop offset="100%" stop-color="#1F73B4"/></linearGradient><linearGradient id="orange" x2="0" y2="1"><stop offset="0%" stop-color="#FF962E"/><stop offset="100%" stop-color="#FF8518"/></linearGradient><marker id="counterArrow" markerWidth="8" markerHeight="8" refX="6.2" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#7995B6" stroke-width="1.4"/></marker></defs>
-<rect width="1950" height="690" fill="white"/>
+<rect width="1950" height="740" fill="white"/>
 <text x="525" y="43" font-family="Times New Roman, Liberation Serif, serif" font-size="32" fill="#1B273A" text-anchor="middle" font-weight="bold">(a) Local token vs. candidate fit</text>
 <text x="1550" y="43" font-family="Times New Roman, Liberation Serif, serif" font-size="32" fill="#1B273A" text-anchor="middle" font-weight="bold">(b) Preferred-prefix disagreement</text>
 <rect x="140" y="77" width="17" height="17" rx="2" fill="#287BBA"/>
@@ -169,20 +169,32 @@
 <text x="1904" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >CNN</text>
 <line x1="1455.50" y1="142" x2="1455.50" y2="568" stroke="#D5DFE9" stroke-width="1.3" stroke-dasharray="5 7"/>
 <line x1="1700.50" y1="142" x2="1700.50" y2="568" stroke="#D5DFE9" stroke-width="1.3" stroke-dasharray="5 7"/>
-<text x="975" y="658" font-family="Times New Roman, Liberation Serif, serif" font-size="20" fill="#6B7888" text-anchor="middle" >Truncated y-axes: KL begins at 0.06; disagreement begins at 10%. Values are shown above every bar.</text>
+
 <!-- Restored VG teacher-student counterexample; compact annotation stays in panel (a) -->
-<g id="vg-counterexample" font-family="Times New Roman, Liberation Serif, serif">
-<path d="M790 264 L770 280 M932 264 L933 280 M770 346 Q774 374 790 409 M933 346 Q910 379 895 411" fill="none" stroke="#88A0C1" stroke-width="2" marker-end="url(#counterArrow)"/>
-<rect x="695" y="157" width="316" height="107" rx="10" fill="#F5F8FD" stroke="#86A1C5" stroke-width="1.7"/>
-<text x="708" y="182" font-size="20" font-weight="bold" fill="#223B60">Counterexample: lower local</text>
-<text x="708" y="205" font-size="20" fill="#223B60">token KL does not necessarily</text>
-<text x="708" y="228" font-size="20" fill="#223B60">imply lower complete-candidate</text>
-<text x="708" y="251" font-size="20" fill="#223B60">KL.</text>
-<rect x="695" y="280" width="151" height="66" rx="8" fill="#F9FBFF" stroke="#91AACB" stroke-width="1.6"/>
-<rect x="855" y="280" width="156" height="66" rx="8" fill="#F9FBFF" stroke="#91AACB" stroke-width="1.6"/>
-<text x="770" y="306" text-anchor="middle" font-size="21" font-weight="bold" fill="#263D60">VG-MLP:</text>
-<text x="933" y="306" text-anchor="middle" font-size="21" font-weight="bold" fill="#263D60">VG-GRU:</text>
-<text x="770" y="332" text-anchor="middle" font-size="19"><tspan fill="#1F73B4">0.0882</tspan><tspan fill="#64748B"> / </tspan><tspan fill="#D07313">0.0768</tspan></text>
-<text x="933" y="332" text-anchor="middle" font-size="19"><tspan fill="#1F73B4">0.0827</tspan><tspan fill="#64748B"> / </tspan><tspan fill="#D07313">0.1020</tspan></text>
+
+
+<!-- Figure 2 annotation row: never overlaps the plotting regions (plot baseline y=519). -->
+<g id="counterexample-footer" font-family="Times New Roman, Liberation Serif, serif">
+  <rect x="94" y="628" width="929" height="88" rx="10" fill="#F5F8FD" stroke="#A7BDD8" stroke-width="1.55"/>
+  <rect x="94" y="628" width="6" height="88" rx="3" fill="#6F96C6"/>
+  <text x="116" y="651" font-size="20" fill="#263F62" font-weight="bold">Counterexample</text>
+  <text x="116" y="676" font-size="18.5" fill="#344964">Lower local token KL does not necessarily</text>
+  <text x="116" y="699" font-size="18.5" fill="#344964">imply lower complete-candidate KL.</text>
+  <line x1="558" y1="640" x2="558" y2="703" stroke="#C4D2E3" stroke-width="1.6"/>
+  <rect x="582" y="641" width="193" height="61" rx="8" fill="#FFFFFF" stroke="#C6D7EB" stroke-width="1.2"/>
+  <rect x="795" y="641" width="205" height="61" rx="8" fill="#FFFFFF" stroke="#C6D7EB" stroke-width="1.2"/>
+  <text x="678.5" y="661" text-anchor="middle" font-size="19.5" fill="#243F64" font-weight="bold">VG-MLP</text>
+  <text x="897.5" y="661" text-anchor="middle" font-size="19.5" fill="#243F64" font-weight="bold">VG-GRU</text>
+  <text x="678.5" y="686" text-anchor="middle" font-size="19.0"><tspan fill="#1F73B4">0.0882</tspan><tspan fill="#728197"> / </tspan><tspan fill="#C26D16">0.0768</tspan></text>
+  <text x="897.5" y="686" text-anchor="middle" font-size="19.0"><tspan fill="#1F73B4">0.0827</tspan><tspan fill="#728197"> / </tspan><tspan fill="#C26D16">0.1020</tspan></text>
+  <text x="678.5" y="708" text-anchor="middle" font-size="13.5" fill="#5F7289">Token / Candidate</text>
+  <text x="897.5" y="708" text-anchor="middle" font-size="13.5" fill="#5F7289">Token / Candidate</text>
+</g>
+<!-- Scale information is outside both plotting regions. -->
+<g id="scale-note-footer" font-family="Times New Roman, Liberation Serif, serif">
+  <rect x="1206" y="628" width="721" height="88" rx="10" fill="#F8FAFC" stroke="#D5E0EA" stroke-width="1.35"/>
+  <text x="1226" y="655" font-size="19.5" fill="#354960" font-weight="bold">Scale note</text>
+  <text x="1226" y="680" font-size="18.8" fill="#52657B">Axes are truncated: KL starts at 0.06;</text>
+  <text x="1226" y="704" font-size="18.8" fill="#52657B">disagreement starts at 10%. Data unchanged.</text>
 </g>
 </svg>
