@@ -56,7 +56,8 @@ with fitz.open(pdf) as doc:
     (pdf.parent/"layout_audit.txt").write_text(report)
     render=pdf.parent/"layout_previews"
     render.mkdir(exist_ok=True)
-    for idx in [0,3,6,7]:
+    # Render every body/figure/table page to support actual visual review.
+    for idx in range(min(total, 10)):
         if idx<total:
             pix=doc[idx].get_pixmap(matrix=fitz.Matrix(1.6,1.6),alpha=False)
             pix.save(render/f"page-{idx+1}.png")
