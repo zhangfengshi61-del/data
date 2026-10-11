@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="883" viewBox="0 58 1672 883">
   <title>Local matching can help or hurt the same item pair</title>
   <desc>Vector DA motivation diagram. Corrected the Student j fourth-step conditional probability from 0.050 to 0.500. Other labels, scores, rankings, layout, typography and gradients are unchanged. Values are illustrative, not measured experimental results.</desc>
   <defs>
@@ -183,7 +183,6 @@
     </clipPath>
   </defs>
   <rect x="0" y="0" width="1672" height="941" rx="0" fill="white"/>
-  <text x="20" y="36" font-family="Liberation Serif, Times New Roman, serif" font-size="28" fill="#172230" font-weight="bold" font-style="normal" text-anchor="start">Local matching can help or hurt the same item pair</text>
   <path d="M552,84 L552,887" fill="none" stroke="#C2D4EB" stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
   <path d="M573,365 L1630,365" fill="none" stroke="#C2D4EB" stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
   <path d="M573,647 L1630,647" fill="none" stroke="#C2D4EB" stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
