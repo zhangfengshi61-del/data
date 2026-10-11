@@ -24,7 +24,17 @@ with fitz.open(pdf) as doc:
                     body_end = int(mat.group(1))
                 break
     pass_body = body_end is not None and body_end <= 8
-    ok = pass_body and total <= 12
+    table_pages = {}
+    for k in (1, 2):
+        table_pages[k] = next((i+1 for i, t in enumerate(txt)
+                               if f"Table {k}:" in t), None)
+    figure_pages = {}
+    for k in range(1, 6):
+        figure_pages[k] = next((i+1 for i, t in enumerate(txt)
+                                if f"Figure {k}:" in t), None)
+    all_floats_in_first_8 = all(p is not None and p <= 8 for p in list(table_pages.values()) + list(figure_pages.values()))
+    references_follow_tables = ref_page is not None and all(p is not None and p < ref_page for p in table_pages.values())
+    ok = pass_body and total <= 12 and all_floats_in_first_8 and references_follow_tables
     out = [
         "WWW 2027 Research Track layout audit",
         "Source: official www2027.thewebconf.org/research-track-papers/",
@@ -33,6 +43,10 @@ with fitz.open(pdf) as doc:
         f"Body last page via LaTeX source label: {body_end or 'NOT DETECTED'}",
         f"All non-reference body content <= page 8: {'PASS' if pass_body else 'FAIL'}",
         f"Method overview caption detected on page: {method_page or 'NOT DETECTED'}",
+        f"Table caption pages: {table_pages}",
+        f"Figure caption pages: {figure_pages}",
+        f"References appear after all main tables: {'PASS' if references_follow_tables else 'FAIL'}",
+        f"All five figures and both tables fit in first 8 pages: {'PASS' if all_floats_in_first_8 else 'FAIL'}",
         f"Total page limit: {'PASS' if total<=12 else 'FAIL'}",
         f"OVERALL: {'PASS' if ok else 'FAIL'}",
         "Check first eight pages visually; this does not validate experimental numbers.",
