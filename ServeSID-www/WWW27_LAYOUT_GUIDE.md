@@ -22,7 +22,7 @@ Source: https://www2027.thewebconf.org/research-track-papers/
 - Do not automatically suppress technical content or shrink ACM font/line spacing to hit the limit.
 
 ## Before submission (scientific validity, separate from typesetting)
-- Cross-check all reported ablation means and five-decimal SDs against real `42/43/44` seed outputs and checkpoints from the paper-aligned **no-direct-pair-anchor Full** configuration. The current 252 aggregate values are author-supplied and include three Base-KD/MLP sets expressly identified as simulation-adjusted.
+- Verify that the author-confirmed 288 main and 252 ablation mean/SD records correspond to the `42/43/44` run artifacts, especially the corrected no-direct-pair-anchor Full objective. There are 67/72 duplicate Base-KD / Full SD discrepancies between main and ablation summaries awaiting reconciliation.
 - Supply the final main method figure PDF, inspect it in the compiled paper, and check all figure captions/references.
 - Require run-level metrics, checkpoint IDs, dataset split manifests and matching configurations before claiming measured statistical significance or fully reproducible improvements.
 - Verify all bib entries, anonymity and metadata, accessible color contrast, and supporting diagnostic logs.
