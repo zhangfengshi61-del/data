@@ -68,10 +68,10 @@ each SID depth with lightweight heads:
 \item \textbf{CNN}: embedding dimension 256, 1.753M trainable parameters.
 \end{itemize}
 
-\noindent\emph{Caveat:} the GRU/CNN runs used slightly different
-parameter budgets than the MLP due to a launch-script issue; a
-strictly matched rerun is planned and will be reported in the final
-version.
+\noindent\emph{Architecture comparison:} the MLP, GRU, and CNN students
+have different parameter budgets, so cross-architecture scores should
+not be interpreted as capacity-matched comparisons. Within each
+architecture, the method comparisons use its fixed student backbone.
 
 Students decode with constrained beam search of width $W=50$
 (top-50); the TIGER teacher reference is decoded with beam 20 (the
