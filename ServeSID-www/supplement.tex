@@ -14,7 +14,7 @@
 
 \settopmatter{printacmref=false, printccs=false, printfolios=true}
 
-\title{\method: Hierarchy-Aligned and Direction-Aware Knowledge
+\title{\method: Hierarchy-Aligned and Decision-Attributed Knowledge
 Distillation for Semantic-ID Generative Recommendation\\
 Supplementary Material}
 
@@ -84,8 +84,9 @@ $K_{\mathrm{tr}}=10$, maximum outsider rank $B=40$, online beam
 $W=50$, HServe weight $\lambda_H=4$, DA-CDRS weight $\lambda_D=1$,
 depth weights $\alpha_d=1$ for $d=1,\dots,L$, pair margin $\mu=.05$,
 increment-correction weight $\lambda_{\mathrm{corr}}=31.42$, learning
-rate $5\times10^{-5}$, seeds $\{42,43,44\}$. All reported numbers are
-three-seed means. Teacher supports, marginals, pairs, and increment
+rate $5\times10^{-5}$, seeds $\{42,43,44\}$. The draft tables have not yet been verified
+against the no-direct-pair-anchor checkpoints and should not be
+interpreted as validated three-seed means. Teacher supports, marginals, pairs, and increment
 scales are built from training requests only; validation/test teacher
 outputs never enter optimization.
 
@@ -107,6 +108,22 @@ are defined in the main paper (Section~6.3).
 
 \input{Figures/table_supp_ablation.tex}
 
+\section{Diagnostic Metrics and Protocol}
+\label{sec:sup-diagnostics}
+
+We evaluate diagnostics on 10,000 held-out requests per domain
+using teacher-proposed top-40 valid SIDs as a common support.
+For each prefix depth, preferred-prefix disagreement is the fraction
+of requests where teacher and student select different groups of
+maximum aggregated probability. Mixed-sign pairs have at least one
+positive and one negative residual among eligible depths from the
+first SID divergence through $L-1$. We also report the fractions with
+at least two positive residuals and with a negative largest-magnitude
+residual. The cancellation ratio summarizes cancellation between
+positive and negative signed depth residuals; the exact aggregation,
+zero-residual handling, and tie-breaking protocol must be checked
+against the diagnostic implementation before final submission.
+
 \section{Reproducibility Notes}
 \label{sec:sup-repro}
 
@@ -117,7 +134,9 @@ is the Jaccard between the student's beam-50 top-$K$ list and the
 teacher's beam-20 top-$K$ list.
 \item The base student (SID-MLP / base KD) minimizes ground-truth SID
 cross-entropy plus gold-prefix token KL (Eq.~2 of the main paper).
-ServeSID replaces the token KL with HServe and DA-CDRS.
+ServeSID replaces token KL with HServe and DA-CDRS. The
+complete-pair Softplus function is used only to calculate detached
+DA attribution weights; no direct pairwise anchor loss is optimized.
 \item Held-out diagnostic pairs (teacher ranks $1{:}K$ vs.\
 $K{+}1{:}B$) are used only for mechanism statistics and never enter
 optimization.
