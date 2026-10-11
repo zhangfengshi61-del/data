@@ -1,0 +1,126 @@
+%% ServeSID -- WWW submission -- Supplementary Material
+%% Compile together with main.tex in the same folder.
+
+\documentclass[sigconf, anonymous]{acmart}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
+\newcommand{\method}{\textsc{ServeSID}}
+
+\settopmatter{printacmref=false, printccs=false, printfolios=true}
+
+\title{\method: Hierarchy-Aligned and Direction-Aware Knowledge
+Distillation for Semantic-ID Generative Recommendation\\
+Supplementary Material}
+
+\author{Anonymous Author(s)}
+\affiliation{%
+  \institution{Anonymous Institution}
+  \city{Anonymous City}
+  \country{Anonymous Country}
+}
+\email{anonymous@example.com}
+
+\renewcommand{\shortauthors}{Anonymous}
+
+\begin{document}
+
+\maketitle
+
+\section{Dataset Statistics}
+\label{sec:sup-datasets}
+
+\TODO{fill in the Beauty/Toys/Video Games statistics (users, items,
+interactions, average sequence length, number of valid SIDs) in the
+same style as the previous submission.}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Dataset & \#Users & \#Items & \#Interactions & Avg.\ len. \\
+\midrule
+Amazon Beauty 2014 & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
+Amazon Toys 2014   & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
+Video Games 2023   & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
+\bottomrule
+\end{tabular}
+\caption{Dataset statistics.}
+\label{tab:sup-stats}
+\end{table}
+
+\section{Implementation and Hyperparameters}
+\label{sec:sup-hyper}
+
+All methods share the same fixed TIGER teacher checkpoint, RQ-VAE
+tokenizer, and four-token SID space with codebook size 256. The
+three student backbones encode the last 20 interactions and score
+each SID depth with lightweight heads:
+
+\begin{itemize}
+\item \textbf{MLP}: 1.664M trainable parameters;
+\item \textbf{GRU}: hidden size 384, 1.201M trainable parameters;
+\item \textbf{CNN}: embedding dimension 256, 1.753M trainable parameters.
+\end{itemize}
+
+\noindent\emph{Caveat:} the GRU/CNN runs used slightly different
+parameter budgets than the MLP due to a launch-script issue; a
+strictly matched rerun is planned and will be reported in the final
+version.
+
+Students decode with constrained beam search of width $W=50$
+(top-50); the TIGER teacher reference is decoded with beam 20 (the
+genrec default) and is reported for scale only, since the absolute
+values are not directly comparable across beam widths.
+
+ServeSID hyperparameters: support size $M=64$, training cutoff
+$K_{\mathrm{tr}}=10$, maximum outsider rank $B=40$, online beam
+$W=50$, HServe weight $\lambda_H=4$, DA-CDRS weight $\lambda_D=1$,
+depth weights $\alpha_d=1$ for $d=1,\dots,L$, pair margin $\mu=.05$,
+increment-correction weight $\lambda_{\mathrm{corr}}=31.42$, learning
+rate $5\times10^{-5}$, seeds $\{42,43,44\}$. All reported numbers are
+three-seed means. Teacher supports, marginals, pairs, and increment
+scales are built from training requests only; validation/test teacher
+outputs never enter optimization.
+
+\section{Full Main-Result Tables}
+\label{sec:sup-main}
+
+Tables~\ref{tab:supp-utility-Beauty}--\ref{tab:supp-jac-VG} give the
+full per-dataset metrics (R@5, N@5, R@10, N@10) and teacher-agreement
+(Jac@5, Jac@10) for all methods and students.
+
+\input{Figures/table_supp_main.tex}
+
+\section{Full Ablation Tables}
+\label{sec:sup-ablation}
+
+Tables~\ref{tab:supp-ablation-Beauty}--\ref{tab:supp-ablation-VG} give
+all six metrics for every ablation arm on each dataset. Ablation arms
+are defined in the main paper (Section~6.3).
+
+\input{Figures/table_supp_ablation.tex}
+
+\section{Reproducibility Notes}
+\label{sec:sup-repro}
+
+\begin{itemize}
+\item Evaluation: next-item utility is Recall@$K$ and NDCG@$K$ under
+leave-one-out on the held-out interaction; teacher-agreement Jac@$K$
+is the Jaccard between the student's beam-50 top-$K$ list and the
+teacher's beam-20 top-$K$ list.
+\item The base student (SID-MLP / base KD) minimizes ground-truth SID
+cross-entropy plus gold-prefix token KL (Eq.~2 of the main paper).
+ServeSID replaces the token KL with HServe and DA-CDRS.
+\item Held-out diagnostic pairs (teacher ranks $1{:}K$ vs.\
+$K{+}1{:}B$) are used only for mechanism statistics and never enter
+optimization.
+\end{itemize}
+
+\end{document}

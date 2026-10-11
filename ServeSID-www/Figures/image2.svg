@@ -1,0 +1,888 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <title>Local matching can help or hurt the same item pair</title>
+  <desc>Vector DA motivation diagram. Corrected the Student j fourth-step conditional probability from 0.050 to 0.500. Other labels, scores, rankings, layout, typography and gradients are unchanged. Values are illustrative, not measured experimental results.</desc>
+  <defs>
+    <linearGradient id="node_blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#F7FBFF"/>
+      <stop offset="1" stop-color="#C5DBF4"/>
+    </linearGradient>
+    <linearGradient id="node_orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#FFF9EE"/>
+      <stop offset="1" stop-color="#F9D899"/>
+    </linearGradient>
+    <linearGradient id="node_green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#F8FCF3"/>
+      <stop offset="1" stop-color="#CEE4B6"/>
+    </linearGradient>
+    <linearGradient id="node_red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#FFF8F6"/>
+      <stop offset="1" stop-color="#F0BFBA"/>
+    </linearGradient>
+    <linearGradient id="node_gray" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#F8F9FB"/>
+      <stop offset="1" stop-color="#E4E9EF"/>
+    </linearGradient>
+    <linearGradient id="teacher" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0" stop-color="#F8FCF3"/>
+      <stop offset="1" stop-color="#CEE4B6"/>
+    </linearGradient>
+    <linearGradient id="student" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0" stop-color="#FFF8F6"/>
+      <stop offset="1" stop-color="#F0BFBA"/>
+    </linearGradient>
+    <linearGradient id="ribbon_blue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0" stop-color="#F0F2F5"/>
+      <stop offset="0.25" stop-color="#E3EEFD"/>
+      <stop offset="1" stop-color="#D3E5FC"/>
+    </linearGradient>
+    <linearGradient id="ribbon_green" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0" stop-color="#F1F4EE"/>
+      <stop offset="0.25" stop-color="#E9F3DF"/>
+      <stop offset="1" stop-color="#D2E8BF"/>
+    </linearGradient>
+    <linearGradient id="ribbon_orange" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0" stop-color="#F4F1EC"/>
+      <stop offset="0.25" stop-color="#FFF0D8"/>
+      <stop offset="1" stop-color="#FFE5BA"/>
+    </linearGradient>
+    <linearGradient id="ribbon_red" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0" stop-color="#F2F1F0"/>
+      <stop offset="0.25" stop-color="#FAE6E2"/>
+      <stop offset="1" stop-color="#F5CCC6"/>
+    </linearGradient>
+    <linearGradient id="path_blue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0" stop-color="#F2F6FC"/>
+      <stop offset="0.35" stop-color="#E5EFFF"/>
+      <stop offset="1" stop-color="#D3E5FD"/>
+    </linearGradient>
+    <linearGradient id="path_orange" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0" stop-color="#F8F5EF"/>
+      <stop offset="0.35" stop-color="#FFF2DD"/>
+      <stop offset="1" stop-color="#FFE5B5"/>
+    </linearGradient>
+    <clipPath id="cell_clip_1">
+      <rect x="50" y="158" width="46" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_2">
+      <rect x="119" y="158" width="69" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_3">
+      <rect x="211" y="158" width="102" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_4">
+      <rect x="329" y="158" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_5">
+      <rect x="50" y="254" width="46" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_6">
+      <rect x="119" y="254" width="69" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_7">
+      <rect x="211" y="254" width="102" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_8">
+      <rect x="329" y="254" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_9">
+      <rect x="50" y="511" width="46" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_10">
+      <rect x="119" y="511" width="69" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_11">
+      <rect x="211" y="511" width="102" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_12">
+      <rect x="329" y="511" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_13">
+      <rect x="50" y="608" width="46" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_14">
+      <rect x="119" y="608" width="69" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_15">
+      <rect x="211" y="608" width="102" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_16">
+      <rect x="329" y="608" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_17">
+      <rect x="632" y="154" width="43" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_18">
+      <rect x="769" y="154" width="74" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_19">
+      <rect x="932" y="154" width="112" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_20">
+      <rect x="1112" y="154" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_21">
+      <rect x="632" y="251" width="43" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_22">
+      <rect x="769" y="251" width="74" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_23">
+      <rect x="932" y="251" width="112" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_24">
+      <rect x="1112" y="251" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_25">
+      <rect x="632" y="441" width="43" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_26">
+      <rect x="769" y="441" width="74" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_27">
+      <rect x="932" y="441" width="112" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_28">
+      <rect x="1112" y="441" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_29">
+      <rect x="632" y="538" width="43" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_30">
+      <rect x="769" y="538" width="74" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_31">
+      <rect x="932" y="538" width="112" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_32">
+      <rect x="1112" y="538" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_33">
+      <rect x="632" y="720" width="43" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_34">
+      <rect x="769" y="720" width="74" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_35">
+      <rect x="932" y="720" width="112" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_36">
+      <rect x="1112" y="720" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_37">
+      <rect x="632" y="813" width="43" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_38">
+      <rect x="769" y="813" width="74" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_39">
+      <rect x="932" y="813" width="112" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+    <clipPath id="cell_clip_40">
+      <rect x="1112" y="813" width="128" height="29" rx="4.3" fill="none"/>
+    </clipPath>
+  </defs>
+  <rect x="0" y="0" width="1672" height="941" rx="0" fill="white"/>
+  <text x="20" y="36" font-family="Liberation Serif, Times New Roman, serif" font-size="28" fill="#172230" font-weight="bold" font-style="normal" text-anchor="start">Local matching can help or hurt the same item pair</text>
+  <path d="M552,84 L552,887" fill="none" stroke="#C2D4EB" stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
+  <path d="M573,365 L1630,365" fill="none" stroke="#C2D4EB" stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
+  <path d="M573,647 L1630,647" fill="none" stroke="#C2D4EB" stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
+  <rect x="20" y="94" width="504" height="30" rx="6" fill="url(#teacher)"/>
+  <text x="272.0" y="116.5" font-family="Liberation Serif, Times New Roman, serif" font-size="23" fill="#172230" font-weight="bold" font-style="normal" text-anchor="middle">Teacher</text>
+  <rect x="20" y="446" width="504" height="31" rx="6" fill="url(#student)"/>
+  <text x="272.0" y="469.25" font-family="Liberation Serif, Times New Roman, serif" font-size="23" fill="#172230" font-weight="bold" font-style="normal" text-anchor="middle">Student</text>
+  <g id="teacher-pair">
+    <path d="M40,172 C54,142 110,146 146,148 C225,151 382,146 430,145 Q457,145 457,152 L457,211 C382,219 177,216 113,214 Q47,212 40,172 Z" fill="url(#path_blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40,268 C54,238 110,242 146,244 C225,247 382,242 430,241 Q457,241 457,248 L457,307 C382,315 177,312 113,310 Q47,308 40,268 Z" fill="url(#path_orange)" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="32" cy="220.5" r="1.2" fill="#98A0AA"/>
+    <path d="M32,220.5 C41.36,220.5 40.64,172.5 50,172.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M45.5,170.79 L50,172.5 L45.5,174.21 L46.85,172.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M96,172.5 L119,172.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M114.2,170.676 L119,172.5 L114.2,174.324 L115.64,172.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M188,172.5 L211,172.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M206.2,170.676 L211,172.5 L206.2,174.324 L207.64,172.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M313,172.5 L329,172.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M324.2,170.676 L329,172.5 L324.2,174.324 L325.64,172.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_1)">
+        <rect x="49.96" y="158" width="46.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="50" y="158" width="46" height="29" rx="4.3" fill="none" stroke="#89939F" stroke-width="1"/>
+      <text x="73.0" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">1</tspan></text>
+    </g>
+    <text x="73.0" y="208" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#5B6573" font-weight="normal" font-style="italic" text-anchor="middle">0.400</text>
+    <g>
+      <g clip-path="url(#cell_clip_2)">
+        <rect x="118.96" y="158" width="34.58" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="153.46" y="158" width="34.58" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="119" y="158" width="69" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M153.500,160.4 V184.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="136.25" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="170.75" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">1</tspan></text>
+    </g>
+    <text x="153.5" y="208" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.510</text>
+    <g>
+      <g clip-path="url(#cell_clip_3)">
+        <rect x="210.96" y="158" width="34.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="244.96" y="158" width="34.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="278.96" y="158" width="34.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="211" y="158" width="102" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M245.000,160.4 V184.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M279.000,160.4 V184.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="228.0" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="262.0" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="296.0" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.42" font-size="12.24">1</tspan></text>
+    </g>
+    <text x="262.0" y="208" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_4)">
+        <rect x="328.96" y="158" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="360.96" y="158" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="392.96" y="158" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="424.96" y="158" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="329" y="158" width="128" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M361.000,160.4 V184.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M393.000,160.4 V184.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M425.000,160.4 V184.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="345.0" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="377.0" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="409.0" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="441.0" y="177.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.42" font-size="12.24">1</tspan></text>
+    </g>
+    <text x="393.0" y="208" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="467" y="180" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#2A608F" font-weight="bold" font-style="italic" text-anchor="start">i 0.051</text>
+    <path d="M32,220.5 C41.36,220.5 40.64,268.5 50,268.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M45.5,266.79 L50,268.5 L45.5,270.21 L46.85,268.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M96,268.5 L119,268.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M114.2,266.676 L119,268.5 L114.2,270.324 L115.64,268.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M188,268.5 L211,268.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M206.2,266.676 L211,268.5 L206.2,270.324 L207.64,268.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M313,268.5 L329,268.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M324.2,266.676 L329,268.5 L324.2,270.324 L325.64,268.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_5)">
+        <rect x="49.96" y="254" width="46.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="50" y="254" width="46" height="29" rx="4.3" fill="none" stroke="#89939F" stroke-width="1"/>
+      <text x="73.0" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">2</tspan></text>
+    </g>
+    <text x="73.0" y="304" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#5B6573" font-weight="normal" font-style="italic" text-anchor="middle">0.400</text>
+    <g>
+      <g clip-path="url(#cell_clip_6)">
+        <rect x="118.96" y="254" width="34.58" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="153.46" y="254" width="34.58" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="119" y="254" width="69" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M153.500,256.4 V280.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="136.25" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="170.75" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">2</tspan></text>
+    </g>
+    <text x="153.5" y="304" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_7)">
+        <rect x="210.96" y="254" width="34.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="244.96" y="254" width="34.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="278.96" y="254" width="34.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="211" y="254" width="102" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M245.000,256.4 V280.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M279.000,256.4 V280.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="228.0" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="262.0" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="296.0" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.42" font-size="12.24">2</tspan></text>
+    </g>
+    <text x="262.0" y="304" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_8)">
+        <rect x="328.96" y="254" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="360.96" y="254" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="392.96" y="254" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="424.96" y="254" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="329" y="254" width="128" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M361.000,256.4 V280.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M393.000,256.4 V280.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M425.000,256.4 V280.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="345.0" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="377.0" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="409.0" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="441.0" y="273.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.42" font-size="12.24">2</tspan></text>
+    </g>
+    <text x="393.0" y="304" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="467" y="276" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#996419" font-weight="bold" font-style="italic" text-anchor="start">j 0.050</text>
+  </g>
+  <g id="student-pair">
+    <path d="M40,525 C54,495 110,499 146,501 C225,504 382,499 430,498 Q457,498 457,505 L457,564 C382,572 177,569 113,567 Q47,565 40,525 Z" fill="url(#path_blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40,622 C54,592 110,596 146,598 C225,601 382,596 430,595 Q457,595 457,602 L457,661 C382,669 177,666 113,664 Q47,662 40,622 Z" fill="url(#path_orange)" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="32" cy="574.0" r="1.2" fill="#98A0AA"/>
+    <path d="M32,574.0 C41.36,574.0 40.64,525.5 50,525.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M45.5,523.79 L50,525.5 L45.5,527.21 L46.85,525.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M96,525.5 L119,525.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M114.2,523.676 L119,525.5 L114.2,527.324 L115.64,525.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M188,525.5 L211,525.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M206.2,523.676 L211,525.5 L206.2,527.324 L207.64,525.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M313,525.5 L329,525.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M324.2,523.676 L329,525.5 L324.2,527.324 L325.64,525.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_9)">
+        <rect x="49.96" y="511" width="46.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="50" y="511" width="46" height="29" rx="4.3" fill="none" stroke="#89939F" stroke-width="1"/>
+      <text x="73.0" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">1</tspan></text>
+    </g>
+    <text x="73.0" y="561" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#5B6573" font-weight="normal" font-style="italic" text-anchor="middle">0.490</text>
+    <g>
+      <g clip-path="url(#cell_clip_10)">
+        <rect x="118.96" y="511" width="34.58" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="153.46" y="511" width="34.58" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="119" y="511" width="69" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M153.500,513.4 V537.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="136.25" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="170.75" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">1</tspan></text>
+    </g>
+    <text x="153.5" y="561" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.460</text>
+    <g>
+      <g clip-path="url(#cell_clip_11)">
+        <rect x="210.96" y="511" width="34.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="244.96" y="511" width="34.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="278.96" y="511" width="34.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="211" y="511" width="102" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M245.000,513.4 V537.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M279.000,513.4 V537.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="228.0" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="262.0" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="296.0" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.42" font-size="12.24">1</tspan></text>
+    </g>
+    <text x="262.0" y="561" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.435</text>
+    <g>
+      <g clip-path="url(#cell_clip_12)">
+        <rect x="328.96" y="511" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="360.96" y="511" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="392.96" y="511" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="424.96" y="511" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="329" y="511" width="128" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M361.000,513.4 V537.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M393.000,513.4 V537.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M425.000,513.4 V537.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="345.0" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="377.0" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="409.0" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.42" font-size="12.24">1</tspan></text>
+      <text x="441.0" y="530.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.42" font-size="12.24">1</tspan></text>
+    </g>
+    <text x="393.0" y="561" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="467" y="533" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#2A608F" font-weight="bold" font-style="italic" text-anchor="start">i 0.049</text>
+    <path d="M32,574.0 C41.36,574.0 40.64,622.5 50,622.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M45.5,620.79 L50,622.5 L45.5,624.21 L46.85,622.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M96,622.5 L119,622.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M114.2,620.676 L119,622.5 L114.2,624.324 L115.64,622.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M188,622.5 L211,622.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M206.2,620.676 L211,622.5 L206.2,624.324 L207.64,622.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M313,622.5 L329,622.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M324.2,620.676 L329,622.5 L324.2,624.324 L325.64,622.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_13)">
+        <rect x="49.96" y="608" width="46.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="50" y="608" width="46" height="29" rx="4.3" fill="none" stroke="#89939F" stroke-width="1"/>
+      <text x="73.0" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">2</tspan></text>
+    </g>
+    <text x="73.0" y="658" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#5B6573" font-weight="normal" font-style="italic" text-anchor="middle">0.416</text>
+    <g>
+      <g clip-path="url(#cell_clip_14)">
+        <rect x="118.96" y="608" width="34.58" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="153.46" y="608" width="34.58" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="119" y="608" width="69" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M153.500,610.4 V634.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="136.25" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="170.75" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">2</tspan></text>
+    </g>
+    <text x="153.5" y="658" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_15)">
+        <rect x="210.96" y="608" width="34.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="244.96" y="608" width="34.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="278.96" y="608" width="34.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="211" y="608" width="102" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M245.000,610.4 V634.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M279.000,610.4 V634.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="228.0" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="262.0" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="296.0" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.42" font-size="12.24">2</tspan></text>
+    </g>
+    <text x="262.0" y="658" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_16)">
+        <rect x="328.96" y="608" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="360.96" y="608" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="392.96" y="608" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="424.96" y="608" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="329" y="608" width="128" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M361.000,610.4 V634.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M393.000,610.4 V634.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M425.000,610.4 V634.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="345.0" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="377.0" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="409.0" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.42" font-size="12.24">2</tspan></text>
+      <text x="441.0" y="627.14" font-family="Liberation Serif, Times New Roman, serif" font-size="18" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.42" font-size="12.24">2</tspan></text>
+    </g>
+    <text x="393.0" y="658" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="467" y="630" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#996419" font-weight="bold" font-style="italic" text-anchor="start">j 0.052</text>
+  </g>
+  <circle cx="537" cy="582" r="1.2" fill="#98A0AA"/>
+  <g id="depth-1-independent-substitution">
+    <text x="600" y="108" font-family="Liberation Serif, Times New Roman, serif" font-size="27" fill="#172230" font-weight="bold" font-style="normal" text-anchor="start">SID layer 1</text>
+    <path d="M622,168 C636,138 692,142 728,144 C807,147 1165,142 1213,141 Q1240,141 1240,148 L1240,207 C1165,215 759,212 695,210 Q629,208 622,168 Z" fill="url(#path_blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M622,265 C636,235 692,239 728,241 C807,244 1165,239 1213,238 Q1240,238 1240,245 L1240,304 C1165,312 759,309 695,307 Q629,305 622,265 Z" fill="url(#path_orange)" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="614" cy="217.0" r="1.2" fill="#98A0AA"/>
+    <path d="M614,217.0 C623.36,217.0 622.64,168.5 632,168.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M627.5,166.79 L632,168.5 L627.5,170.21 L628.85,168.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M675,168.5 L769,168.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M764.2,166.676 L769,168.5 L764.2,170.324 L765.64,168.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M843,168.5 L932,168.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M927.2,166.676 L932,168.5 L927.2,170.324 L928.64,168.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1044,168.5 L1112,168.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1107.2,166.676 L1112,168.5 L1107.2,170.324 L1108.64,168.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_17)">
+        <rect x="631.96" y="154" width="43.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="632" y="154" width="43" height="29" rx="4.3" fill="none" stroke="#7FA263" stroke-width="1"/>
+      <text x="653.5" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <rect x="626.5" y="186" width="54" height="24" rx="4" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="653.5" y="204" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#507636" font-weight="bold" font-style="italic" text-anchor="middle">0.400</text>
+    <rect x="644.5" y="124" width="18" height="20" rx="3" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="653.5" y="139" font-family="Liberation Serif, Times New Roman, serif" font-size="16" fill="#507636" font-weight="normal" font-style="normal" text-anchor="middle">T</text>
+    <path d="M653.5,145 V152" fill="none" stroke="#7FA263" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M651.5,150 L653.5,154 L655.5,150 Z" fill="#7FA263" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_18)">
+        <rect x="768.96" y="154" width="37.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="805.96" y="154" width="37.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="769" y="154" width="74" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M806.000,156.4 V180.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="787.5" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="824.5" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="806.0" y="204" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.460</text>
+    <g>
+      <g clip-path="url(#cell_clip_19)">
+        <rect x="931.96" y="154" width="37.413333333333334" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="969.2933333333334" y="154" width="37.413333333333334" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1006.6266666666667" y="154" width="37.413333333333334" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="932" y="154" width="112" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M969.333,156.4 V180.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1006.667,156.4 V180.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="950.6666666666666" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="988.0" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1025.3333333333333" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="988.0" y="204" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.435</text>
+    <g>
+      <g clip-path="url(#cell_clip_20)">
+        <rect x="1111.96" y="154" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="1143.96" y="154" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1175.96" y="154" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1207.96" y="154" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="1112" y="154" width="128" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M1144.000,156.4 V180.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1176.000,156.4 V180.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1208.000,156.4 V180.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="1128.0" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1160.0" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1192.0" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1224.0" y="173.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="1176.0" y="204" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="1262" y="176" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="start">i</text>
+    <path d="M614,217.0 C623.36,217.0 622.64,265.5 632,265.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M627.5,263.79 L632,265.5 L627.5,267.21 L628.85,265.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M675,265.5 L769,265.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M764.2,263.676 L769,265.5 L764.2,267.324 L765.64,265.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M843,265.5 L932,265.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M927.2,263.676 L932,265.5 L927.2,267.324 L928.64,265.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1044,265.5 L1112,265.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1107.2,263.676 L1112,265.5 L1107.2,267.324 L1108.64,265.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_21)">
+        <rect x="631.96" y="251" width="43.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="632" y="251" width="43" height="29" rx="4.3" fill="none" stroke="#7FA263" stroke-width="1"/>
+      <text x="653.5" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <rect x="626.5" y="283" width="54" height="24" rx="4" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="653.5" y="301" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#507636" font-weight="bold" font-style="italic" text-anchor="middle">0.400</text>
+    <rect x="644.5" y="221" width="18" height="20" rx="3" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="653.5" y="236" font-family="Liberation Serif, Times New Roman, serif" font-size="16" fill="#507636" font-weight="normal" font-style="normal" text-anchor="middle">T</text>
+    <path d="M653.5,242 V249" fill="none" stroke="#7FA263" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M651.5,247 L653.5,251 L655.5,247 Z" fill="#7FA263" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_22)">
+        <rect x="768.96" y="251" width="37.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="805.96" y="251" width="37.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="769" y="251" width="74" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M806.000,253.4 V277.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="787.5" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="824.5" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="806.0" y="301" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_23)">
+        <rect x="931.96" y="251" width="37.413333333333334" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="969.2933333333334" y="251" width="37.413333333333334" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1006.6266666666667" y="251" width="37.413333333333334" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="932" y="251" width="112" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M969.333,253.4 V277.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1006.667,253.4 V277.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="950.6666666666666" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="988.0" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1025.3333333333333" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="988.0" y="301" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_24)">
+        <rect x="1111.96" y="251" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="1143.96" y="251" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1175.96" y="251" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1207.96" y="251" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="1112" y="251" width="128" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M1144.000,253.4 V277.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1176.000,253.4 V277.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1208.000,253.4 V277.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="1128.0" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1160.0" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1192.0" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1224.0" y="270.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="1176.0" y="301" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="1262" y="273" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#996419" font-weight="normal" font-style="italic" text-anchor="start">j</text>
+    <rect x="1320" y="177" width="230" height="16" rx="2.4" fill="#F3F6F8"/>
+    <rect x="1320" y="177" width="131.4942857142857" height="16" rx="2.4" fill="url(#node_blue)"/>
+    <rect x="1320" y="177" width="161.08049999999997" height="16" rx="2.4" fill="none" stroke="#91A6BC" stroke-width="0.8" stroke-dasharray="2 2.5"/>
+    <path d="M1481.0805,175 V195" fill="none" stroke="#91A6BC" stroke-width="0.65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2.5"/>
+    <text x="1481.0805" y="169" font-family="Liberation Serif, Times New Roman, serif" font-size="14" fill="#687B8E" font-weight="normal" font-style="italic" text-anchor="middle">0.049</text>
+    <text x="1561" y="192" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#2A608F" font-weight="bold" font-style="italic" text-anchor="start">i 0.040</text>
+    <rect x="1320" y="218" width="230" height="16" rx="2.4" fill="#F3F6F8"/>
+    <rect x="1320" y="218" width="164.28571428571428" height="16" rx="2.4" fill="url(#node_orange)"/>
+    <rect x="1320" y="218" width="170.85714285714283" height="16" rx="2.4" fill="none" stroke="#91A6BC" stroke-width="0.8" stroke-dasharray="2 2.5"/>
+    <path d="M1490.857142857143,216 V236" fill="none" stroke="#91A6BC" stroke-width="0.65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2.5"/>
+    <text x="1490.857142857143" y="210" font-family="Liberation Serif, Times New Roman, serif" font-size="14" fill="#687B8E" font-weight="normal" font-style="italic" text-anchor="middle">0.052</text>
+    <text x="1561" y="233" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#996419" font-weight="normal" font-style="italic" text-anchor="start">j 0.050</text>
+    <text x="1464" y="272" font-family="Liberation Serif, Times New Roman, serif" font-size="21" fill="#B23832" font-weight="bold" font-style="normal" text-anchor="middle">Worse</text>
+  </g>
+  <path d="M537,582 C569.76,582 567.24,195.0 600,195.0" fill="none" stroke="#98A0AA" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M595.5,193.29 L600,195.0 L595.5,196.71 L596.85,195.0 Z" fill="#98A0AA" stroke-linecap="round" stroke-linejoin="round"/>
+  <g id="depth-2-independent-substitution">
+    <text x="600" y="399" font-family="Liberation Serif, Times New Roman, serif" font-size="27" fill="#172230" font-weight="bold" font-style="normal" text-anchor="start">SID layer 2</text>
+    <path d="M622,455 C636,425 692,429 728,431 C807,434 1165,429 1213,428 Q1240,428 1240,435 L1240,494 C1165,502 759,499 695,497 Q629,495 622,455 Z" fill="url(#path_blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M622,552 C636,522 692,526 728,528 C807,531 1165,526 1213,525 Q1240,525 1240,532 L1240,591 C1165,599 759,596 695,594 Q629,592 622,552 Z" fill="url(#path_orange)" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="614" cy="504.0" r="1.2" fill="#98A0AA"/>
+    <path d="M614,504.0 C623.36,504.0 622.64,455.5 632,455.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M627.5,453.79 L632,455.5 L627.5,457.21 L628.85,455.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M675,455.5 L769,455.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M764.2,453.676 L769,455.5 L764.2,457.324 L765.64,455.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M843,455.5 L932,455.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M927.2,453.676 L932,455.5 L927.2,457.324 L928.64,455.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1044,455.5 L1112,455.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1107.2,453.676 L1112,455.5 L1107.2,457.324 L1108.64,455.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_25)">
+        <rect x="631.96" y="441" width="43.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="632" y="441" width="43" height="29" rx="4.3" fill="none" stroke="#89939F" stroke-width="1"/>
+      <text x="653.5" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="653.5" y="491" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#5B6573" font-weight="normal" font-style="italic" text-anchor="middle">0.490</text>
+    <g>
+      <g clip-path="url(#cell_clip_26)">
+        <rect x="768.96" y="441" width="37.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="805.96" y="441" width="37.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="769" y="441" width="74" height="29" rx="4.3" fill="none" stroke="#7FA263" stroke-width="1"/>
+      <path d="M806.000,443.4 V467.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="787.5" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="824.5" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <rect x="779.0" y="473" width="54" height="24" rx="4" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="806.0" y="491" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#507636" font-weight="bold" font-style="italic" text-anchor="middle">0.510</text>
+    <rect x="797.0" y="411" width="18" height="20" rx="3" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="806.0" y="426" font-family="Liberation Serif, Times New Roman, serif" font-size="16" fill="#507636" font-weight="normal" font-style="normal" text-anchor="middle">T</text>
+    <path d="M806.0,432 V439" fill="none" stroke="#7FA263" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M804.0,437 L806.0,441 L808.0,437 Z" fill="#7FA263" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_27)">
+        <rect x="931.96" y="441" width="37.413333333333334" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="969.2933333333334" y="441" width="37.413333333333334" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1006.6266666666667" y="441" width="37.413333333333334" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="932" y="441" width="112" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M969.333,443.4 V467.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1006.667,443.4 V467.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="950.6666666666666" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="988.0" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1025.3333333333333" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="988.0" y="491" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.435</text>
+    <g>
+      <g clip-path="url(#cell_clip_28)">
+        <rect x="1111.96" y="441" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="1143.96" y="441" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1175.96" y="441" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1207.96" y="441" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="1112" y="441" width="128" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M1144.000,443.4 V467.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1176.000,443.4 V467.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1208.000,443.4 V467.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="1128.0" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1160.0" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1192.0" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1224.0" y="460.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="1176.0" y="491" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="1262" y="463" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="start">i</text>
+    <path d="M614,504.0 C623.36,504.0 622.64,552.5 632,552.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M627.5,550.79 L632,552.5 L627.5,554.21 L628.85,552.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M675,552.5 L769,552.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M764.2,550.676 L769,552.5 L764.2,554.324 L765.64,552.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M843,552.5 L932,552.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M927.2,550.676 L932,552.5 L927.2,554.324 L928.64,552.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1044,552.5 L1112,552.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1107.2,550.676 L1112,552.5 L1107.2,554.324 L1108.64,552.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_29)">
+        <rect x="631.96" y="538" width="43.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="632" y="538" width="43" height="29" rx="4.3" fill="none" stroke="#89939F" stroke-width="1"/>
+      <text x="653.5" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="653.5" y="588" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#5B6573" font-weight="normal" font-style="italic" text-anchor="middle">0.416</text>
+    <g>
+      <g clip-path="url(#cell_clip_30)">
+        <rect x="768.96" y="538" width="37.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="805.96" y="538" width="37.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="769" y="538" width="74" height="29" rx="4.3" fill="none" stroke="#7FA263" stroke-width="1"/>
+      <path d="M806.000,540.4 V564.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="787.5" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="824.5" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <rect x="779.0" y="570" width="54" height="24" rx="4" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="806.0" y="588" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#507636" font-weight="bold" font-style="italic" text-anchor="middle">0.500</text>
+    <rect x="797.0" y="508" width="18" height="20" rx="3" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="806.0" y="523" font-family="Liberation Serif, Times New Roman, serif" font-size="16" fill="#507636" font-weight="normal" font-style="normal" text-anchor="middle">T</text>
+    <path d="M806.0,529 V536" fill="none" stroke="#7FA263" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M804.0,534 L806.0,538 L808.0,534 Z" fill="#7FA263" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_31)">
+        <rect x="931.96" y="538" width="37.413333333333334" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="969.2933333333334" y="538" width="37.413333333333334" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1006.6266666666667" y="538" width="37.413333333333334" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="932" y="538" width="112" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M969.333,540.4 V564.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1006.667,540.4 V564.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="950.6666666666666" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="988.0" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1025.3333333333333" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="988.0" y="588" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_32)">
+        <rect x="1111.96" y="538" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="1143.96" y="538" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1175.96" y="538" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1207.96" y="538" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="1112" y="538" width="128" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M1144.000,540.4 V564.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1176.000,540.4 V564.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1208.000,540.4 V564.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="1128.0" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1160.0" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1192.0" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1224.0" y="557.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="1176.0" y="588" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="1262" y="560" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#996419" font-weight="normal" font-style="italic" text-anchor="start">j</text>
+    <rect x="1320" y="465" width="230" height="16" rx="2.4" fill="#F3F6F8"/>
+    <rect x="1320" y="465" width="178.58924999999996" height="16" rx="2.4" fill="url(#node_blue)"/>
+    <rect x="1320" y="465" width="161.08049999999997" height="16" rx="2.4" fill="none" stroke="#91A6BC" stroke-width="0.8" stroke-dasharray="2 2.5"/>
+    <path d="M1481.0805,463 V483" fill="none" stroke="#91A6BC" stroke-width="0.65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2.5"/>
+    <text x="1481.0805" y="457" font-family="Liberation Serif, Times New Roman, serif" font-size="14" fill="#687B8E" font-weight="normal" font-style="italic" text-anchor="middle">0.049</text>
+    <text x="1561" y="480" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#2A608F" font-weight="bold" font-style="italic" text-anchor="start">i 0.054</text>
+    <rect x="1320" y="506" width="230" height="16" rx="2.4" fill="#F3F6F8"/>
+    <rect x="1320" y="506" width="170.85714285714283" height="16" rx="2.4" fill="url(#node_orange)"/>
+    <rect x="1320" y="506" width="170.85714285714283" height="16" rx="2.4" fill="none" stroke="#91A6BC" stroke-width="0.8" stroke-dasharray="2 2.5"/>
+    <path d="M1490.857142857143,504 V524" fill="none" stroke="#91A6BC" stroke-width="0.65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2.5"/>
+    <text x="1490.857142857143" y="498" font-family="Liberation Serif, Times New Roman, serif" font-size="14" fill="#687B8E" font-weight="normal" font-style="italic" text-anchor="middle">0.052</text>
+    <text x="1561" y="521" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#996419" font-weight="normal" font-style="italic" text-anchor="start">j 0.052</text>
+    <text x="1464" y="560" font-family="Liberation Serif, Times New Roman, serif" font-size="21" fill="#4F793B" font-weight="bold" font-style="normal" text-anchor="middle">Better</text>
+  </g>
+  <path d="M537,582 C569.76,582 567.24,482.0 600,482.0" fill="none" stroke="#98A0AA" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M595.5,480.29 L600,482.0 L595.5,483.71 L596.85,482.0 Z" fill="#98A0AA" stroke-linecap="round" stroke-linejoin="round"/>
+  <g id="depth-3-independent-substitution">
+    <text x="600" y="690" font-family="Liberation Serif, Times New Roman, serif" font-size="27" fill="#172230" font-weight="bold" font-style="normal" text-anchor="start">SID layer 3</text>
+    <path d="M622,734 C636,704 692,708 728,710 C807,713 1165,708 1213,707 Q1240,707 1240,714 L1240,773 C1165,781 759,778 695,776 Q629,774 622,734 Z" fill="url(#path_blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M622,827 C636,797 692,801 728,803 C807,806 1165,801 1213,800 Q1240,800 1240,807 L1240,866 C1165,874 759,871 695,869 Q629,867 622,827 Z" fill="url(#path_orange)" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="614" cy="781.0" r="1.2" fill="#98A0AA"/>
+    <path d="M614,781.0 C623.36,781.0 622.64,734.5 632,734.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M627.5,732.79 L632,734.5 L627.5,736.21 L628.85,734.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M675,734.5 L769,734.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M764.2,732.676 L769,734.5 L764.2,736.324 L765.64,734.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M843,734.5 L932,734.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M927.2,732.676 L932,734.5 L927.2,736.324 L928.64,734.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1044,734.5 L1112,734.5" fill="none" stroke="#648FB5" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1107.2,732.676 L1112,734.5 L1107.2,736.324 L1108.64,734.5 Z" fill="#648FB5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_33)">
+        <rect x="631.96" y="720" width="43.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="632" y="720" width="43" height="29" rx="4.3" fill="none" stroke="#89939F" stroke-width="1"/>
+      <text x="653.5" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="653.5" y="770" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#5B6573" font-weight="normal" font-style="italic" text-anchor="middle">0.490</text>
+    <g>
+      <g clip-path="url(#cell_clip_34)">
+        <rect x="768.96" y="720" width="37.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="805.96" y="720" width="37.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="769" y="720" width="74" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M806.000,722.4 V746.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="787.5" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="824.5" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="806.0" y="770" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.460</text>
+    <g>
+      <g clip-path="url(#cell_clip_35)">
+        <rect x="931.96" y="720" width="37.413333333333334" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="969.2933333333334" y="720" width="37.413333333333334" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1006.6266666666667" y="720" width="37.413333333333334" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="932" y="720" width="112" height="29" rx="4.3" fill="none" stroke="#7FA263" stroke-width="1"/>
+      <path d="M969.333,722.4 V746.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1006.667,722.4 V746.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="950.6666666666666" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="988.0" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1025.3333333333333" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <rect x="961.0" y="752" width="54" height="24" rx="4" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="988.0" y="770" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#507636" font-weight="bold" font-style="italic" text-anchor="middle">0.500</text>
+    <rect x="979.0" y="690" width="18" height="20" rx="3" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="988.0" y="705" font-family="Liberation Serif, Times New Roman, serif" font-size="16" fill="#507636" font-weight="normal" font-style="normal" text-anchor="middle">T</text>
+    <path d="M988.0,711 V718" fill="none" stroke="#7FA263" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M986.0,716 L988.0,720 L990.0,716 Z" fill="#7FA263" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_36)">
+        <rect x="1111.96" y="720" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="1143.96" y="720" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1175.96" y="720" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+        <rect x="1207.96" y="720" width="32.08" height="29" rx="0" fill="url(#node_blue)"/>
+      </g>
+      <rect x="1112" y="720" width="128" height="29" rx="4.3" fill="none" stroke="#648FB5" stroke-width="1"/>
+      <path d="M1144.000,722.4 V746.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1176.000,722.4 V746.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1208.000,722.4 V746.6" fill="none" stroke="#648FB5" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="1128.0" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1160.0" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1192.0" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+      <text x="1224.0" y="739.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.61" font-size="12.920000000000002">1</tspan></text>
+    </g>
+    <text x="1176.0" y="770" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="1262" y="742" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#2A608F" font-weight="normal" font-style="italic" text-anchor="start">i</text>
+    <path d="M614,781.0 C623.36,781.0 622.64,827.5 632,827.5" fill="none" stroke="#89939F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M627.5,825.79 L632,827.5 L627.5,829.21 L628.85,827.5 Z" fill="#89939F" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M675,827.5 L769,827.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M764.2,825.676 L769,827.5 L764.2,829.324 L765.64,827.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M843,827.5 L932,827.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M927.2,825.676 L932,827.5 L927.2,829.324 L928.64,827.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1044,827.5 L1112,827.5" fill="none" stroke="#CE9C4E" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1107.2,825.676 L1112,827.5 L1107.2,829.324 L1108.64,827.5 Z" fill="#CE9C4E" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_37)">
+        <rect x="631.96" y="813" width="43.08" height="29" rx="0" fill="url(#node_gray)"/>
+      </g>
+      <rect x="632" y="813" width="43" height="29" rx="4.3" fill="none" stroke="#89939F" stroke-width="1"/>
+      <text x="653.5" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="653.5" y="863" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#5B6573" font-weight="normal" font-style="italic" text-anchor="middle">0.416</text>
+    <g>
+      <g clip-path="url(#cell_clip_38)">
+        <rect x="768.96" y="813" width="37.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="805.96" y="813" width="37.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="769" y="813" width="74" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M806.000,815.4 V839.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="787.5" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="824.5" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="806.0" y="863" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <g>
+      <g clip-path="url(#cell_clip_39)">
+        <rect x="931.96" y="813" width="37.413333333333334" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="969.2933333333334" y="813" width="37.413333333333334" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1006.6266666666667" y="813" width="37.413333333333334" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="932" y="813" width="112" height="29" rx="4.3" fill="none" stroke="#7FA263" stroke-width="1"/>
+      <path d="M969.333,815.4 V839.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1006.667,815.4 V839.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="950.6666666666666" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="988.0" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1025.3333333333333" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <rect x="961.0" y="845" width="54" height="24" rx="4" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="988.0" y="863" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#507636" font-weight="bold" font-style="italic" text-anchor="middle">0.500</text>
+    <rect x="979.0" y="783" width="18" height="20" rx="3" fill="url(#node_green)" stroke="#7FA263" stroke-width="0.9"/>
+    <text x="988.0" y="798" font-family="Liberation Serif, Times New Roman, serif" font-size="16" fill="#507636" font-weight="normal" font-style="normal" text-anchor="middle">T</text>
+    <path d="M988.0,804 V811" fill="none" stroke="#7FA263" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M986.0,809 L988.0,813 L990.0,809 Z" fill="#7FA263" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <g clip-path="url(#cell_clip_40)">
+        <rect x="1111.96" y="813" width="32.08" height="29" rx="0" fill="url(#node_gray)"/>
+        <rect x="1143.96" y="813" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1175.96" y="813" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+        <rect x="1207.96" y="813" width="32.08" height="29" rx="0" fill="url(#node_orange)"/>
+      </g>
+      <rect x="1112" y="813" width="128" height="29" rx="4.3" fill="none" stroke="#CE9C4E" stroke-width="1"/>
+      <path d="M1144.000,815.4 V839.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1176.000,815.4 V839.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <path d="M1208.000,815.4 V839.6" fill="none" stroke="#CE9C4E" stroke-width="0.52" stroke-linecap="round" stroke-linejoin="round" opacity=".52"/>
+      <text x="1128.0" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">a<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1160.0" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">b<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1192.0" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">c<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+      <text x="1224.0" y="832.14" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#172230" font-style="italic" text-anchor="middle">d<tspan dy="3.61" font-size="12.920000000000002">2</tspan></text>
+    </g>
+    <text x="1176.0" y="863" font-family="Liberation Serif, Times New Roman, serif" font-size="19" fill="#996419" font-weight="normal" font-style="italic" text-anchor="middle">0.500</text>
+    <text x="1262" y="835" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#996419" font-weight="normal" font-style="italic" text-anchor="start">j</text>
+    <rect x="1320" y="740" width="230" height="16" rx="2.4" fill="#F3F6F8"/>
+    <rect x="1320" y="740" width="185.14999999999998" height="16" rx="2.4" fill="url(#node_blue)"/>
+    <rect x="1320" y="740" width="161.08049999999997" height="16" rx="2.4" fill="none" stroke="#91A6BC" stroke-width="0.8" stroke-dasharray="2 2.5"/>
+    <path d="M1481.0805,738 V758" fill="none" stroke="#91A6BC" stroke-width="0.65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2.5"/>
+    <text x="1481.0805" y="732" font-family="Liberation Serif, Times New Roman, serif" font-size="14" fill="#687B8E" font-weight="normal" font-style="italic" text-anchor="middle">0.049</text>
+    <text x="1561" y="755" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#2A608F" font-weight="bold" font-style="italic" text-anchor="start">i 0.056</text>
+    <rect x="1320" y="781" width="230" height="16" rx="2.4" fill="#F3F6F8"/>
+    <rect x="1320" y="781" width="170.85714285714283" height="16" rx="2.4" fill="url(#node_orange)"/>
+    <rect x="1320" y="781" width="170.85714285714283" height="16" rx="2.4" fill="none" stroke="#91A6BC" stroke-width="0.8" stroke-dasharray="2 2.5"/>
+    <path d="M1490.857142857143,779 V799" fill="none" stroke="#91A6BC" stroke-width="0.65" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2.5"/>
+    <text x="1490.857142857143" y="773" font-family="Liberation Serif, Times New Roman, serif" font-size="14" fill="#687B8E" font-weight="normal" font-style="italic" text-anchor="middle">0.052</text>
+    <text x="1561" y="796" font-family="Liberation Serif, Times New Roman, serif" font-size="20" fill="#996419" font-weight="normal" font-style="italic" text-anchor="start">j 0.052</text>
+    <text x="1464" y="835" font-family="Liberation Serif, Times New Roman, serif" font-size="21" fill="#4F793B" font-weight="bold" font-style="normal" text-anchor="middle">Better</text>
+  </g>
+  <path d="M537,582 C569.76,582 567.24,759.0 600,759.0" fill="none" stroke="#98A0AA" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M595.5,757.29 L600,759.0 L595.5,760.71 L596.85,759.0 Z" fill="#98A0AA" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
