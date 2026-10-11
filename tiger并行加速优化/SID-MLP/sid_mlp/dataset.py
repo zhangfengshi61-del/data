@@ -22,6 +22,13 @@ class CommonLensDataset(Dataset):
         self.digits = digits
         self.teacher_logits = teacher_logits
         self.gt_digits = gt_digits
+        # s24: optional teacher-beam dump (search-distribution distillation targets)
+        self.bm_codes = None    # (N, M, 4) uint8 codebook-space, sorted by exact teacher score desc
+        self.bm_scores = None   # (N, M) fp16 exact sequence scores (sum digit logprobs + eos)
+        self.bm_nvalid = None   # (N,) int16
+        self.bm_steplp = None       # s41 CDRS: (N, M, 4) teacher per-digit logp
+        self.bm_score_scale = None  # s41 CDRS: (4,) per-depth teacher-gap std
+        self.bm_step_scale = None    # s43e DA-CDRS: (4,) per-depth teacher INCREMENT-gap std
 
     def __len__(self):
         return self.enc_seq.shape[0]
@@ -29,24 +36,70 @@ class CommonLensDataset(Dataset):
     def __getitem__(self, idx):
         return idx
 
+    @property
+    def device(self):
+        return getattr(self, "_device", torch.device("cuda"))
+
 
 def collate_fn_gpu(dataset: CommonLensDataset, indices: List[int]):
-    idx = torch.tensor(indices, dtype=torch.long, device=dataset.enc_seq.device)
+    dev = dataset.device
+    idx = torch.tensor(indices, dtype=torch.long)
 
-    enc_seq = dataset.enc_seq[idx].float()
-    enc_mask = dataset.enc_mask[idx]
+    enc_seq = dataset.enc_seq[idx].float().to(dev, non_blocking=True)
+    enc_mask = dataset.enc_mask[idx].to(dev, non_blocking=True)
     hk = None
 
-    digits = dataset.digits[idx]
+    digits = dataset.digits[idx].to(dev, non_blocking=True)
     d1, d2, d3, d4 = digits[:, 0], digits[:, 1], digits[:, 2], digits[:, 3]
 
-    tl = dataset.teacher_logits[idx].float()
+    tl = dataset.teacher_logits[idx].float().to(dev, non_blocking=True)
     tl1, tl2, tl3, tl4 = tl[:, 0], tl[:, 1], tl[:, 2], tl[:, 3]
 
-    gt = dataset.gt_digits[idx]
+    gt = dataset.gt_digits[idx].to(dev, non_blocking=True)
     gd1, gd2, gd3, gd4 = gt[:, 0], gt[:, 1], gt[:, 2], gt[:, 3]
 
-    return enc_seq, enc_mask, hk, d1, d2, d3, d4, tl1, tl2, tl3, tl4, gd1, gd2, gd3, gd4
+    base = (enc_seq, enc_mask, hk, d1, d2, d3, d4, tl1, tl2, tl3, tl4, gd1, gd2, gd3, gd4)
+    if dataset.bm_codes is None:
+        return base
+    # s24 extras: candidate codes (long, codebook space), exact scores, valid counts
+    bm_cb = dataset.bm_codes[idx].long().to(dev, non_blocking=True)
+    bm_sc = dataset.bm_scores[idx].float().to(dev, non_blocking=True)
+    bm_nv = dataset.bm_nvalid[idx].long().to(dev, non_blocking=True)
+    extras = (bm_cb, bm_sc, bm_nv)
+    if getattr(dataset, 'bm_steplp', None) is not None:  # s41 CDRS
+        extras = extras + (dataset.bm_steplp[idx].float().to(dev, non_blocking=True),)
+    return base + extras
+
+
+def attach_beam_dump(dataset: CommonLensDataset, dump_path: str, device: torch.device, topm: int = 0):  # s36
+    """s24: attach the teacher-beam dump (codes/scores/nvalid) to a packed dataset.
+    Alignment is by row index — the dump was produced by iterating the same packed cache."""
+    d = torch.load(dump_path, map_location='cpu', weights_only=False)
+    if topm and int(topm) > 0:  # s36: teacher-score-sorted truncation to top-M (A7 M-sweep)
+        W0 = d['scores'].shape[1]
+        ar = torch.arange(W0).unsqueeze(0)
+        sc = d['scores'].float().masked_fill(ar >= d['nvalid'].unsqueeze(1), float('-inf'))
+        order = sc.argsort(dim=1, descending=True)
+        d = dict(d)
+        d['codes'] = d['codes'].gather(1, order.unsqueeze(-1).expand(-1, -1, d['codes'].shape[-1]))[:, :topm].contiguous()
+        d['scores'] = d['scores'].gather(1, order)[:, :topm].contiguous()
+        d['nvalid'] = d['nvalid'].clamp_max(topm)
+        d['W'] = int(topm)
+        print(f"s36: beam dump truncated to top-{topm} by teacher score", flush=True)
+    n_ds, n_dump = len(dataset), d['codes'].shape[0]
+    if n_ds != n_dump:
+        raise RuntimeError(f"beam dump rows ({n_dump}) != dataset rows ({n_ds}): {dump_path}")
+    if int(d['nvalid'].min()) < 1:
+        raise RuntimeError(f"beam dump has empty candidate lists: {dump_path}")
+    dataset.bm_codes = d['codes'].to(device)
+    dataset.bm_scores = d['scores'].to(device)
+    dataset.bm_nvalid = d['nvalid'].to(device)
+    dataset.bm_steplp = d['step_logp'].to(device) if 'step_logp' in d else None  # s41 CDRS
+    dataset.bm_score_scale = d['score_scale'].to(device) if 'score_scale' in d else None  # s41 CDRS
+    dataset.bm_step_scale = d['step_scale'].to(device) if 'step_scale' in d else None  # s43e DA-CDRS
+    print(f"Attached beam dump {dump_path}: N={n_dump} W={d['W']} "
+          f"nvalid_mean={d['nvalid'].float().mean():.1f} anchors={d['meta'].get('anchors')}", flush=True)
+    return dataset
 
 
 def _pack_from_raw(graph_dir: str, dataset_tag: str, storage_dtype: torch.dtype) -> dict:
@@ -138,7 +191,8 @@ def _cache_path(graph_dir: str, dataset_tag: str, storage_dtype: torch.dtype) ->
 
 
 def prepare_common_data(graph_dir: str, dataset_tag: str, device: torch.device,
-                        storage_dtype: torch.dtype = torch.float32):
+                        storage_dtype: torch.dtype = torch.float32,
+                        gpu_resident: bool = True):
     cache_file = _cache_path(graph_dir, dataset_tag, storage_dtype)
 
     if os.path.exists(cache_file):
@@ -154,19 +208,25 @@ def prepare_common_data(graph_dir: str, dataset_tag: str, device: torch.device,
         cached = torch.load(cache_file, map_location="cpu", weights_only=False, mmap=True)
 
     total_samples = cached["enc_seq"].shape[0]
-    print(f"Moving {total_samples} samples to {device} ...", flush=True)
-    enc_seq_gpu = cached["enc_seq"].to(device, non_blocking=True)
-    enc_mask_gpu = cached["enc_mask"].to(device, non_blocking=True)
-    digits_gpu = cached["digits"].to(device, non_blocking=True)
-    tl_gpu = cached["teacher_logits"].to(device, non_blocking=True)
-    gt_gpu = cached["gt_digits"].to(device, non_blocking=True)
-
-    del cached
-    gc.collect()
-
-    if device.type == "cuda":
-        torch.cuda.synchronize(device)
-        allocated_gb = torch.cuda.memory_allocated(device) / 1e9
-        print(f"GPU memory after data load: {allocated_gb:.2f} GB", flush=True)
-
-    return CommonLensDataset(enc_seq_gpu, enc_mask_gpu, None, digits_gpu, tl_gpu, gt_gpu)
+    if gpu_resident:
+        print(f"Moving {total_samples} samples to {device} ...", flush=True)
+        enc_seq_gpu = cached["enc_seq"].to(device, non_blocking=True)
+        enc_mask_gpu = cached["enc_mask"].to(device, non_blocking=True)
+        digits_gpu = cached["digits"].to(device, non_blocking=True)
+        tl_gpu = cached["teacher_logits"].to(device, non_blocking=True)
+        gt_gpu = cached["gt_digits"].to(device, non_blocking=True)
+        del cached
+        gc.collect()
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+            allocated_gb = torch.cuda.memory_allocated(device) / 1e9
+            print(f"GPU memory after data load: {allocated_gb:.2f} GB", flush=True)
+        ds = CommonLensDataset(enc_seq_gpu, enc_mask_gpu, None, digits_gpu, tl_gpu, gt_gpu)
+    else:
+        print(f"CPU-resident mode: {total_samples} samples stay in RAM, streaming to {device}", flush=True)
+        ds = CommonLensDataset(cached["enc_seq"], cached["enc_mask"], None,
+                               cached["digits"], cached["teacher_logits"], cached["gt_digits"])
+        del cached
+        gc.collect()
+    ds._device = device
+    return ds

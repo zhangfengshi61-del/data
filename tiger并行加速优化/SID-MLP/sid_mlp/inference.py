@@ -15,8 +15,10 @@ from tqdm import tqdm
 
 from .beam import build_valid_tensors, gather_d4_mask, lookup_item_idx
 from .constants import CODEBOOK_SIZE, DIGIT_OFFSETS, quad_key_int, triplet_key_int
-from .models import SIDMLP
+from .models import SIDMLP, SIDMLPPD  # s23
 from .pretrain_encoder import build_encoder, infer_encoder_config
+
+_save_ranks_flag = type("F", (), {"path": None})()
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 CHECKOUT_ROOT = os.path.abspath(os.path.join(PACKAGE_DIR, ".."))
@@ -37,6 +39,31 @@ def _torch_load(path, *, weights_only):
         return torch.load(os.path.abspath(path), map_location="cpu")
 
 
+_ARCH_ENV = {
+    "num_layers": "TIGER_ARCH_NUM_LAYERS",
+    "num_decoder_layers": "TIGER_ARCH_NUM_DECODER_LAYERS",
+    "d_model": "TIGER_ARCH_D_MODEL",
+    "d_ff": "TIGER_ARCH_D_FF",
+    "num_heads": "TIGER_ARCH_NUM_HEADS",
+    "d_kv": "TIGER_ARCH_D_KV",
+    "dropout_rate": "TIGER_ARCH_DROPOUT",
+    "max_item_seq_len": "TIGER_ARCH_MAX_ITEM_SEQ_LEN",
+    "num_beams": "TIGER_ARCH_NUM_BEAMS",
+}
+
+
+def _arch_overrides():
+    out = {}
+    for key, env in _ARCH_ENV.items():
+        v = os.environ.get(env)
+        if v:
+            out[key] = float(v) if key == "dropout_rate" else int(v)
+    cache_dir = os.environ.get("CACHE_DIR")
+    if cache_dir:
+        out["cache_dir"] = cache_dir
+    return out
+
+
 def build_tiger_pipeline(args):
     _ensure_import_paths()
     from genrec.pipeline import Pipeline
@@ -44,22 +71,24 @@ def build_tiger_pipeline(args):
     if not getattr(args, "sem_ids", None):
         raise ValueError("--sem_ids is required. Set it in the launcher script or pass it on the CLI.")
     sem_ids_path = os.path.abspath(args.sem_ids)
+    config_dict = {
+        "category": args.category,
+        "custom_sem_ids_path": sem_ids_path,
+        "run_id": "sid_mlp_public_infer",
+    }
+    config_dict.update(_arch_overrides())
     return Pipeline(
         model_name="TIGER",
         dataset_name=args.dataset,
         checkpoint_path=os.path.abspath(args.checkpoint),
-        config_dict={
-            "category": args.category,
-            "custom_sem_ids_path": sem_ids_path,
-            "run_id": "sid_mlp_public_infer",
-        },
+        config_dict=config_dict,
     )
 
 
 def build_sidmlp_from_checkpoint(checkpoint_path, embedding_weight, device, *, loaded_checkpoint=None):
     ckpt = loaded_checkpoint if loaded_checkpoint is not None else _torch_load(checkpoint_path, weights_only=False)
     if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
-        state = ckpt["model_state_dict"]
+        state = {k: v for k, v in ckpt["model_state_dict"].items() if not k.startswith("sg_")}
         ckpt_args = ckpt.get("args", {})
     else:
         state = ckpt
@@ -67,10 +96,11 @@ def build_sidmlp_from_checkpoint(checkpoint_path, embedding_weight, device, *, l
 
     inferred_attn_dim = int(ckpt_args.get("attn_dim", state["cross_attn.q_proj.weight"].shape[0]))
     inferred_ffn_dim = int(ckpt_args.get("ffn_dim", state["ffn.0.weight"].shape[0]))
-    inferred_head_hidden = int(ckpt_args.get("head_hidden", state["head1.0.weight"].shape[0]))
+    variant = ckpt_args.get("variant", "base")
+    _hh_key = "headJP.0.weight" if variant == "jp" else "head1.0.weight"  # s24
+    inferred_head_hidden = int(ckpt_args.get("head_hidden", state[_hh_key].shape[0]))
 
-    model = SIDMLP(
-        embedding_weight,
+    _kwargs = dict(
         embed_dim=embedding_weight.shape[1],
         d_model=128,
         num_heads=int(ckpt_args.get("num_heads", 4)),
@@ -80,6 +110,15 @@ def build_sidmlp_from_checkpoint(checkpoint_path, embedding_weight, device, *, l
         head_layers=int(ckpt_args.get("head_layers", 1)),
         attn_dim=inferred_attn_dim,
     )
+    if variant == "jp":  # s24
+        from .models import SIDMLPJP
+        model = SIDMLPJP(embedding_weight, jp_pairs=state["jp_pairs"], **_kwargs)
+    elif variant != "base":
+        _kwargs["pd_depth"] = int(ckpt_args.get("pd_depth", 4))
+        _kwargs["pd_mode"] = str(ckpt_args.get("pd_mode", "full") or "full")
+        model = SIDMLPPD(embedding_weight, **_kwargs)
+    else:
+        model = SIDMLP(embedding_weight, **_kwargs)
     model.load_state_dict(state, strict=True)
     model.to(device).eval()
     return model, ckpt
@@ -283,6 +322,7 @@ def evaluate_loader(
     gamma_d3=1.0,
     delta_d4=1.0,
     max_batches=None,
+    teacher_topk=None,
 ):
     (mask_d1_d2, mask_d1d2_d3, d4_keys_sorted, d4_masks_sorted,
      keys4_sorted, vals4_sorted, _item_mapping, valid_items_4) = valid_tensors
@@ -292,6 +332,8 @@ def evaluate_loader(
     coverage = defaultdict(int)
     total = 0
     test_ns = (1, 5, 10)
+    stu_lists = []
+    rank_rows = []
     beam = int(beam_size)
     final_n = int(final_top_n)
     d1_temp = max(float(d1_temp), 1e-6)
@@ -426,7 +468,12 @@ def evaluate_loader(
             gt = gt_sids[row]
             gt_item_idx = gt_item_indices[row]
             total += 1
+            if teacher_topk is not None:
+                stu_lists.append((total - 1, [int(x) for x in item_rows[row] if x >= 0]))
             rank = _dedup_rank(item_rows[row], gt_item_idx, final_n)
+            if getattr(_save_ranks_flag, "path", None):
+                rank_rows.append((total - 1, rank, 1 if 0 <= rank < 10 else 0,
+                                  1.0 / math.log2(rank + 2) if 0 <= rank < 10 else 0.0))
             for cutoff in test_ns:
                 if rank != -1 and rank < cutoff:
                     recall[cutoff] += 1
@@ -452,6 +499,23 @@ def evaluate_loader(
         metrics[f"ndcg{cutoff}"] = ndcg[cutoff] / max(total, 1)
     for key, value in coverage.items():
         metrics[f"{key}_hit"] = value / max(total, 1)
+    if rank_rows:
+        import csv as _csv
+        with open(_save_ranks_flag.path, "w", newline="") as f:
+            w = _csv.writer(f); w.writerow(["request_id", "rank", "hit10", "ndcg10"])
+            w.writerows(rank_rows)
+    if teacher_topk is not None and stu_lists:
+        import numpy as _np
+        for K in (5, 10):
+            jacs = []
+            for row, items in stu_lists:
+                if row >= teacher_topk.shape[0]:
+                    continue
+                tlist = [int(x) for x in teacher_topk[row].tolist() if x >= 0]
+                s = set(items[:K]); t = set(tlist[:K])
+                u = s | t
+                jacs.append(len(s & t) / max(len(u), 1) if u else 0.0)
+            metrics[f"jac{K}"] = float(_np.mean(jacs)) if jacs else 0.0
     return metrics
 
 
@@ -502,6 +566,13 @@ def run_inference(args):
         raise FileNotFoundError(f"Cannot find valid_item_set for dataset_tag={args.dataset_tag}")
     valid_tensors = build_valid_tensors(valid_set, device)
 
+    global _save_ranks_flag
+    _save_ranks_flag = type("F", (), {"path": getattr(args, "save_ranks", None)})()
+    t_topk = None
+    if getattr(args, "teacher_topk", None):
+        import torch as _t
+        t_topk = _t.load(os.path.abspath(args.teacher_topk), map_location="cpu",
+                         weights_only=False)["topk_items"]
     split = args.split or ("val" if "val" in pipeline.tokenized_datasets else "test")
     dataset = pipeline.tokenized_datasets[split]
     loader = DataLoader(
@@ -533,6 +604,7 @@ def run_inference(args):
         gamma_d3=args.gamma_d3,
         delta_d4=args.delta_d4,
         max_batches=5 if args.test else None,
+        teacher_topk=t_topk,
     )
     if device.type == "cuda":
         torch.cuda.synchronize(device)
@@ -548,6 +620,8 @@ def run_inference(args):
         f"dtype={'native-bfloat16' if native_bf16 else 'fp32'} tf32=False",
         flush=True,
     )
+    import json as _json
+    print("METRICS_JSON " + _json.dumps(metrics), flush=True)
     if "peak_mem_gb" in metrics:
         print(f"peak_mem={metrics['peak_mem_gb']:.3f} GB", flush=True)
     return metrics, lens_ckpt
