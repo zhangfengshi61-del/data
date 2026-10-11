@@ -83,11 +83,13 @@ $K_{\mathrm{tr}}=10$, maximum outsider rank $B=40$, online beam
 $W=50$, HServe weight $\lambda_H=4$, DA-CDRS weight $\lambda_D=1$,
 depth weights $\alpha_d=1$ for $d=1,\dots,L$, pair margin $\mu=.05$,
 increment-correction weight $\lambda_{\mathrm{corr}}=31.42$, learning
-rate $5\times10^{-5}$, seeds $\{42,43,44\}$. The draft tables have not yet been verified
-against the corresponding configuration checkpoints and should not be
-interpreted as validated three-seed means. Teacher supports, marginals, pairs, and increment
-scales are built from training requests only; validation/test teacher
-outputs never enter optimization.
+rate $5\times10^{-5}$, target seeds $\{42,43,44\}$. The
+mean and SD entries in the ablation tables were supplied as summary values;
+per-seed metric files and matching checkpoints have not been provided
+for independent validation. The MLP Base-KD entries were previously
+identified as simulation-adjusted. Teacher supports, marginals, pairs,
+and increment scales are intended to be built only from training
+requests; validation/test teacher outputs must not enter optimization.
 
 \section{Full Main-Result Tables}
 \label{sec:sup-main}
@@ -102,8 +104,10 @@ full per-dataset metrics (R@5, N@5, R@10, N@10) and teacher-agreement
 \label{sec:sup-ablation}
 
 Tables~\ref{tab:supp-ablation-Beauty}--\ref{tab:supp-ablation-VG} give
-all four Top-$K$ metrics per student for every ablation arm on each dataset. Ablation arms
-are defined in the main paper (Section~6.3).
+all four Top-$K$ metrics, with the submitted SD in parentheses,
+for every student and ablation arm. These aggregate summaries do not
+by themselves establish three-seed reproducibility. Ablation arms are
+defined in the main paper (Section~6.3).
 
 \input{Figures/table_supp_ablation.tex}
 
@@ -141,8 +145,9 @@ $\lambda_P\,|\mathcal B(u)|^{-1}\sum_{b\in\mathcal B(u)}
 \operatorname{softplus}(\mu-G_S(b))$ alongside digit CE and HServe,
 using the same teacher-ordered pair support and margin.
 This comparison isolates a global pair-ranking objective from
-depth-localized residual correction; its coefficient $\lambda_P$
-and checkpoint provenance require run-log verification.
+depth-localized residual correction; the paper-aligned training
+configuration specifies $\lambda_P=1$, while its actual checkpoint
+provenance still requires run-log verification.
 \item Held-out diagnostic pairs (teacher ranks $1{:}K$ vs.\
 $K{+}1{:}B$) are used only for mechanism statistics and never enter
 optimization.

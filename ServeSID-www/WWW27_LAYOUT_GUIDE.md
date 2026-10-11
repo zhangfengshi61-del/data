@@ -22,7 +22,7 @@ Source: https://www2027.thewebconf.org/research-track-papers/
 - Do not automatically suppress technical content or shrink ACM font/line spacing to hit the limit.
 
 ## Before submission (scientific validity, separate from typesetting)
-- Verify main/ablation metrics match the **actual final no-direct-pair-anchor training configuration**. Some current draft values are synthetic/historical.
+- Cross-check all reported ablation means and five-decimal SDs against real `42/43/44` seed outputs and checkpoints from the paper-aligned **no-direct-pair-anchor Full** configuration. The current 252 aggregate values are author-supplied and include three Base-KD/MLP sets expressly identified as simulation-adjusted.
 - Supply the final main method figure PDF, inspect it in the compiled paper, and check all figure captions/references.
-- Insert genuine (not synthetic) quantitative discussion of performance and ablations. The previous visible TODO blocks were moved to LaTeX comments.
+- Require run-level metrics, checkpoint IDs, dataset split manifests and matching configurations before claiming measured statistical significance or fully reproducible improvements.
 - Verify all bib entries, anonymity and metadata, accessible color contrast, and supporting diagnostic logs.

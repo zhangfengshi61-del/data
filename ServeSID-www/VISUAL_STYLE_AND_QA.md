@@ -31,9 +31,9 @@ This document adapts principles from six publicly available paper-layout Skills 
 
 - Table 1: `Figures/table_main_results.tex` (8 methods × 3 datasets) and Table 2: `Figures/table_ablation.tex` (7 arms × 3 datasets).
 - **Both are generated from** `scripts/gen_tables.py`. Any table typography change must update the generator and committed `.tex` consistently.
-- Keep all 4-decimal values, grouping, and tie-aware bold/gray ranking untouched during visual edits; never simulate or silently 'fix' results.
+- Preserve 4-decimal means, 5-decimal reported SDs, grouping, and tie-aware highlighting. The single source for the supplied ablation statistics is `data/ablation_user_supplied_mean_sd.csv`; never silently alter numerical entries.
 - Color is supportive only: best is bold, second-best gray, full ServeSID coral, and group labels show the method family in words.
-- This project has historical synthetic/unverified figures. Do not claim statistical or experimental validation until training logs and runs substantiate the data.
+- Provenance (2026-10-11): 252 ablation mean/SD entries are author-supplied summaries without matching per-seed logs or checkpoints. Three Base-KD/MLP mean sets were explicitly marked as simulation-adjusted by the provider. Presentation changes cannot validate experimental results.
 
 ## Mandatory checks after any layout change
 
