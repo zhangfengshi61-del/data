@@ -33,7 +33,28 @@ with fitz.open(pdf) as doc:
         figure_pages[k] = next((i+1 for i, t in enumerate(txt)
                                 if f"Figure {k}:" in t), None)
     all_floats_in_first_8 = all(p is not None and p <= 8 for p in list(table_pages.values()) + list(figure_pages.values()))
-    references_follow_tables = ref_page is not None and all(p is not None and p < ref_page for p in table_pages.values())
+    def heading_y(page_number, prefix):
+        # Compare actual text positions when a float and the References
+        # heading appear on the same page.
+        for block in doc[page_number - 1].get_text("blocks"):
+            if block[4].strip().startswith(prefix):
+                return block[1]
+        return None
+
+    def table_precedes_references(table_index, page_number):
+        if ref_page is None or page_number is None:
+            return False
+        if page_number < ref_page:
+            return True
+        if page_number > ref_page:
+            return False
+        table_y = heading_y(page_number, f"Table {table_index}:")
+        refs_y = heading_y(ref_page, "References")
+        return table_y is not None and refs_y is not None and table_y < refs_y
+
+    references_follow_tables = all(
+        table_precedes_references(k, p) for k, p in table_pages.items()
+    )
     ok = pass_body and total <= 12 and all_floats_in_first_8 and references_follow_tables
     out = [
         "WWW 2027 Research Track layout audit",
