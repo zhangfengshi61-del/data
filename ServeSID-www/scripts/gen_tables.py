@@ -398,7 +398,7 @@ def main_results_table():
     ]
     cats = {
         2: r"\multirow{-3}{*}{\catrect{catTrad}{29pt}{Traditional\\Recommendation KD}}",
-        4: r"\multirow{-2}{*}{\catrect{catGen}{19pt}{General autoregressive\\/ LLM KD}}",
+        4: r"\multirow{-2}{*}{\catrect{catGen}{27pt}{General\\autoregressive\\/ LLM KD}}",
         7: r"\multirow{-3}{*}{\catrect{catSID}{29pt}{SID-based generative\\recommendation KD}}",
     }
 
