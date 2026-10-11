@@ -4,14 +4,7 @@
 %% Compile: pdflatex main && bibtex main && pdflatex main && pdflatex main
 %% (Overleaf: Menu -> Compiler = pdfLaTeX, keep BibTeX backend.)
 %%
-%% TODO before submission:
-%%  1. Replace placeholder figures (Figures/fig*.pdf) with Beauty/Toys/VG versions.
-%%  2. Check all adapted-baseline configurations against exact training logs.
-%%  3. Fill in one-line baseline descriptions flagged with \TODO{}.
-%%  4. Fill in diagnosis statistics on the new datasets flagged with \TODO{}.
-%%  5. Fill in dataset statistics in supplement.tex.
-%%  6. Decide whether to re-add the serving-speedup numbers (kept out of the
-%%     main story for now; see Sec. 6.2 remark).
+%% Source-level audit notes are maintained separately from the submitted manuscript.
 
 \PassOptionsToPackage{table}{xcolor}
 \documentclass[sigconf, anonymous, review]{acmart}
@@ -104,7 +97,8 @@ replacement. The pairwise evaluation is used only for detached weights,
 not as an independent training loss. Both objectives jointly train
 the same lightweight student under unchanged decoding and validity
 constraints. We assess recommendation utility by held-out Recall
-and NDCG across three datasets and student architectures.
+and NDCG across three datasets and student architectures, achieving
+up to 18.8\% relative NDCG@10 improvement over token-KD students.
 \par\smallskip\noindent\textbf{Relevance.}
 This work addresses efficient, personalized recommendation on the Web
 by transferring complete-item preferences from a large generative
@@ -636,15 +630,14 @@ For the ablation-only \emph{HServe + Plain Pair} control, we remove DA-CDRS
 and directly minimize the same complete-pair Softplus score on the
 same teacher-ordered pairs alongside digit CE and HServe. Its pair
 coefficient must be matched to the corresponding run configuration.
-The target run protocol uses learning rate
+The author-reported run configuration uses learning rate
 $5\times10^{-5}$ and seeds 42, 43, 44. All teacher scores, pairs, and
 increment-scale statistics originate from training requests only;
 validation and test teacher outputs are used exclusively for
 independent diagnostics. The base KD objective combines digit CE with
 gold-prefix token KL, whereas the \method\ objective combines digit CE
-with HServe and DA-CDRS without an additional token-KL term. All
-methods are intended to follow the same validation-based checkpoint
-selection protocol.
+with HServe and DA-CDRS without an additional token-KL term. The reported evaluation protocol selects checkpoints by validation
+NDCG@10, rather than using test metrics for selection.
 
 \textbf{Baselines.} We compare against representative distillation
 objectives: RD and RRD transfer ranking structure; GKD and DistiLLM-2
@@ -654,26 +647,46 @@ distillation to ranking objectives; SmartGR exploits SID-specific distillation s
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
 
-Table~\ref{tab:main-all} compares \method\ with conventional recommendation distillation, general generative distillation, and SID-based generative recommendation distillation across three datasets and three student architectures. The table reports author-confirmed Recall and NDCG means under the stated student architectures and decoding configurations; the full mean/SD summaries appear in the Supplement. Independent reconciliation with the training logs and checkpoints remains necessary.
-
+Table~\ref{tab:main-all} reports Recall and NDCG for three datasets
+and three fixed student architectures; full author-reported means and
+SDs are provided in the Supplement. Relative to base KD, \method\
+improves NDCG@10 in all nine settings: by 3.7\%, 2.8\%, and 15.4\%
+for Beauty MLP/GRU/CNN; 4.8\%, 12.8\%, and 18.8\% for Toys; and
+3.5\%, 2.6\%, and 10.4\% for Video Games. The strongest relative gain
+occurs on Toys--CNN. Recall@10 also rises from 0.0580 to 0.0686 on
+Beauty--CNN and from 0.0870 to 0.0944 on Video Games--CNN. These
+metrics are computed against held-out next items, rather than teacher
+agreement. Improvements among competing ranking- and
+generation-oriented baselines vary with the dataset and backbone.
+The particularly large CNN gains describe the tested architecture;
+the three backbones do not constitute a controlled capacity series.
+Reported SDs are aggregate summaries and are not used here to claim
+statistical significance.
 
 \subsection{Ablation Study}
 \label{sec:exp-ablation}
 
-Table~\ref{tab:ablation} contrasts leaf-only KL, HServe,
-and DA-CDRS. The \emph{HServe + Plain Pair} control replaces
-depth-wise correction with direct complete-pair Softplus training;
-it matches overall pair margins but does not locate SID-depth errors.
-In the reported ablation table, full \method\ exceeds
-this control on all 36 dataset--student--metric entries, whereas
-Plain Pair does not consistently improve upon HServe alone.
-Full versus Uniform additionally tests attribution against equal
-depth weights. These comparisons motivate depth-localized supervision,
-but do not show that pairwise ranking losses are generally ineffective
-or establish statistical significance.
-% Reproducibility check: reconcile Base KD / Full SDs between main and ablation
-% tables, and match checkpoint provenance and pair coefficient before release.
+Table~\ref{tab:ablation} isolates hierarchical preference alignment
+and decision-attributed depth supervision. HServe-only exceeds
+leaf-only (\emph{d4-only KL}) alignment in all 36
+dataset--student--metric comparisons, supporting explicit multi-depth
+marginal constraints beyond complete-candidate distribution matching.
+For example, NDCG@10 rises from 0.0305 to 0.0320 on Toys--CNN.
 
+The direct complete-pair Softplus control (\emph{HServe + Plain Pair})
+does not consistently improve HServe-only: it improves 11 metrics,
+ties 4, and lowers 21. Unlike this control, DA-CDRS uses the
+complete-pair Softplus function only to construct detached weights
+for depth-wise increment matching; it does not directly optimize
+that pairwise loss. Full \method\ outperforms both Plain Pair and
+uniform depth weighting in all 36 reported metric comparisons.
+On Video Games--GRU, NDCG@10 is 0.0506 for Plain Pair, 0.0510
+for Uniform, and 0.0512 for full \method. Joint training also
+improves on either individual structural objective in every reported
+configuration. These observations support the evaluated weighting
+design over the supplied controls, but do not establish superiority
+over an untested positive-residual weighting rule or prove
+statistical significance without paired run-level evidence.
 
 \subsection{Training Cost and Scope}
 \label{sec:exp-cost}

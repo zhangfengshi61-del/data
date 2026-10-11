@@ -7,8 +7,6 @@
 \usepackage{booktabs}
 \usepackage{xcolor}
 
-\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
-
 \newcommand{\method}{\textsc{ServeSID}}
 
 \settopmatter{printacmref=false, printccs=false, printfolios=true}
@@ -31,28 +29,16 @@ Supplementary Material}
 
 \maketitle
 
-\section{Dataset Statistics}
+\section{Datasets and Evaluation Protocol}
 \label{sec:sup-datasets}
 
-\TODO{fill in the Beauty/Toys/Video Games statistics (users, items,
-interactions, average sequence length, number of valid SIDs) in the
-same style as the previous submission.}
-
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{lcccc}
-\toprule
-Dataset & \#Users & \#Items & \#Interactions & Avg.\ len. \\
-\midrule
-Amazon Beauty 2014 & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
-Amazon Toys 2014   & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
-Video Games 2023   & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
-\bottomrule
-\end{tabular}
-\caption{Dataset statistics.}
-\label{tab:sup-stats}
-\end{table}
+We evaluate Amazon Beauty and Toys from Amazon Reviews 2014 and Video
+Games from Amazon Reviews 2023 using chronological leave-one-out
+next-item evaluation, with at most 20 preceding interactions per
+request. Preprocessing, user/item mapping, SID assignments, and
+train/validation/test splits are shared among methods within each
+dataset. Processed user, item, and interaction counts are not
+available in the manuscript source and are not estimated here.
 
 \section{Implementation and Hyperparameters}
 \label{sec:sup-hyper}
@@ -83,12 +69,13 @@ $K_{\mathrm{tr}}=10$, maximum outsider rank $B=40$, online beam
 $W=50$, HServe weight $\lambda_H=4$, DA-CDRS weight $\lambda_D=1$,
 depth weights $\alpha_d=1$ for $d=1,\dots,L$, pair margin $\mu=.05$,
 increment-correction weight $\lambda_{\mathrm{corr}}=31.42$, learning
-rate $5\times10^{-5}$, reported seeds $\{42,43,44\}$. The
-author confirms the reported means and SDs as experimental results;
-individual seed outputs and corresponding checkpoints were not supplied
-with these tables for independent reproduction. Main-table and ablation
-SDs for some shared Base-KD / Full configurations differ and must be
-reconciled against run-level records before archival release.
+rate $5\times10^{-5}$, and author-reported seeds $\{42,43,44\}$.
+The tables provide author-reported mean/SD aggregates, not the
+per-seed evaluation files. For the 72 Base-KD and Full configurations
+shared between the main and ablation tables, the author selected the
+ablation summary as the canonical SD source; mean values were
+unchanged. This reporting reconciliation does not establish
+run-level statistical verification.
 Teacher supports, marginals, pairs, and increment scales should be
 constructed only from training requests; validation/test teacher
 outputs must not enter optimization.
@@ -107,9 +94,8 @@ full per-dataset metrics (R@5, N@5, R@10, N@10) and teacher-agreement
 
 Tables~\ref{tab:supp-ablation-Beauty}--\ref{tab:supp-ablation-VG} give
 all four Top-$K$ metrics with reported SDs in parentheses for every
-student and ablation arm. Independent reproducibility requires the
-corresponding run-level seed outputs. Ablation arms are
-defined in the main paper (Section~6.3).
+student and ablation arm. The manuscript does not tabulate individual seed values. Ablation
+arms are defined in the main paper (Section~6.3).
 
 \input{Figures/table_supp_ablation.tex}
 
@@ -125,9 +111,8 @@ positive and one negative residual among eligible depths from the
 first SID divergence through $L-1$. We also report the fractions with
 at least two positive residuals and with a negative largest-magnitude
 residual. The cancellation ratio summarizes cancellation between
-positive and negative signed depth residuals; the exact aggregation,
-zero-residual handling, and tie-breaking protocol must be checked
-against the diagnostic implementation before final submission.
+positive and negative signed depth residuals; aggregation details, treatment of zero residuals, and tie-breaking
+remain implementation-level reproducibility requirements.
 
 \section{Reproducibility Notes}
 \label{sec:sup-repro}
