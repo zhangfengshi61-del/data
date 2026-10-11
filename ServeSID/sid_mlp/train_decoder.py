@@ -106,12 +106,37 @@ def _batch_loss_jp(args, model, batch, list_masks=None):
             l_pair = boundary_pair_loss(s_S, valid, gamma=float(getattr(args, "pair_gamma", 0.05)),
                                         n_pos=int(getattr(args, "pair_k", 10)),
                                         n_neg_hi=int(getattr(args, "pair_b", 40)),
-                                        n_neg_sample=int(getattr(args, "pair_negs", 0)))
+                                        n_neg_sample=int(getattr(args, "pair_negs", 0)),
+                                        margin=getattr(args, "pair_margin", None))
             loss = loss + lam_pair * l_pair
             comps["pair"] = float(l_pair.item())
         with torch.no_grad():
             comps["ltop1"] = float((s_S.masked_fill(~valid, -1e9).argmax(1) == 0).float().mean().item())
     return loss, (logitsJP, logits3, logits4), (jp_cls, gd3, gd4), comps
+
+
+
+def validate_full_paper_objective(args):
+    """Guard the paper's Full objective against direct Pair Loss and token KL."""
+    hserve = float(getattr(args, "serve_kl", 0.0) or 0.0)
+    da = float(getattr(args, "da_w", 0.0) or 0.0)
+    pair = float(getattr(args, "pair_w", 0.0) or 0.0)
+    if da > 0 and pair > 0:
+        raise ValueError(
+            "DA-CDRS/Full must not optimize direct Pair Loss: set pair_w=0. "
+            "Use da_w=0 with pair_w>0 for HServe + Plain Pair."
+        )
+    if hserve > 0 and da > 0:
+        if (str(getattr(args, "loss", "")).lower() != "ce"
+                or str(getattr(args, "d4_teacher", "")).lower() != "ce"):
+            raise ValueError("Full ServeSID requires loss=ce and d4_teacher=ce.")
+        if (bool(getattr(args, "seqkd", False))
+                or float(getattr(args, "list_kl", 0.0) or 0.0) > 0
+                or float(getattr(args, "prefix_kl", 0.0) or 0.0) > 0
+                or float(getattr(args, "cdrs_w", 0.0) or 0.0) > 0):
+            raise ValueError("Full ServeSID uses only digit CE + HServe + DA-CDRS.")
+        if getattr(args, "da_margin", None) is None:
+            raise ValueError("Full ServeSID requires da_margin for softplus(mu-G) weights.")
 
 
 def _batch_loss(args, model, batch, list_masks=None):
@@ -158,6 +183,7 @@ def _batch_loss(args, model, batch, list_masks=None):
     lam_cdrs = float(getattr(args, "cdrs_w", 0.0) or 0.0)  # s41 CDRS
     lam_serve = float(getattr(args, "serve_kl", 0.0) or 0.0)  # s43e E1
     lam_da = float(getattr(args, "da_w", 0.0) or 0.0)         # s43e DA-CDRS
+    validate_full_paper_objective(args)
     if extras is not None and (lam_list > 0 or lam_pf > 0 or lam_pair > 0 or lam_cdrs > 0 or lam_serve > 0 or lam_da > 0):
         bm_cb, bm_sc, bm_nv = extras[0], extras[1], extras[2]
         bm_slp = extras[3] if len(extras) > 3 else None  # s41 CDRS: teacher per-digit logp
@@ -219,7 +245,8 @@ def _batch_loss(args, model, batch, list_masks=None):
                                         n_pos=int(getattr(args, "pair_k", 10)),
                                         n_neg_hi=int(getattr(args, "pair_b", 40)),
                                         n_neg_sample=0 if shared_neg_idx is not None else pair_negs,
-                                        neg_idx=shared_neg_idx)
+                                        neg_idx=shared_neg_idx,
+                                        margin=getattr(args, "pair_margin", None))
             loss = loss + lam_pair * l_pair
             comps["pair"] = float(l_pair.item())
         if lam_cdrs > 0:  # s41 CDRS
@@ -238,16 +265,23 @@ def _batch_loss(args, model, batch, list_masks=None):
                                     w3=float(getattr(args, "serve_w3", 1.0)), w4=float(getattr(args, "serve_w4", 1.0)))
             loss = loss + lam_serve * l_serve
             comps["serve"] = float(l_serve.item())
-        if lam_da > 0:  # s43e DA-CDRS correction (pair anchor added separately via pair_w)
+        if lam_da > 0:  # DA-CDRS is standalone; only the explicit Plain Pair arm uses pair_w
             _dascale = getattr(args, "_da_scale", None)
             if _slp is None or bm_slp is None or _dascale is None:
                 raise SystemExit("--da_w requires an augmented dump with step_logp + step_scale (run add_step_scale_s43e)")
+            weight_mode = str(getattr(args, "corr_mode", "cf"))
+            if str(getattr(args, "da_mode", "cf")) == "uniform":
+                weight_mode = "uniform_valid"  # HServe + Uniform control
             l_da = da_cdrs_loss(bm_slp, _slp, bm_cb, valid, _dascale,
-                                gamma=float(getattr(args, "da_gamma", 0.05)), huber_delta=float(getattr(args, "da_huber", 1.0)),
-                                counterfactual=(str(getattr(args, "da_mode", "cf")) != "uniform"),
+                                gamma=float(getattr(args, "da_gamma", 0.05)),
+                                margin=getattr(args, "da_margin", None),
+                                huber_delta=float(getattr(args, "da_huber", 1.0)),
+                                counterfactual=(weight_mode == "cf"), weight_mode=weight_mode,
                                 n_pos=int(getattr(args, "cdrs_pos_k", 10)), n_neg_hi=int(getattr(args, "cdrs_neg_end", 40)),
                                 neg_idx=shared_neg_idx)
-            loss = loss + lam_da * l_da
+            # Paper: lambda_D * lambda_corr * weighted Huber; kept separately for audit.
+            corr_w = float(getattr(args, "da_corr_w", 1.0))
+            loss = loss + lam_da * corr_w * l_da
             comps["da"] = float(l_da.item())
         with torch.no_grad():
             comps["ltop1"] = float((s_S.masked_fill(~valid, -1e9).argmax(1) == 0).float().mean().item())
@@ -329,6 +363,7 @@ def _check_sidmlp_pp_training_tags(args):
 
 
 def train_sidmlp(args):
+    validate_full_paper_objective(args)
     _check_sidmlp_pp_training_tags(args)
     if not getattr(args, "graph_dir", None):
         raise SystemExit("--graph_dir is required. Set it in the launcher script or pass it on the CLI.")
