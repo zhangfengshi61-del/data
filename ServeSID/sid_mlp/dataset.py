@@ -83,6 +83,14 @@ def attach_beam_dump(dataset: CommonLensDataset, dump_path: str, device: torch.d
         d = dict(d)
         d['codes'] = d['codes'].gather(1, order.unsqueeze(-1).expand(-1, -1, d['codes'].shape[-1]))[:, :topm].contiguous()
         d['scores'] = d['scores'].gather(1, order)[:, :topm].contiguous()
+        # Teacher per-depth log-probabilities MUST follow the identical candidate
+        # permutation: DA-CDRS uses these scores for teacher-depth residuals.
+        if 'step_logp' in d:
+            if d['step_logp'].shape[:2] != order.shape:
+                raise RuntimeError("beam dump step_logp and candidate-score shapes do not match")
+            d['step_logp'] = d['step_logp'].gather(
+                1, order.unsqueeze(-1).expand_as(d['step_logp'])
+            )[:, :topm].contiguous()
         d['nvalid'] = d['nvalid'].clamp_max(topm)
         d['W'] = int(topm)
         print(f"s36: beam dump truncated to top-{topm} by teacher score", flush=True)

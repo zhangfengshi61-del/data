@@ -1,0 +1,31 @@
+name: Validate ServeSID paper objectives
+on:
+  push:
+    branches:
+      - servesid-align-paper-objectives-seeds-20261011
+    paths:
+      - "ServeSID/**"
+      - ".github/workflows/validate-servesid-objectives.yml"
+  pull_request:
+    paths:
+      - "ServeSID/**"
+      - ".github/workflows/validate-servesid-objectives.yml"
+  workflow_dispatch:
+
+jobs:
+  paper-code-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check Python syntax
+        run: python -m compileall -q ServeSID
+      - name: Check shell launchers
+        run: bash -n ServeSID/scripts/run_paper_seeds.sh ServeSID/scripts/train.sh.servesid
+      - name: Verify manuscript configuration contract and seeds
+        run: python ServeSID/scripts/check_paper_consistency.py
+      - name: Provenance warning
+        run: |
+          echo "Static checks only: numerical checkpoints, full training and three-seed results are NOT verified."

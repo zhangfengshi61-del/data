@@ -1,7 +1,7 @@
-dataset: AmazonReviews2023
-category: Industrial_and_Scientific
-dataset_tag: AmazonReviews2023_Industrial_and_Scientific
-val_dataset_tag: AmazonReviews2023_Industrial_and_Scientific_val
+dataset: Amazon2014
+category: Beauty
+dataset_tag: Amazon2014_Beauty
+val_dataset_tag: Amazon2014_Beauty_val
 
 num_heads: 4
 attn_dim: 384
@@ -9,10 +9,10 @@ ffn_dim: 1024
 head_hidden: 512
 head_layers: 1
 dropout: 0.2
-loss: combined
+loss: ce
 temperature: 1.0
 alpha: 0.7
-d4_teacher: combined
+d4_teacher: ce
 
 lr: 5e-5
 weight_decay: 1e-4
@@ -33,7 +33,7 @@ serve_w2: 1
 serve_w3: 1
 serve_w4: 1
 
-pair_w: 1.0
+pair_w: 0.0
 pair_gamma: 0.05
 pair_k: 10
 pair_b: 40
@@ -41,8 +41,14 @@ pair_negs: 0
 
 cdrs_pos_k: 10
 cdrs_neg_end: 40
-da_w: 31.42
+da_w: 1.0
 da_mode: cf
 da_gamma: 0.05
 da_huber: 1.0
 da_negs: 0
+da_corr_w: 31.42
+da_margin: 0.05
+corr_mode: cf
+list_topm: 64
+list_temp: 1.0
+seeds: [42, 43, 44]

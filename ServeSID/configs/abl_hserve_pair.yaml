@@ -9,10 +9,10 @@ ffn_dim: 1024
 head_hidden: 512
 head_layers: 1
 dropout: 0.2
-loss: combined
+loss: ce
 temperature: 1.0
 alpha: 0.7
-d4_teacher: combined
+d4_teacher: ce
 
 lr: 5e-5
 weight_decay: 1e-4
@@ -31,3 +31,6 @@ pair_gamma: 0.05
 pair_k: 10
 pair_b: 40
 da_w: 0.0
+pair_margin: 0.05
+list_topm: 64
+seeds: [42, 43, 44]
