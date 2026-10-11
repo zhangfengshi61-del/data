@@ -172,17 +172,17 @@
 <text x="975" y="658" font-family="Times New Roman, Liberation Serif, serif" font-size="20" fill="#6B7888" text-anchor="middle" >Truncated y-axes: KL begins at 0.06; disagreement begins at 10%. Values are shown above every bar.</text>
 <!-- Restored VG teacher-student counterexample; compact annotation stays in panel (a) -->
 <g id="vg-counterexample" font-family="Times New Roman, Liberation Serif, serif">
-<path d="M788 264 L766 280 M929 264 L931 280 M760 346 Q765 376 790 409 M934 346 Q910 379 895 411" fill="none" stroke="#88A0C1" stroke-width="2" marker-end="url(#counterArrow)"/>
-<rect x="681" y="157" width="331" height="107" rx="10" fill="#F5F8FD" stroke="#86A1C5" stroke-width="1.7"/>
-<text x="695" y="182" font-size="20" font-weight="bold" fill="#223B60">Counterexample: lower local</text>
-<text x="695" y="205" font-size="20" fill="#223B60">token KL does not necessarily</text>
-<text x="695" y="228" font-size="20" fill="#223B60">imply lower complete-candidate</text>
-<text x="695" y="251" font-size="20" fill="#223B60">KL.</text>
-<rect x="681" y="280" width="161" height="66" rx="8" fill="#F9FBFF" stroke="#91AACB" stroke-width="1.6"/>
-<rect x="850" y="280" width="162" height="66" rx="8" fill="#F9FBFF" stroke="#91AACB" stroke-width="1.6"/>
-<text x="761" y="306" text-anchor="middle" font-size="21" font-weight="bold" fill="#263D60">VG-MLP:</text>
-<text x="931" y="306" text-anchor="middle" font-size="21" font-weight="bold" fill="#263D60">VG-GRU:</text>
-<text x="761" y="332" text-anchor="middle" font-size="19"><tspan fill="#1F73B4">0.0882</tspan><tspan fill="#64748B"> / </tspan><tspan fill="#D07313">0.0768</tspan></text>
-<text x="931" y="332" text-anchor="middle" font-size="19"><tspan fill="#1F73B4">0.0827</tspan><tspan fill="#64748B"> / </tspan><tspan fill="#D07313">0.1020</tspan></text>
+<path d="M790 264 L770 280 M932 264 L933 280 M770 346 Q774 374 790 409 M933 346 Q910 379 895 411" fill="none" stroke="#88A0C1" stroke-width="2" marker-end="url(#counterArrow)"/>
+<rect x="695" y="157" width="316" height="107" rx="10" fill="#F5F8FD" stroke="#86A1C5" stroke-width="1.7"/>
+<text x="708" y="182" font-size="20" font-weight="bold" fill="#223B60">Counterexample: lower local</text>
+<text x="708" y="205" font-size="20" fill="#223B60">token KL does not necessarily</text>
+<text x="708" y="228" font-size="20" fill="#223B60">imply lower complete-candidate</text>
+<text x="708" y="251" font-size="20" fill="#223B60">KL.</text>
+<rect x="695" y="280" width="151" height="66" rx="8" fill="#F9FBFF" stroke="#91AACB" stroke-width="1.6"/>
+<rect x="855" y="280" width="156" height="66" rx="8" fill="#F9FBFF" stroke="#91AACB" stroke-width="1.6"/>
+<text x="770" y="306" text-anchor="middle" font-size="21" font-weight="bold" fill="#263D60">VG-MLP:</text>
+<text x="933" y="306" text-anchor="middle" font-size="21" font-weight="bold" fill="#263D60">VG-GRU:</text>
+<text x="770" y="332" text-anchor="middle" font-size="19"><tspan fill="#1F73B4">0.0882</tspan><tspan fill="#64748B"> / </tspan><tspan fill="#D07313">0.0768</tspan></text>
+<text x="933" y="332" text-anchor="middle" font-size="19"><tspan fill="#1F73B4">0.0827</tspan><tspan fill="#64748B"> / </tspan><tspan fill="#D07313">0.1020</tspan></text>
 </g>
 </svg>
