@@ -10,7 +10,7 @@ with fitz.open(pdf) as doc:
     total = len(doc)
     txt = [page.get_text(sort=True) for page in doc]
     ref_page = next((i+1 for i,t in enumerate(txt)
-                     if re.search(r"\\b(?:REFERENCES|References)\\b",t)),None)
+                     if re.search(r"\b(?:REFERENCES|References)\b",t)),None)
     method_page = next((i+1 for i,t in enumerate(txt)
                         if re.search(r"Overview of\s+(?:ServeSID|S\s*erveSID)",t,re.I)
                         or ("single-depth attribution" in t and "HServe" in t and "DA-CDRS" in t)),None)
@@ -19,7 +19,7 @@ with fitz.open(pdf) as doc:
     if aux.is_file():
         for line in aux.read_text(errors="replace").splitlines():
             if "newlabel{www:body-end}" in line:
-                mat = re.search(r"}{(\\d+)}", line)
+                mat = re.search(r"}{(\d+)}", line)
                 if mat:
                     body_end = int(mat.group(1))
                 break
