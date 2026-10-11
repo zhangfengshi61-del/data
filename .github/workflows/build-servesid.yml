@@ -1,0 +1,26 @@
+name: Build ServeSID paper
+on:
+  push:
+    branches:
+      - revise-servesid-storyline-20261011
+  workflow_dispatch:
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: xu-cheng/latex-action@v3
+        with:
+          root_file: |
+            main.tex
+            supplement.tex
+          working_directory: ServeSID-www
+          latexmk_use_xelatex: false
+          args: -pdf -bibtex -interaction=nonstopmode -halt-on-error -file-line-error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ServeSID-revised-PDFs
+          path: |
+            ServeSID-www/main.pdf
+            ServeSID-www/supplement.pdf
+          if-no-files-found: error
