@@ -280,7 +280,7 @@ def boundary_neg_indices(cand_cb, valid_mask, n_pos=10, n_neg_hi=40, n_neg_sampl
 
 
 def boundary_pair_loss(s_S, valid_mask, n_pos=10, n_neg_hi=40, gamma=0.05,
-                       n_neg_sample=0, neg_idx=None):
+                       n_neg_sample=0, neg_idx=None, margin=None):
     """s24 wave-4: rank-10 boundary pair loss. Dump rows are teacher-exact-sorted, so
     positives = rows 0..n_pos-1 (the teacher's served top-10), negatives = the near-boundary
     rows n_pos..n_neg_hi-1 (teacher ranks 11-40 — where the observed displacements live).
@@ -303,7 +303,10 @@ def boundary_pair_loss(s_S, valid_mask, n_pos=10, n_neg_hi=40, gamma=0.05,
         _r = torch.rand(sn.shape, device=sn.device, dtype=torch.float32).masked_fill(~vn, 2.0)
         _idx = _r.topk(n_neg_sample, dim=1, largest=False).indices
         sn = sn.gather(1, _idx); vn = vn.gather(1, _idx)
-    diff = (sn.unsqueeze(1) - sp.unsqueeze(2)) / gamma      # (B, n_pos, n_neg)
+    # Paper's Plain Pair control: softplus(margin-G_S), G_S=s_plus-s_minus.
+    # Legacy experiments lacking --pair_margin retain their temperature-scaled loss.
+    diff = ((margin + sn.unsqueeze(1) - sp.unsqueeze(2)) if margin is not None
+            else (sn.unsqueeze(1) - sp.unsqueeze(2)) / gamma)
     pm = (vp.unsqueeze(2) & vn.unsqueeze(1)).float()
     loss = _F.softplus(diff) * pm
     return loss.sum() / pm.sum().clamp_min(1.0)
@@ -429,15 +432,17 @@ def serve_kl_loss(s_student, s_teacher, cand_cb, valid_mask, temperature=1.0,
 
 def da_cdrs_loss(t_steplp, s_steplp, cand_cb, valid_mask, step_scale,
                  gamma=0.05, huber_delta=1.0, counterfactual=True, n_pos=10,
-                 n_neg_hi=40, neg_idx=None, weight_mode="cf"):
+                 n_neg_hi=40, neg_idx=None, weight_mode="cf", margin=None):
     """s43e DA-CDRS: decision-attributed cross-depth INCREMENTAL score matching, added on top of the
-    plain boundary-pair anchor (boundary_pair_loss, wired separately via pair_w). Per teacher rank-10
+    standalone depth-wise supervision, WITHOUT a plain pairwise training anchor.
+    boundary_pair_loss is an ablation control. Per teacher rank-10
     boundary pair (pos rows 0..n_pos-1 x neg n_pos..n_neg_hi-1) and per shallow depth d<D: push the
     student per-depth increment gap dG_S^d toward the teacher's dG_T^d (Huber, per-depth increment-
     std-scaled), weighting depth d by its COUNTERFACTUAL decision impact
         A_d = [l_pair(G_S) - l_pair(G_S - dG_S^d + dG_T^d)]_+   (stop-grad, normalized over d<D),
-    l_pair(G) = softplus(-G/gamma) == the anchor hinge. Fixes the s41 CDRS failure modes: INCREMENTAL
-    (not cumulative) gaps -> no double-supervision; the pair loss is the anchor (not replaced); the
+    ell(G)=softplus(mu-G), when margin is supplied for paper-consistent training.
+    Legacy gamma-scaled scoring is retained for old runs. INCREMENTAL
+    (not cumulative) gaps -> no double-supervision; pairwise ranking is not optimized; the
     attribution concentrates the correction on the depth(s) that actually flip THIS boundary.
     counterfactual=False -> uniform depth weights (the control that isolates the attribution)."""
     B, M, Dd = s_steplp.shape
@@ -459,29 +464,40 @@ def da_cdrs_loss(t_steplp, s_steplp, cand_cb, valid_mask, step_scale,
     dG_S = sp.unsqueeze(2) - sn.unsqueeze(1)              # (B,np,neg,D) student per-depth incr gap
     dG_T = tp.unsqueeze(2) - tn.unsqueeze(1)             # teacher per-depth incr gap
     pm = (vp.unsqueeze(2) & vn.unsqueeze(1)).float()     # (B,np,neg) active pair
-    Dc = Dd - 1                                          # corrected shallow depths d<D
+    Dc = Dd - 1                                          # corrected shallow depths d<L
+    # Eligible depths are at/after the FIRST differing SID code, excluding d=L.
+    # Reuse the same mask for CF attribution and both weighting controls.
+    diff_codes = cand_cb[:, :n_pos].unsqueeze(2) != cand_cb[:, n_pos:n_neg_hi].unsqueeze(1)
+    if neg_idx is not None:
+        diff_codes = diff_codes.gather(2, neg_idx[:, None, :, None].expand(-1, n_pos, -1, Dd))
+    first_div = diff_codes.float().argmax(-1)
+    has_div = diff_codes.any(-1)
+    depths = torch.arange(Dc, device=s_steplp.device).view(1, 1, 1, Dc)
+    eligible = (depths >= first_div.unsqueeze(-1)) & has_div.unsqueeze(-1)
     if weight_mode == "uniform_valid":
         # U: uniform over post-divergence non-final depths (v_d / sum v_t)
-        cp = cand_cb[:, :, :Dc].float()                   # (B,M,Dc) codebook digits
-        ci = cp[:, :n_pos].unsqueeze(2); cj = cp[:, n_pos:n_neg_hi].unsqueeze(1)
-        diff = (ci != cj)                                  # (B,np,neg,Dc)
-        first = diff.to(torch.float32).argmax(-1)          # (B,np,neg)
-        depth = torch.arange(Dc, device=s_steplp.device).view(1, 1, 1, Dc)
-        hasdiv = diff.any(-1)
-        v_d = (depth >= first.unsqueeze(-1)) & hasdiv.unsqueeze(-1)   # valid post-divergence depths
-        w = (v_d.to(dG_S.dtype) / v_d.sum(-1, keepdim=True).clamp_min(1.0)).detach()
+        v_d = eligible.to(dG_S.dtype)
+        w = (v_d / v_d.sum(-1, keepdim=True).clamp_min(1.0)).detach()
     elif weight_mode == "posres":
         # R+: stopgrad normalized positive-residual weights over valid depths
-        pos = F.relu(dG_T - dG_S)[..., :Dc]               # delta_d = dG_T - dG_S, positive part
+        pos = F.relu(dG_T - dG_S)[..., :Dc] * eligible.to(dG_S.dtype)
         w = (pos / pos.sum(-1, keepdim=True).clamp_min(1e-8)).detach()
     elif counterfactual:
         G_S = dG_S.sum(-1)                               # (B,np,neg) total student gap
         G_tilde = G_S.unsqueeze(-1) - dG_S[..., :Dc] + dG_T[..., :Dc]   # replace depth-d increment
-        A = F.relu(F.softplus(-G_S / gamma).unsqueeze(-1) - F.softplus(-G_tilde / gamma))
+        # A_d=[ell(G_S)-ell(G_tilde_d)]_+, with ell(G)=softplus(mu-G).
+        if margin is None:  # legacy gamma-scaled evaluation for old checkpoints
+            before = F.softplus(-G_S / gamma).unsqueeze(-1)
+            after = F.softplus(-G_tilde / gamma)
+        else:
+            before = F.softplus(margin - G_S).unsqueeze(-1)
+            after = F.softplus(margin - G_tilde)
+        A = F.relu(before - after) * eligible.to(dG_S.dtype)
         w = (A / A.sum(-1, keepdim=True).clamp_min(1e-9)).detach()      # normalized over d<D, stop-grad
     else:
-        w = torch.full((B, dG_S.shape[1], dG_S.shape[2], Dc), 1.0 / Dc,
-                       device=s_steplp.device, dtype=dG_S.dtype)
+        # Legacy uniform mode follows the paper's valid post-divergence mask.
+        v_d = eligible.to(dG_S.dtype)
+        w = (v_d / v_d.sum(-1, keepdim=True).clamp_min(1.0)).detach()
     scale = step_scale.to(s_steplp.device).float().clamp_min(1e-4)[:Dc].view(1, 1, 1, Dc)
     resid = (dG_S[..., :Dc] - dG_T[..., :Dc]) / scale
     huber = F.smooth_l1_loss(resid, torch.zeros_like(resid), beta=huber_delta, reduction='none')
