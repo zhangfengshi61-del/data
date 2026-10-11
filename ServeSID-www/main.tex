@@ -6,7 +6,7 @@
 %%
 %% TODO before submission:
 %%  1. Replace placeholder figures (Figures/fig*.pdf) with Beauty/Toys/VG versions.
-%%  2. Fill in citations for SmartGR, RCE-KD (see extra-refs.bib TODO).
+%%  2. Check all adapted-baseline configurations against exact training logs.
 %%  3. Fill in one-line baseline descriptions flagged with \TODO{}.
 %%  4. Fill in diagnosis statistics on the new datasets flagged with \TODO{}.
 %%  5. Fill in dataset statistics in supplement.tex.
@@ -105,6 +105,14 @@ not as an independent training loss. Both objectives jointly train
 the same lightweight student under unchanged decoding and validity
 constraints. We assess recommendation utility by held-out Recall
 and NDCG across three datasets and student architectures.
+\par\smallskip\noindent\textbf{Relevance.}
+This work addresses efficient, personalized recommendation on the Web
+by transferring complete-item preferences from a large generative
+teacher to compact sequential recommenders. It directly relates to
+the \emph{Search, Recommendation, and Retrieval-Augmented AI} and
+\emph{User Modeling, Personalization and Agentic Web Users} tracks,
+with an emphasis on training-time preference alignment under an
+unchanged lightweight serving architecture.
 \end{abstract}
 
 %% CCS concepts and keywords are required only for camera-ready; generate
@@ -119,6 +127,10 @@ serving; hierarchical alignment}
 \section{Introduction}
 \label{sec:intro}
 
+Earlier sequential recommenders modeled interaction histories using
+recurrent and attention-based architectures \citep{gru4rec,sasrec,bert4rec,s3rec},
+while language-style and large-scale sequence models extended these
+ideas to generative recommendation \citep{p5,hstu}.
 Semantic-ID (SID) generative recommenders retrieve items by
 autoregressively predicting discrete identifiers. TIGER \citep{tiger}
 scores complete candidates using accumulated SID token
@@ -168,26 +180,39 @@ with controlled structural ablations.
 
 \subsection{Generative Recommendation with Semantic IDs}
 TIGER \citep{tiger} popularized quantized SIDs and constrained
-autoregressive item retrieval. Subsequent work explores learned
-tokenization and representations
-\citep{actionpiece,letter,etegrec,idgenrec}. Prefix-aware approaches
+autoregressive item retrieval, building on discrete representation
+learning and residual quantization \citep{vqvae,rqvae}.
+Subsequent work explores learned tokenization and representations
+\citep{actionpiece,letter,etegrec,idgenrec}, efficient identifier
+design \citep{effitemid,practsid}, and the integration of
+collaborative signals into language models \citep{lcrec,llmrecsurvey}.
+Prefix-aware approaches
 include RIPOR \citep{ripor} for retrieval ranking and APAO
 \citep{apao} for mitigating premature beam pruning. LOHRec
 \citep{lohrec} exploits order and hierarchy in quantized identifiers.
+Complementary directions include long identifier generation and
+unified generative retrieval and ranking \citep{rpg,liger,onerec}.
 Unlike direct prefix-survival objectives, HServe distills probability
 marginals induced by a shared distribution over complete SID items.
 
 \subsection{Efficient Generative Recommendation and Lightweight Students}
-Draft--verify decoding reduces autoregressive cost through proposals
-and verification, while compact models reduce per-step computation.
-SID-MLP \citep{sidmlp} supports verify-free SID prediction with
+Speculative and blockwise decoding amortize autoregressive inference
+through parallel proposals or verification
+\citep{specdec,specsample,blockwise}; recommendation-specific systems
+explore speculative retrieval and faster inference
+\citep{specgr,atspeed}. Compact students instead reduce per-step
+computation without requiring a verifier. SID-MLP \citep{sidmlp} supports verify-free SID prediction with
 lightweight heads. \method\ retains the same serving architecture:
 teacher lists and structural supervision are training-only. We
 distinguish those offline costs from inference efficiency.
 
 \subsection{Knowledge Distillation for Recommendation}
-Conventional recommendation distillation transfers ranked items or
-relative orderings: RD \citep{rankdistill}, RRD \citep{rrd}, and
+Knowledge distillation transfers predictions or sequences from
+stronger models to smaller students \citep{hintonkd,seqkd,distilbert}.
+Earlier implicit-feedback recommenders employ personalized ranking
+and learned interaction functions \citep{bpr,ncf}.
+Recommendation distillation transfers ranked items or relative
+orderings: RD \citep{rankdistill}, RRD \citep{rrd}, and
 RCE-KD \citep{rcekd} exemplify these alternatives. Generative
 distillation includes on-policy GKD \citep{gkd} and contrastive
 DistiLLM-2 \citep{distillm}. More directly, SID-MLP \citep{sidmlp}
