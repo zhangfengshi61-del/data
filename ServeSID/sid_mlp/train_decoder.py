@@ -34,7 +34,7 @@ from .losses import (
     student_list_scores_pd,
     topk_correct,
 )
-from .models import SIDMLP, SIDMLPJP, SIDMLPPD  # s23/s24
+from .models import SIDMLP, SIDMLPJP, SIDMLPPD, SIDGRU, SIDCNN  # s23/s24 + GRU/CNN students
 
 import torch.nn.functional as F
 
@@ -452,11 +452,36 @@ def train_sidmlp(args):
         model = SIDMLPJP(embedding_weight, jp_pairs=jp_pairs, **_model_kwargs).to(device)
         print(f"SIDMLPJP: {jp_pairs.shape[0]} occupied (d1,d2) prefixes", flush=True)
     else:
-        model_cls = SIDMLPPD if variant != "base" else SIDMLP  # s23
-        if variant != "base":
-            _model_kwargs["pd_depth"] = int(getattr(args, "pd_depth", 4))
-            _model_kwargs["pd_mode"] = str(getattr(args, "pd_mode", "full") or "full")
-        model = model_cls(embedding_weight, **_model_kwargs).to(device)
+        arch = str(getattr(args, "arch", "mlp") or "mlp").lower()
+        if arch == "gru":
+            model = SIDGRU(
+                embedding_weight,
+                embed_dim=embedding_weight.shape[1],
+                gru_hidden=int(getattr(args, "gru_hidden", 384)),
+                gru_layers=int(getattr(args, "gru_layers", 1)),
+                head_hidden=args.head_hidden,
+                head_layers=args.head_layers,
+                dropout=args.dropout,
+            ).to(device)
+            print(f"SIDGRU: hidden={args.gru_hidden} layers={args.gru_layers}", flush=True)
+        elif arch == "cnn":
+            model = SIDCNN(
+                embedding_weight,
+                embed_dim=embedding_weight.shape[1],
+                conv_dim=int(getattr(args, "conv_dim", 256)),
+                kernel_size=int(getattr(args, "conv_kernel", 3)),
+                conv_layers=int(getattr(args, "conv_layers", 2)),
+                head_hidden=args.head_hidden,
+                head_layers=args.head_layers,
+                dropout=args.dropout,
+            ).to(device)
+            print(f"SIDCNN: dim={args.conv_dim} kernel={args.conv_kernel} layers={args.conv_layers}", flush=True)
+        else:
+            model_cls = SIDMLPPD if variant != "base" else SIDMLP  # s23
+            if variant != "base":
+                _model_kwargs["pd_depth"] = int(getattr(args, "pd_depth", 4))
+                _model_kwargs["pd_mode"] = str(getattr(args, "pd_mode", "full") or "full")
+            model = model_cls(embedding_weight, **_model_kwargs).to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)

@@ -174,7 +174,145 @@ class SIDMLP(nn.Module):
         return logits1, logits2, logits3, logits4
 
 
-__all__ = ["CrossAttention", "MLPBlock", "SIDMLP", "make_mlp"]
+__all__ = ["CrossAttention", "MLPBlock", "SIDMLP", "make_mlp", "SIDGRU", "SIDCNN"]
+
+
+class _SIDStudentCore(nn.Module):
+    """Shared skeleton for lightweight SID students: frozen semantic-ID embedding,
+    four prefix-conditioned codebook heads, and the SIDMLP-style forward path.
+    Subclasses only supply the history encoder (``encode``)."""
+
+    def __init__(
+        self,
+        embedding_weight: torch.Tensor,
+        ctx_dim: int,
+        embed_dim: int = 128,
+        head_hidden: int = 512,
+        head_layers: int = 1,
+        dropout: float = 0.1,
+    ):
+        super().__init__()
+        self.embedding = nn.Embedding.from_pretrained(embedding_weight, freeze=True)
+        self.ctx_dim = ctx_dim
+        self.head1 = make_mlp(ctx_dim, CODEBOOK_SIZE, head_hidden, head_layers, dropout)
+        self.head2 = make_mlp(ctx_dim + embed_dim, CODEBOOK_SIZE, head_hidden, head_layers, dropout)
+        self.head3 = make_mlp(ctx_dim + 2 * embed_dim, CODEBOOK_SIZE, head_hidden, head_layers, dropout)
+        self.head4 = make_mlp(ctx_dim + 3 * embed_dim, CODEBOOK_SIZE, head_hidden, head_layers, dropout)
+
+    def encode(self, enc_seq, enc_mask):
+        raise NotImplementedError
+
+    def forward(self, enc_seq, enc_mask, d1_ids=None, d2_ids=None, d3_ids=None):
+        ctx = self.encode(enc_seq, enc_mask)
+        logits1 = self.head1(ctx)
+
+        if d1_ids is None:
+            d1_ids = logits1.argmax(dim=-1) + DIGIT_OFFSETS[0]
+        with torch.no_grad():
+            e1 = self.embedding(d1_ids)
+        logits2 = self.head2(torch.cat([ctx, e1], dim=1))
+
+        if d2_ids is None:
+            d2_ids = logits2.argmax(dim=-1) + DIGIT_OFFSETS[1]
+        with torch.no_grad():
+            e2 = self.embedding(d2_ids)
+        logits3 = self.head3(torch.cat([ctx, e1, e2], dim=1))
+
+        if d3_ids is None:
+            d3_ids = logits3.argmax(dim=-1) + DIGIT_OFFSETS[2]
+        with torch.no_grad():
+            e3 = self.embedding(d3_ids)
+        logits4 = self.head4(torch.cat([ctx, e1, e2, e3], dim=1))
+
+        return logits1, logits2, logits3, logits4
+
+
+class SIDGRU(_SIDStudentCore):
+    """GRU history encoder + prefix-conditioned codebook heads.
+
+    Replaces the cross-attention readout of SID-MLP with a single-layer
+    bidirectional-free GRU over the interaction history; the last valid hidden
+    state serves as the context for all four SID heads."""
+
+    def __init__(
+        self,
+        embedding_weight: torch.Tensor,
+        embed_dim: int = 128,
+        gru_hidden: int = 384,
+        gru_layers: int = 1,
+        head_hidden: int = 512,
+        head_layers: int = 1,
+        dropout: float = 0.1,
+    ):
+        super().__init__(
+            embedding_weight,
+            ctx_dim=gru_hidden,
+            embed_dim=embed_dim,
+            head_hidden=head_hidden,
+            head_layers=head_layers,
+            dropout=dropout,
+        )
+        self.gru = nn.GRU(
+            embed_dim, gru_hidden, num_layers=gru_layers,
+            batch_first=True, dropout=0.0,
+        )
+        self.ctx_norm = nn.LayerNorm(gru_hidden)
+
+    def encode(self, enc_seq, enc_mask):
+        valid = (~enc_mask).to(enc_seq.dtype)                       # (B, L), 1=valid
+        x = enc_seq * valid.unsqueeze(-1)                           # zero out padding
+        out, _ = self.gru(x)                                        # (B, L, H)
+        lengths = valid.sum(dim=1).clamp_min(1.0)                   # (B,)
+        last_idx = (lengths - 1).long()
+        ctx = out[torch.arange(out.size(0), device=out.device), last_idx]
+        return self.ctx_norm(ctx)
+
+
+class SIDCNN(_SIDStudentCore):
+    """Causal 1-D CNN history encoder + prefix-conditioned codebook heads.
+
+    Stacks causal convolutions over the item embedding sequence and pools the
+    encoded history into a single context vector for the four SID heads."""
+
+    def __init__(
+        self,
+        embedding_weight: torch.Tensor,
+        embed_dim: int = 128,
+        conv_dim: int = 256,
+        kernel_size: int = 3,
+        conv_layers: int = 2,
+        head_hidden: int = 512,
+        head_layers: int = 1,
+        dropout: float = 0.1,
+    ):
+        super().__init__(
+            embedding_weight,
+            ctx_dim=conv_dim,
+            embed_dim=embed_dim,
+            head_hidden=head_hidden,
+            head_layers=head_layers,
+            dropout=dropout,
+        )
+        layers = []
+        in_c = embed_dim
+        for _ in range(conv_layers):
+            layers.append(nn.Conv1d(in_c, conv_dim, kernel_size, padding=0))
+            layers.append(nn.GELU())
+            layers.append(nn.Dropout(dropout))
+            in_c = conv_dim
+        self.conv = nn.Sequential(*layers)
+        self.total_pad = (kernel_size - 1) * conv_layers
+        self.ctx_norm = nn.LayerNorm(conv_dim)
+
+    def encode(self, enc_seq, enc_mask):
+        valid = (~enc_mask).to(enc_seq.dtype)                       # (B, L), 1=valid
+        x = (enc_seq * valid.unsqueeze(-1)).transpose(1, 2)         # (B, E, L)
+        x = F.pad(x, (self.total_pad, 0))                           # causal: pad the front only
+        h = self.conv(x)                                            # (B, C, L)
+        v = valid.unsqueeze(1)                                      # (B, 1, L)
+        denom = v.sum(dim=2).clamp_min(1.0)                         # (B, 1)
+        ctx = (h * v).sum(dim=2) / denom                            # masked mean pool
+        return self.ctx_norm(ctx)
 
 
 class SIDMLPPD(SIDMLP):

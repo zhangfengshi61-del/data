@@ -95,6 +95,12 @@ def _add_decoder_args(parser):
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--run_tag", type=str, default="")
     parser.add_argument("--variant", type=str, default="base", choices=["base", "pd", "jp"])  # s23/s24
+    parser.add_argument("--arch", type=str.lower, default="mlp", choices=["mlp", "gru", "cnn"])  # student encoder family
+    parser.add_argument("--gru_hidden", type=int, default=384)   # GRU student hidden size
+    parser.add_argument("--gru_layers", type=int, default=1)     # GRU student layers
+    parser.add_argument("--conv_dim", type=int, default=256)     # CNN student channel dim
+    parser.add_argument("--conv_kernel", type=int, default=3)    # CNN student kernel size
+    parser.add_argument("--conv_layers", type=int, default=2)    # CNN student conv layers
     parser.add_argument("--pd_depth", type=int, default=4)         # s24/s32: PD-lite depth; 4 = full PD
     parser.add_argument("--pd_mode", type=str, default="full", choices=["full", "cheap", "train_only"])
     parser.add_argument("--list_kl", type=float, default=0.0)      # s24

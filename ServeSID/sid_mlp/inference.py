@@ -94,6 +94,30 @@ def build_sidmlp_from_checkpoint(checkpoint_path, embedding_weight, device, *, l
         state = ckpt
         ckpt_args = {}
 
+    arch = str(ckpt_args.get("arch", "mlp") or "mlp").lower()
+    if arch in ("gru", "cnn"):
+        from .models import SIDCNN, SIDGRU
+
+        inferred_head_hidden = int(ckpt_args.get("head_hidden", state["head1.0.weight"].shape[0]))
+        _kwargs = dict(
+            embed_dim=embedding_weight.shape[1],
+            head_hidden=inferred_head_hidden,
+            head_layers=int(ckpt_args.get("head_layers", 1)),
+            dropout=float(ckpt_args.get("dropout", 0.0)),
+        )
+        if arch == "gru":
+            _kwargs["gru_hidden"] = int(ckpt_args.get("gru_hidden", 384))
+            _kwargs["gru_layers"] = int(ckpt_args.get("gru_layers", 1))
+            model = SIDGRU(embedding_weight, **_kwargs)
+        else:
+            _kwargs["conv_dim"] = int(ckpt_args.get("conv_dim", 256))
+            _kwargs["kernel_size"] = int(ckpt_args.get("conv_kernel", 3))
+            _kwargs["conv_layers"] = int(ckpt_args.get("conv_layers", 2))
+            model = SIDCNN(embedding_weight, **_kwargs)
+        model.load_state_dict(state, strict=True)
+        model.to(device).eval()
+        return model, ckpt
+
     inferred_attn_dim = int(ckpt_args.get("attn_dim", state["cross_attn.q_proj.weight"].shape[0]))
     inferred_ffn_dim = int(ckpt_args.get("ffn_dim", state["ffn.0.weight"].shape[0]))
     variant = ckpt_args.get("variant", "base")
