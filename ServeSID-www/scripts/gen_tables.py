@@ -372,8 +372,8 @@ def main_results_table():
     for ds in DATASETS:
         for j, method in enumerate(methods):
             left = r"\cellcolor{white}"
-            if j == 0:
-                left += r"\multirow{8}{*}{\textbf{\fontsize{9}{10}\selectfont " + ds + r"}}"
+            if j == 7:
+                left += r"\multirow{-8}{*}{\textbf{\fontsize{9}{10}\selectfont " + ds + r"}}"
             cat = r"\cellcolor{white}" + cats.get(j, "")
             label = r"\textbf{ServeSID}" if method == "ServeSID (ours)" else method
             vals = [marked_value(ds, st, k, MAIN[method][ds][st][k])
