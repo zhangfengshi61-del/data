@@ -110,7 +110,8 @@ def _add_decoder_args(parser):
     parser.add_argument("--beam_dump", type=str, default=None)     # s24
     parser.add_argument("--seqkd", action="store_true")            # s24
     parser.add_argument("--pair_w", type=float, default=0.0)       # s24 wave-4
-    parser.add_argument("--pair_gamma", type=float, default=0.05)  # s24 wave-4
+    parser.add_argument("--pair_gamma", type=float, default=0.05)  # legacy temperature version
+    parser.add_argument("--pair_margin", type=float, default=None)  # paper's softplus(mu-G) control
     parser.add_argument("--cdrs_w", type=float, default=0.0)        # s41 CDRS
     parser.add_argument("--cdrs_tau", type=float, default=0.0)      # s41 CDRS (0 -> reuse list_temp)
     parser.add_argument("--cdrs_pos_k", type=int, default=10)       # s41 CDRS
@@ -124,7 +125,9 @@ def _add_decoder_args(parser):
     parser.add_argument("--da_mode", type=str, default="cf")
     parser.add_argument("--corr_mode", type=str, default="cf",
                         choices=["cf", "uniform_valid", "posres"])        # s43e cf|uniform
-    parser.add_argument("--da_gamma", type=float, default=0.05)     # s43e counterfactual pair-hinge gamma
+    parser.add_argument("--da_gamma", type=float, default=0.05)     # legacy temperature version
+    parser.add_argument("--da_margin", type=float, default=None)  # paper's detached softplus(mu-G)
+    parser.add_argument("--da_corr_w", type=float, default=1.0)   # lambda_corr; da_w=lambda_D
     parser.add_argument("--da_huber", type=float, default=1.0)      # s43e Huber delta
     parser.add_argument("--da_negs", type=int, default=0)           # s53 fixed negatives shared with pair anchor
     parser.add_argument("--ckpt_dir", type=str, default=None)
