@@ -33,7 +33,7 @@ This document adapts principles from six publicly available paper-layout Skills 
 - **Both are generated from** `scripts/gen_tables.py`. Any table typography change must update the generator and committed `.tex` consistently.
 - Preserve 4-decimal means, 5-decimal reported SDs, grouping, and tie-aware highlighting. The single source for the supplied ablation statistics is `data/ablation_user_supplied_mean_sd.csv`; never silently alter numerical entries.
 - Color is supportive only: best is bold, second-best gray, full ServeSID coral, and group labels show the method family in words.
-- Provenance (2026-10-11): 252 ablation mean/SD entries are author-supplied summaries without matching per-seed logs or checkpoints. Three Base-KD/MLP mean sets were explicitly marked as simulation-adjusted by the provider. Presentation changes cannot validate experimental results.
+- Provenance (2026-10-11): the author confirms 288 main-table and 252 ablation mean/SD entries as real results. Raw per-seed logs and checkpoint IDs remain to be linked for independent replication. The main and ablation SDs disagree for 67 of 72 duplicate Base-KD / Full metrics; keep both sources unchanged until reconciled.
 
 ## Mandatory checks after any layout change
 
