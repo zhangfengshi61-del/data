@@ -4,7 +4,8 @@ This repository contains the training and inference code for **ServeSID**,
 a structure-aware knowledge distillation framework for Semantic-ID (SID)
 generative recommendation. ServeSID distills a fixed TIGER teacher into
 lightweight students (MLP / GRU / CNN) with two complementary,
-training-only objectives:
+training-only objectives. The student encoder family is selected with
+`--arch {mlp,gru,cnn}`:
 
 - **HServe (Hierarchical Serving-Distribution Alignment)**: aligns teacher
   and student preference distributions over a shared complete-SID candidate
@@ -29,6 +30,8 @@ SID prediction heads, valid-prefix masking, and constrained beam search).
 - `genrec/` — the TIGER teacher pipeline (based on GenRec/SID-MLP teacher
   code) used to generate teacher candidates and scores.
 - `configs/` — YAML configurations:
+  - `sidmlp_gru.yaml` / `sidmlp_cnn.yaml` — base-KD runs for the GRU
+    (`gru_hidden=384`) and CNN (`conv_dim=256`) student encoders.
   - `servesid_final.yaml` — full ServeSID (HServe + DA-CDRS).
   - `abl_*.yaml` — ablation arms (d4-only KL, DA-CDRS only, HServe only,
     HServe + plain pair, HServe + uniform attribution).
@@ -52,8 +55,16 @@ conda env create -f environment.yml   # or: pip install -r requirements.txt
 bash scripts/build_valid_set.sh
 bash scripts/extract.sh
 
-# 2. train the full ServeSID student
+# 2a. train the full ServeSID student (MLP encoder, default)
 bash scripts/train.sh.servesid
+
+# 2b. or train a GRU / CNN student encoder
+python -m sid_mlp.cli.train sidmlp --config configs/sidmlp_gru.yaml --arch gru \
+    --checkpoint $MODEL_DIR/<category>/checkpoint.pth --category <category> \
+    --graph_dir $GRAPH_DIR --sem_ids $SEM_IDS
+python -m sid_mlp.cli.train sidmlp --config configs/sidmlp_cnn.yaml --arch cnn \
+    --checkpoint $MODEL_DIR/<category>/checkpoint.pth --category <category> \
+    --graph_dir $GRAPH_DIR --sem_ids $SEM_IDS
 
 # 3. evaluate with constrained beam search
 bash scripts/infer.sh
@@ -61,7 +72,11 @@ bash scripts/infer.sh
 
 See `scripts/*.sh` and `configs/*.yaml` for dataset paths and hyperparameters
 (candidate support `M`, training cutoff `K_tr`, pair range `B`, loss weights
-`lambda_H`, `lambda_D`, `lambda_corr`, learning rate, and seeds).
+`lambda_H`, `lambda_D`, `lambda_corr`, learning rate, and seeds). The GRU
+(`gru_hidden`, `gru_layers`) and CNN (`conv_dim`, `conv_kernel`,
+`conv_layers`) student sizes are also configurable; with the shared
+512-wide prediction heads the defaults give roughly 2.8M and 2.3M
+parameters, and smaller `head_hidden` values reduce the total budget.
 
 ## Acknowledgments
 
