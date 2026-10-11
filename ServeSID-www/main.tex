@@ -566,6 +566,10 @@ of every teacher Top-$K$ item.
 \section{Experiments}
 \label{sec:exp}
 
+% Place wide experiment tables early so they float before References.
+\input{Figures/table_main_results.tex}
+\input{Figures/table_ablation.tex}
+
 We evaluate \method\ along three questions: (RQ1) Does structure-aware
 distillation improve next-item recommendation across datasets and
 student architectures? (RQ2) Does HServe add value beyond
@@ -619,7 +623,6 @@ Table~\ref{tab:main-all} compares \method\ with conventional recommendation dist
 % new-objective NDCG@10 and Recall results for 3 datasets x 3 students.
 % Do not publish synthetic or historical configurations as measured results.
 
-\input{Figures/table_main_results.tex}
 
 \subsection{Ablation Study}
 \label{sec:exp-ablation}
@@ -635,7 +638,6 @@ additional matched control.
 % ABLATION VERIFICATION REQUIRED before submission: insert checked
 % HServe-vs-d4, Full-vs-Uniform, and cross-objective comparisons.
 
-\input{Figures/table_ablation.tex}
 
 \subsection{Training Cost and Scope}
 \label{sec:exp-cost}
