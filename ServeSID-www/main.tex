@@ -144,8 +144,10 @@ A second SID property motivates DA-CDRS: complete-candidate score gaps
 decompose into depth-wise relative-score increments. Teacher--student
 residuals can have opposing signs and partially cancel; correcting a
 large absolute error need not favor the teacher-preferred ordering
-(Motivation 3). DA-CDRS accordingly uses single-depth teacher
-replacements to allocate detached, gap-sensitive depth weights.
+(Motivation 3). A direct complete-pair margin supervises only their
+sum, without identifying which SID depth caused the mismatch.
+DA-CDRS instead allocates detached, gap-sensitive depth weights
+through single-depth teacher replacements.
 
 Our \method\ framework combines HServe's complete-item and
 shared-prefix KL alignment with DA-CDRS's weighted relative-score
@@ -544,8 +546,9 @@ The request loss averages over $\mathcal B(u)$ and is zero if this
 set is empty. If all eligible attributions vanish, that pair adds no
 DA correction. The complete-pair Softplus is used \emph{only} to
 compute detached weights, never as an independent training loss.
-Whether its gap-sensitive allocation improves upon uniform or simple
-positive-residual weights requires controlled ablations.
+A direct pair-ranking objective is evaluated separately as an
+ablation; improvement over that control does not establish superiority
+over every pairwise or positive-residual weighting alternative.
 
 \subsection{Offline Training and Verify-Free Inference}
 \label{sec:method-train-inf}
@@ -573,7 +576,9 @@ of every teacher Top-$K$ item.
 We evaluate \method\ along three questions: (RQ1) Does structure-aware
 distillation improve next-item recommendation across datasets and
 student architectures? (RQ2) Does HServe add value beyond
-complete-candidate, leaf-only distribution matching? (RQ3) Does decision-attributed depth-wise distillation complement hierarchical alignment and outperform uniform depth weighting?
+complete-candidate, leaf-only distribution matching? (RQ3) Does
+depth-attributed supervision improve upon both uniform weighting and
+a direct complete-pair ranking control when combined with HServe?
 
 \subsection{Experimental Setup}
 \label{sec:exp-setup}
@@ -601,7 +606,12 @@ support with depth weights $\alpha_d=1$ and $\lambda_H=4$. DA-CDRS samples teach
 for detached attribution weights, with $\lambda_D=1$ and
 $\lambda_{\mathrm{corr}}=31.42$. The uniform variant replaces these
 weights with equal weights over eligible non-final SID depths;
-neither variant directly optimizes an additional pairwise loss. Models are trained with learning rate
+neither variant directly optimizes an additional pairwise loss.
+For the ablation-only \emph{HServe + Plain Pair} control, we remove DA-CDRS
+and directly minimize the same complete-pair Softplus score on the
+same teacher-ordered pairs alongside digit CE and HServe. Its pair
+coefficient must be matched to the corresponding run configuration.
+Models are trained with learning rate
 $5\times10^{-5}$ and seeds 42, 43, 44. All teacher scores, pairs, and
 increment-scale statistics originate from training requests only;
 validation and test teacher outputs are used exclusively for
@@ -627,16 +637,19 @@ Table~\ref{tab:main-all} compares \method\ with conventional recommendation dist
 \subsection{Ablation Study}
 \label{sec:exp-ablation}
 
-Table~\ref{tab:ablation} examines the individual and complementary
-contributions of HServe and DA-CDRS. HServe-only versus d4-only KL
-tests explicit multi-level alignment; DA-CDRS-only isolates depth-wise
-relative-score transfer. Full versus uniform tests gap-sensitive
-attribution against equal depth weights. Comparisons with each
-individual module assess their complementarity. These tests do not
-establish superiority over positive-residual weighting without an
-additional matched control.
-% ABLATION VERIFICATION REQUIRED before submission: insert checked
-% HServe-vs-d4, Full-vs-Uniform, and cross-objective comparisons.
+Table~\ref{tab:ablation} contrasts leaf-only KL, HServe,
+and DA-CDRS. The \emph{HServe + Plain Pair} control replaces
+depth-wise correction with direct complete-pair Softplus training;
+it matches overall pair margins but does not locate SID-depth errors.
+In the supplied \emph{provisional} table, full \method\ exceeds
+this control on all 36 dataset--student--metric entries, whereas
+Plain Pair does not consistently improve upon HServe alone.
+Full versus Uniform additionally tests attribution against equal
+depth weights. These comparisons motivate depth-localized supervision,
+but do not show that pairwise ranking losses are generally ineffective
+or establish statistical significance.
+% ABLATION VERIFICATION REQUIRED: verify seed means, exact pair weight,
+% checkpoint provenance and configuration matching before submission.
 
 
 \subsection{Training Cost and Scope}
