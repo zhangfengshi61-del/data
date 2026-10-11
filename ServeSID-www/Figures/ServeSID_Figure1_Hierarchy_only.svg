@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1466" height="696" viewBox="0 0 1466 696">
+<svg xmlns="http://www.w3.org/2000/svg" width="1466" height="648" viewBox="0 48 1466 648">
   <title>ServeSID — hierarchical candidate preference shifts</title>
   <desc>Teacher and student distribute candidate preference mass differently across Semantic-ID prefix depths. Boundary ranking flip example removed.</desc>
   <defs>
@@ -291,7 +291,6 @@
     </clipPath>
   </defs>
   <rect x="0" y="0" width="1466" height="696" rx="0" fill="white"/>
-  <text x="18" y="31" font-family="Liberation Serif, Times New Roman, serif" font-size="28" fill="#172230" font-weight="bold" font-style="normal" text-anchor="start">Hierarchical preference shifts across SID prefix depths</text>
   <path d="M735,55 L735,674" fill="none" stroke="#C2D4EB" stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
   <g id="fig1_teacher" transform="translate(0 0)">
     <path d="M49,227 C80,213 134,185 167,168 C231,133 271,98 329,80 C414,56 493,53 561,60 L561,256 C452,260 334,257 244,260 C173,261 137,263 119,245 L103,230 Z" fill="url(#ribbon_blue)" stroke-linecap="round" stroke-linejoin="round"/>
