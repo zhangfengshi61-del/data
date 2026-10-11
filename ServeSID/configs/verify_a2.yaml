@@ -29,3 +29,4 @@ list_kl: 4
 list_temp: 1.0
 pair_w: 0.0
 da_w: 0.0
+seeds: [42, 43, 44]
