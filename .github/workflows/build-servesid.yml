@@ -54,13 +54,13 @@ jobs:
             ServeSID-www/layout_audit.txt
             ServeSID-www/layout_previews/*.png
           if-no-files-found: error
-      - name: Commit regenerated Figure 2 vector PDF
-        if: github.ref == 'refs/heads/revise-servesid-storyline-20261011'
+      - name: Commit regenerated publication figures
+        if: github.ref == 'refs/heads/www27-eight-page-layout-20261011'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ServeSID-www/Figures/fig_stat_h1.pdf
+          git add ServeSID-www/Figures/diag_hierarchy.pdf ServeSID-www/Figures/fig_stat_h1.pdf ServeSID-www/Figures/fig_stat_d12.pdf ServeSID-www/Figures/diag_replace.pdf
           if ! git diff --cached --quiet; then
-            git commit -m "Update Figure 2 PDF colors to match Figure 3"
+            git commit -m "Refresh publication figure PDFs after vector-layout refinement"
             git push
           fi
