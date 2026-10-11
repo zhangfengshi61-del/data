@@ -4,6 +4,7 @@ on:
     branches:
       - revise-servesid-storyline-20261011
       - www27-eight-page-layout-20261011
+      - servesid-visual-skills-polish-20261011
   workflow_dispatch:
 permissions:
   contents: write
@@ -55,7 +56,7 @@ jobs:
             ServeSID-www/layout_previews/*.png
           if-no-files-found: error
       - name: Commit regenerated publication figures
-        if: github.ref == 'refs/heads/www27-eight-page-layout-20261011'
+        if: github.ref == 'refs/heads/servesid-visual-skills-polish-20261011'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
