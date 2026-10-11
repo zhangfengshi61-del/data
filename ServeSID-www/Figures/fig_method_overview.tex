@@ -2,6 +2,9 @@
 % Avoid any claims about measured latency/accuracy in this schematic.
 \begin{figure*}[t]
 \centering
+% Reserve the same 53mm plot area for the author's final main_method.pdf.
+\begin{minipage}[c][53mm][c]{\textwidth}
+\centering
 \IfFileExists{Figures/main_method.pdf}{%
   \includegraphics[width=0.98\textwidth,height=53mm,keepaspectratio]{Figures/main_method.pdf}%
 }{%
@@ -41,6 +44,7 @@
   {Offline training only; no extra inference module};
 \end{tikzpicture}%
 }
+\end{minipage}
 \caption{Overview of \method. HServe aligns complete-candidate and prefix-level preferences; DA-CDRS weights depth-wise relative-score matching using detached single-depth attribution. Both objectives update the same lightweight student offline.}
 \Description{Training-only teacher candidate supervision branches into hierarchical candidate-marginal alignment and direction-attributed depth-wise Huber distillation. The jointly trained student retains its original inference architecture.}
 \label{fig:method-overview}
