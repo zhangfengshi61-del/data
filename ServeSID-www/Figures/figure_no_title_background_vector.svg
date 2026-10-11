@@ -187,8 +187,8 @@
   <text x="897.5" y="661" text-anchor="middle" font-size="19.5" fill="#243F64" font-weight="bold">VG-GRU</text>
   <text x="678.5" y="686" text-anchor="middle" font-size="19.0"><tspan fill="#1F73B4">0.0882</tspan><tspan fill="#728197"> / </tspan><tspan fill="#C26D16">0.0768</tspan></text>
   <text x="897.5" y="686" text-anchor="middle" font-size="19.0"><tspan fill="#1F73B4">0.0827</tspan><tspan fill="#728197"> / </tspan><tspan fill="#C26D16">0.1020</tspan></text>
-  <text x="678.5" y="708" text-anchor="middle" font-size="13.5" fill="#5F7289">Token / Candidate</text>
-  <text x="897.5" y="708" text-anchor="middle" font-size="13.5" fill="#5F7289">Token / Candidate</text>
+  
+  
 </g>
 <!-- Scale information is outside both plotting regions. -->
 <g id="scale-note-footer" font-family="Times New Roman, Liberation Serif, serif">
