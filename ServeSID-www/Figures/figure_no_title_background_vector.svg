@@ -48,49 +48,49 @@
 <line x1="960" y1="445.23" x2="960" y2="421.23" stroke="#9AAABD" stroke-width="1.25" stroke-dasharray="3 3" />
 <line x1="1020" y1="400.98" x2="1020" y2="376.98" stroke="#9AAABD" stroke-width="1.25" stroke-dasharray="3 3" />
 <rect x="116.00" y="489.18" width="28" height="29.82" fill="url(#blue)" rx="2"/>
-<text x="130" y="475.18" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.1057</text>
+<text x="130" y="475.18" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.1057</text>
 <rect x="176.00" y="492.44" width="28" height="26.56" fill="url(#orange)" rx="2"/>
-<text x="190" y="422.44" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.1007</text>
+<text x="190" y="422.44" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.1007</text>
 <text x="160" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >MLP</text>
 <rect x="216.00" y="451.66" width="28" height="67.34" fill="url(#blue)" rx="2"/>
-<text x="230" y="381.66" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.1632</text>
+<text x="230" y="381.66" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.1632</text>
 <rect x="276.00" y="398.54" width="28" height="120.46" fill="url(#orange)" rx="2"/>
-<text x="290" y="328.54" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.2446</text>
+<text x="290" y="328.54" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.2446</text>
 <text x="260" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >GRU</text>
 <rect x="316.00" y="388.30" width="28" height="130.70" fill="url(#blue)" rx="2"/>
-<text x="330" y="374.30" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.2603</text>
+<text x="330" y="374.30" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.2603</text>
 <rect x="376.00" y="222.09" width="28" height="296.91" fill="url(#orange)" rx="2"/>
-<text x="390" y="208.09" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.5150</text>
+<text x="390" y="208.09" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.5150</text>
 <text x="360" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >CNN</text>
 <rect x="431.00" y="464.51" width="28" height="54.49" fill="url(#blue)" rx="2"/>
-<text x="445" y="450.51" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.1435</text>
+<text x="445" y="450.51" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.1435</text>
 <rect x="491.00" y="466.93" width="28" height="52.07" fill="url(#orange)" rx="2"/>
-<text x="505" y="424.93" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.1398</text>
+<text x="505" y="424.93" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.1398</text>
 <text x="475" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >MLP</text>
 <rect x="531.00" y="425.56" width="28" height="93.44" fill="url(#blue)" rx="2"/>
-<text x="545" y="383.56" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.2032</text>
+<text x="545" y="383.56" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.2032</text>
 <rect x="591.00" y="345.03" width="28" height="173.97" fill="url(#orange)" rx="2"/>
-<text x="605" y="331.03" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.3266</text>
+<text x="605" y="331.03" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.3266</text>
 <text x="575" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >GRU</text>
 <rect x="631.00" y="355.08" width="28" height="163.92" fill="url(#blue)" rx="2"/>
-<text x="645" y="285.08" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.3112</text>
+<text x="645" y="285.08" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.3112</text>
 <rect x="691.00" y="162.39" width="28" height="356.61" fill="url(#orange)" rx="2"/>
-<text x="705" y="148.39" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.6065</text>
+<text x="705" y="148.39" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.6065</text>
 <text x="675" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >CNN</text>
 <rect x="746.00" y="500.60" width="28" height="18.40" fill="url(#blue)" rx="2"/>
-<text x="760" y="486.60" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.0882</text>
+<text x="760" y="486.60" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.0882</text>
 <rect x="806.00" y="508.04" width="28" height="10.96" fill="url(#orange)" rx="2"/>
-<text x="820" y="438.04" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.0768</text>
+<text x="820" y="438.04" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.0768</text>
 <text x="790" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >MLP</text>
 <rect x="846.00" y="504.19" width="28" height="14.81" fill="url(#blue)" rx="2"/>
-<text x="860" y="490.19" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.0827</text>
+<text x="860" y="490.19" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.0827</text>
 <rect x="906.00" y="491.59" width="28" height="27.41" fill="url(#orange)" rx="2"/>
-<text x="920" y="449.59" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.1020</text>
+<text x="920" y="449.59" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.1020</text>
 <text x="890" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >GRU</text>
 <rect x="946.00" y="456.23" width="28" height="62.77" fill="url(#blue)" rx="2"/>
-<text x="960" y="414.23" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.1562</text>
+<text x="960" y="414.23" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#1F73B4" text-anchor="middle" font-weight="bold">0.1562</text>
 <rect x="1006.00" y="411.98" width="28" height="107.02" fill="url(#orange)" rx="2"/>
-<text x="1020" y="369.98" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">0.2240</text>
+<text x="1020" y="369.98" font-family="Times New Roman, Liberation Serif, serif" font-size="20.2" fill="#B8610E" text-anchor="middle" font-weight="bold">0.2240</text>
 <text x="990" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >CNN</text>
 <line x1="417.5" y1="142" x2="417.5" y2="568" stroke="#D5DFE9" stroke-width="1.3" stroke-dasharray="5 7"/>
 <line x1="732.5" y1="142" x2="732.5" y2="568" stroke="#D5DFE9" stroke-width="1.3" stroke-dasharray="5 7"/>
@@ -123,49 +123,49 @@
 <path d="M1198 504 l6 -7 l6 7 l6 -7" fill="none" stroke="#334155" stroke-width="2.5"/>
 <text x="1139" y="325" transform="rotate(-90 1139 325)" font-family="Times New Roman, Liberation Serif, serif" font-size="23" font-weight="bold" fill="#26394B" text-anchor="middle">Disagreement (%)</text>
 <rect x="1217" y="478.72" width="24" height="40.28" fill="url(#blue)" rx="2"/>
-<text x="1229" y="464.72" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">16.8%</text>
+<text x="1229" y="464.72" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">16.8%</text>
 <rect x="1263" y="366.18" width="24" height="152.82" fill="url(#orange)" rx="2"/>
-<text x="1275" y="352.18" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">35.8%</text>
+<text x="1275" y="352.18" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">35.8%</text>
 <text x="1252" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >MLP</text>
 <rect x="1298" y="422.45" width="24" height="96.55" fill="url(#blue)" rx="2"/>
-<text x="1310" y="408.45" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">26.3%</text>
+<text x="1310" y="408.45" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">26.3%</text>
 <rect x="1344" y="278.52" width="24" height="240.48" fill="url(#orange)" rx="2"/>
-<text x="1356" y="264.52" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">50.6%</text>
+<text x="1356" y="264.52" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">50.6%</text>
 <text x="1333" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >GRU</text>
 <rect x="1379" y="324.72" width="24" height="194.28" fill="url(#blue)" rx="2"/>
-<text x="1391" y="310.72" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">42.8%</text>
+<text x="1391" y="310.72" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">42.8%</text>
 <rect x="1425" y="183.75" width="24" height="335.25" fill="url(#orange)" rx="2"/>
-<text x="1437" y="169.75" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">66.6%</text>
+<text x="1437" y="169.75" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">66.6%</text>
 <text x="1414" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >CNN</text>
 <rect x="1462" y="487.61" width="24" height="31.39" fill="url(#blue)" rx="2"/>
-<text x="1474" y="473.61" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">15.3%</text>
+<text x="1474" y="473.61" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">15.3%</text>
 <rect x="1508" y="347.23" width="24" height="171.77" fill="url(#orange)" rx="2"/>
-<text x="1520" y="333.23" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">39.0%</text>
+<text x="1520" y="333.23" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">39.0%</text>
 <text x="1497" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >MLP</text>
 <rect x="1543" y="426.01" width="24" height="92.99" fill="url(#blue)" rx="2"/>
-<text x="1555" y="412.01" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">25.7%</text>
+<text x="1555" y="412.01" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">25.7%</text>
 <rect x="1589" y="257.79" width="24" height="261.21" fill="url(#orange)" rx="2"/>
-<text x="1601" y="243.79" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">54.1%</text>
+<text x="1601" y="243.79" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">54.1%</text>
 <text x="1578" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >GRU</text>
 <rect x="1624" y="343.68" width="24" height="175.32" fill="url(#blue)" rx="2"/>
-<text x="1636" y="329.68" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">39.6%</text>
+<text x="1636" y="329.68" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">39.6%</text>
 <rect x="1670" y="177.24" width="24" height="341.76" fill="url(#orange)" rx="2"/>
-<text x="1682" y="163.24" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">67.7%</text>
+<text x="1682" y="163.24" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">67.7%</text>
 <text x="1659" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >CNN</text>
 <rect x="1707" y="498.86" width="24" height="20.14" fill="url(#blue)" rx="2"/>
-<text x="1719" y="484.86" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">13.4%</text>
+<text x="1719" y="484.86" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">13.4%</text>
 <rect x="1753" y="389.28" width="24" height="129.72" fill="url(#orange)" rx="2"/>
-<text x="1765" y="375.28" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">31.9%</text>
+<text x="1765" y="375.28" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">31.9%</text>
 <text x="1742" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >MLP</text>
 <rect x="1788" y="478.72" width="24" height="40.28" fill="url(#blue)" rx="2"/>
-<text x="1800" y="464.72" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">16.8%</text>
+<text x="1800" y="464.72" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">16.8%</text>
 <rect x="1834" y="367.37" width="24" height="151.63" fill="url(#orange)" rx="2"/>
-<text x="1846" y="353.37" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">35.6%</text>
+<text x="1846" y="353.37" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">35.6%</text>
 <text x="1823" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >GRU</text>
 <rect x="1869" y="433.71" width="24" height="85.29" fill="url(#blue)" rx="2"/>
-<text x="1881" y="419.71" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">24.4%</text>
+<text x="1881" y="419.71" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#1F73B4" text-anchor="middle" font-weight="bold">24.4%</text>
 <rect x="1915" y="295.11" width="24" height="223.89" fill="url(#orange)" rx="2"/>
-<text x="1927" y="281.11" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold" stroke="white" stroke-width="3.2" paint-order="stroke">47.8%</text>
+<text x="1927" y="281.11" font-family="Times New Roman, Liberation Serif, serif" font-size="19.5" fill="#B8610E" text-anchor="middle" font-weight="bold">47.8%</text>
 <text x="1904" y="553" font-family="Times New Roman, Liberation Serif, serif" font-size="21" fill="#26394B" text-anchor="middle" >CNN</text>
 <line x1="1455.50" y1="142" x2="1455.50" y2="568" stroke="#D5DFE9" stroke-width="1.3" stroke-dasharray="5 7"/>
 <line x1="1700.50" y1="142" x2="1700.50" y2="568" stroke="#D5DFE9" stroke-width="1.3" stroke-dasharray="5 7"/>
