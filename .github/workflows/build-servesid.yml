@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - revise-servesid-storyline-20261011
+      - www27-eight-page-layout-20261011
   workflow_dispatch:
 permissions:
   contents: write
