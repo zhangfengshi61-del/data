@@ -1,4 +1,4 @@
-# ServeSID: Hierarchy-Aligned and Direction-Aware Distillation for Semantic-ID Generative Recommendation
+# ServeSID: Hierarchy-Aligned and Decision-Attributed Distillation for Semantic-ID Generative Recommendation
 
 This repository contains the training and inference code for **ServeSID**,
 a structure-aware knowledge distillation framework for Semantic-ID (SID)
@@ -11,12 +11,12 @@ training-only objectives. The student encoder family is selected with
   and student preference distributions over a shared complete-SID candidate
   support and their hierarchically consistent prefix marginals through
   multi-depth KL.
-- **DA-CDRS (Direction-Aware Cross-Depth Relative-Score Distillation)**:
-  distills teacher-ordered cross-cutoff candidate pairs by decomposing their
-  score gaps into depth-wise relative-score increments and weighting
-  scale-normalized Huber correction by the direction-aware (positive-residual)
-  attribution of each depth. No pairwise ranking loss is added to the training
-  objective.
+- **DA-CDRS (Decision-Attributed Cross-Depth Relative-Score Distillation)**:
+  matches depth-wise relative-score increments with a scale-normalized Huber
+  loss. Depth weights are detached and computed from the hypothetical reduction
+  in `softplus(mu - G_S)` under single-depth teacher-increment replacement.
+  **Full ServeSID does not directly optimize Pair Loss.** Only the separate
+  `HServe + Plain Pair` ablation optimizes this Softplus as a direct loss.
 
 Both objectives operate only during training; the deployed student keeps the
 original verify-free inference graph (one history-encoding pass, depth-wise
@@ -77,6 +77,40 @@ See `scripts/*.sh` and `configs/*.yaml` for dataset paths and hyperparameters
 `conv_layers`) student sizes are also configurable; with the shared
 512-wide prediction heads the defaults give roughly 2.8M and 2.3M
 parameters, and smaller `head_hidden` values reduce the total budget.
+
+## Paper-aligned loss configuration
+
+The full paper objective is:
+
+```text
+L_full = L_digit_CE + lambda_H * L_HServe
+                    + lambda_D * lambda_corr * L_DA_weighted_Huber
+```
+
+Use `configs/servesid_final.yaml`:
+`loss: ce`, `d4_teacher: ce`, `serve_kl: 4`, `pair_w: 0`,
+`da_w: 1`, `da_corr_w: 31.42`, `da_margin: 0.05`,
+`corr_mode: cf`, and `list_topm: 64`. This additive margin yields
+`softplus(0.05 - G)` **only when calculating detached attribution
+weights**; it is not an extra term added to `L_full`.
+
+The separate `configs/abl_hserve_pair.yaml` sets `pair_w: 1`,
+`pair_margin: 0.05`, `da_w: 0`. DA-only and uniform-depth ablations
+also set `pair_w: 0`. Training rejects a configuration that combines
+positive `pair_w` with DA-CDRS; it also rejects token KD in Full.
+
+The same loss configuration works with all three student encoders:
+`--arch mlp`, `--arch gru`, or `--arch cnn`. The standalone
+`sidmlp_gru.yaml` and `sidmlp_cnn.yaml` are **base-KD examples**,
+not Full-loss recipes. Select the Full config and override `--arch`
+and corresponding encoder hyperparameters to train Full with GRU/CNN.
+The Full YAML uses Amazon Beauty 2014 as an example; other domains need
+their own matching dataset tags, semantic IDs, teacher checkpoints and
+training-only beam dumps.
+
+**Reproducibility:** correcting the loss does not validate previously
+reported checkpoint results or regenerate experiments. Re-evaluation
+requires the actual training data, seeds and corresponding checkpoints.
 
 ## Acknowledgments
 
