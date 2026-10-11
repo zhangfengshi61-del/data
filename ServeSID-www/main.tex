@@ -636,15 +636,15 @@ For the ablation-only \emph{HServe + Plain Pair} control, we remove DA-CDRS
 and directly minimize the same complete-pair Softplus score on the
 same teacher-ordered pairs alongside digit CE and HServe. Its pair
 coefficient must be matched to the corresponding run configuration.
-Models are trained with learning rate
+The target run protocol uses learning rate
 $5\times10^{-5}$ and seeds 42, 43, 44. All teacher scores, pairs, and
 increment-scale statistics originate from training requests only;
 validation and test teacher outputs are used exclusively for
 independent diagnostics. The base KD objective combines digit CE with
 gold-prefix token KL, whereas the \method\ objective combines digit CE
 with HServe and DA-CDRS without an additional token-KL term. All
-methods follow the same validation-based checkpoint selection
-protocol.
+methods are intended to follow the same validation-based checkpoint
+selection protocol.
 
 \textbf{Baselines.} We compare against representative distillation
 objectives: RD and RRD transfer ranking structure; GKD and DistiLLM-2
