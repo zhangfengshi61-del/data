@@ -532,7 +532,7 @@ def supp_main_tables():
             cells = [m.replace("_", "\\_")]
             for st in STUDENTS:
                 v = MAIN[m][ds][st]
-                cells += [r"\\shortstack[c]{" + fmt(v[k]) + r"\\\\[-1pt]{\\tiny(" + MAIN_SD[(ds, st, m, k)] + r")}}" for k in range(4)]
+                cells += [r"\shortstack[c]{" + fmt(v[k]) + r"\\[-1pt]{\tiny(" + MAIN_SD[(ds, st, m, k)] + r")}}" for k in range(4)]
             if m == "ServeSID (ours)":
                 L.append("\\textbf{\\method} & " + " & ".join(cells[1:]) + " \\\\")
             else:
