@@ -4,6 +4,8 @@ on:
     branches:
       - revise-servesid-storyline-20261011
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   compile:
     runs-on: ubuntu-latest
@@ -11,6 +13,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Regenerate manuscript tables
         run: python3 ServeSID-www/scripts/gen_tables.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Regenerate Figure 2 PDF from its palette-matched SVG
+        run: |
+          python -m pip install --quiet cairosvg
+          python - <<'PY'
+          import cairosvg
+          cairosvg.svg2pdf(
+              url='ServeSID-www/Figures/figure_no_title_background_vector.svg',
+              write_to='ServeSID-www/Figures/fig_stat_h1.pdf'
+          )
+          PY
       - uses: xu-cheng/latex-action@v3
         with:
           root_file: |
@@ -26,3 +41,13 @@ jobs:
             ServeSID-www/main.pdf
             ServeSID-www/supplement.pdf
           if-no-files-found: error
+      - name: Commit regenerated Figure 2 vector PDF
+        if: github.ref == 'refs/heads/revise-servesid-storyline-20261011'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ServeSID-www/Figures/fig_stat_h1.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Figure 2 PDF colors to match Figure 3"
+            git push
+          fi
