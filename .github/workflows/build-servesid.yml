@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Regenerate manuscript tables
+        run: python3 ServeSID-www/scripts/gen_tables.py
       - uses: xu-cheng/latex-action@v3
         with:
           root_file: |
