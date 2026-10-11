@@ -635,12 +635,12 @@ protocol.
 \textbf{Baselines.} We compare against representative distillation
 objectives: RD and RRD transfer ranking structure; GKD and DistiLLM-2
 provide generation-aware distillation; RCE-KD adapts cross-entropy
-distillation to ranking objectives; SmartGR and LOHRec exploit SID- or identifier-specific signals. Each method keeps its core supervision principle under the same teacher, tokenizer, backbone, and protocol; adaptations are detailed in the supplementary material. All baseline adaptations use the same next-item evaluation protocol and validation-based checkpoint selection rule. This controls for differences in student architecture and evaluation setup when comparing supervision objectives derived from ranking-based, generation-based, and SID-specific distillation methods.
+distillation to ranking objectives; SmartGR exploits SID-specific distillation signals. Each method keeps its core supervision principle under the same teacher, tokenizer, backbone, and protocol; adaptations are detailed in the supplementary material. All baseline adaptations use the same next-item evaluation protocol and validation-based checkpoint selection rule. This controls for differences in student architecture and evaluation setup when comparing supervision objectives derived from ranking-based, generation-based, and SID-specific distillation methods.
 
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
 
-Table~\ref{tab:main-all} compares \method\ with conventional recommendation distillation, general generative distillation, and SID-/identifier-aware methods across three datasets and three student architectures. We evaluate all methods using held-out Recall and NDCG under the same student architectures and decoding configurations. \TODO{After the no-direct-pair-anchor checkpoints are verified, report here (i) the NDCG@10 advantage across the nine dataset--student settings, (ii) the gains relative to the corresponding base-KD student, and (iii) whether MLP, GRU, and CNN exhibit different benefit patterns.}
+Table~\ref{tab:main-all} compares \method\ with conventional recommendation distillation, general generative distillation, and SID-based generative recommendation distillation across three datasets and three student architectures. We evaluate all methods using held-out Recall and NDCG under the same student architectures and decoding configurations. \TODO{After the no-direct-pair-anchor checkpoints are verified, report here (i) the NDCG@10 advantage across the nine dataset--student settings, (ii) the gains relative to the corresponding base-KD student, and (iii) whether MLP, GRU, and CNN exhibit different benefit patterns.}
 
 \input{Figures/table_main_results.tex}
 
