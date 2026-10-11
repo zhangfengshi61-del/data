@@ -553,51 +553,49 @@ def supp_main_tables():
 
 
 def supp_ablation_tables():
+    """Full author-supplied mean/SD ablation, one wide ACM table per dataset."""
     blocks = []
+
+    def stat_cell(dataset, student, method, k, bold=False):
+        vals = MAIN[method][dataset][student] if method in MAIN else ABLATION[method][dataset][student]
+        mean = fmt(vals[k])
+        if bold:
+            mean = r"\textbf{" + mean + "}"
+        sd = SUPPLIED_ABLATION_SD[(dataset, student, method, k)]
+        return r"\shortstack[c]{" + mean + r"\\[-1pt]{\tiny(" + sd + r")}}"
+
+    arms = ["SID-MLP (base KD)"] + ABLATION_ORDER + ["ServeSID (ours)"]
     for ds in DATASETS:
-        L = []
-        L.append("\\begin{table*}[t]")
-        L.append("\\centering")
-        L.append("\\footnotesize")
-        L.append("\\setlength{\\tabcolsep}{1.1mm}")
-        L.append("\\renewcommand{\\arraystretch}{1.05}")
-        L.append("\\begin{tabular}{l" + "c" * (len(STUDENTS) * 4) + "}")
-        L.append("\\toprule")
-        h1 = "Arm"
-        for st in STUDENTS:
-            h1 += " & \\multicolumn{4}{c}{" + st + "}"
-        L.append(h1 + " \\\\")
-        h2 = ""
-        for _ in STUDENTS:
-            h2 += " & R@5 & N@5 & R@10 & N@10"
-        L.append(h2 + " \\\\")
-        L.append("\\cmidrule(lr){2-5}\\cmidrule(lr){6-9}\\cmidrule(lr){10-13}")
-        L.append("\\midrule")
-        cells = ["SID-MLP (base KD)"]
-        for st in STUDENTS:
-            v = MAIN["SID-MLP (base KD)"][ds][st]
-            cells += [fmt(v[0]), fmt(v[1]), fmt(v[2]), fmt(v[3])]
-        L.append(" & ".join(cells) + " \\\\")
-        for arm in ABLATION_ORDER:
-            cells = [arm]
+        L = [
+            r"\begin{table*}[t]",
+            r"\centering",
+            r"\caption{Author-provided ablation means and parenthesized SDs for " + ds +
+              r"; original seed-level outputs have not yet been supplied for audit.}",
+            r"\fontsize{6.6}{7.8}\selectfont",
+            r"\setlength{\tabcolsep}{1.0pt}",
+            r"\renewcommand{\arraystretch}{1.10}",
+            r"\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l *{12}{c} @{}}",
+            r"\toprule",
+            r"\textbf{Arm} & \multicolumn{4}{c}{\textbf{MLP}} & \multicolumn{4}{c}{\textbf{GRU}} & \multicolumn{4}{c}{\textbf{CNN}} \\",
+            r"\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(l){10-13}",
+            r" & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 \\",
+            r"\midrule",
+        ]
+        for arm in arms:
+            name = r"\textbf{\method (full)}" if arm == "ServeSID (ours)" else (
+                "Base KD" if arm == "SID-MLP (base KD)" else arm
+            )
+            cells = [name]
             for st in STUDENTS:
-                v = ABLATION[arm][ds][st]
-                cells += [fmt(v[0]), fmt(v[1]), fmt(v[2]), fmt(v[3])]
-            L.append(" & ".join(cells) + " \\\\")
-        cells = ["\\textbf{\\method (full)}"]
-        for st in STUDENTS:
-            v = MAIN["ServeSID (ours)"][ds][st]
-            cells += ["\\textbf{" + fmt(v[0]) + "}", "\\textbf{" + fmt(v[1]) + "}",
-                      "\\textbf{" + fmt(v[2]) + "}", "\\textbf{" + fmt(v[3]) + "}"]
-        L.append(" & ".join(cells) + " \\\\")
-        L.append("\\bottomrule")
-        L.append("\\end{tabular}")
-        L.append("\\caption{Full ablation metrics on " + ds + " for all students.}")
-        L.append("\\label{tab:supp-ablation-" + ds.replace(" ", "") + "}")
-        L.append("\\end{table*}")
+                cells.extend(stat_cell(ds, st, arm, k, bold=(arm == "ServeSID (ours)")) for k in range(4))
+            L.append(" & ".join(cells) + r" \\")
+        L += [
+            r"\bottomrule", r"\end{tabular*}",
+            r"\label{tab:supp-ablation-" + ds + r"}",
+            r"\end{table*}",
+        ]
         blocks.append("\n".join(L))
     return "\n\n".join(blocks)
-
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
