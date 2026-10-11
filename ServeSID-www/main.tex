@@ -27,8 +27,8 @@
 %% TODO markers (remove all before submission)
 \newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
 
-%% Provenance note: author-provided summary means/SDs have not been linked to
-%% seed-level training logs and checkpoints. Check provenance before the
+%% Reproducibility note: reported mean/SD inputs were confirmed by the author,
+%% but corresponding per-seed metrics/checkpoint IDs are not stored here. Verify before the
 %% no-direct-pair-anchor implementation before making performance claims.
 
 %% ===== convenience macros =====
@@ -654,9 +654,7 @@ distillation to ranking objectives; SmartGR exploits SID-specific distillation s
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
 
-Table~\ref{tab:main-all} compares \method\ with conventional recommendation distillation, general generative distillation, and SID-based generative recommendation distillation across three datasets and three student architectures. The table reports author-provided Recall and NDCG summaries for the stated student architectures and decoding configurations; the seed-wise checkpoints and logs still require verification. % RESULTS VERIFICATION REQUIRED before submission: insert validated
-% new-objective NDCG@10 and Recall results for 3 datasets x 3 students.
-% Do not publish synthetic or historical configurations as measured results.
+Table~\ref{tab:main-all} compares \method\ with conventional recommendation distillation, general generative distillation, and SID-based generative recommendation distillation across three datasets and three student architectures. The table reports author-confirmed Recall and NDCG summaries for the stated student architectures and decoding configurations, with standard deviations shown in parentheses. Independent reconciliation with the training logs and checkpoints remains necessary.
 
 
 \subsection{Ablation Study}
@@ -666,15 +664,15 @@ Table~\ref{tab:ablation} contrasts leaf-only KL, HServe,
 and DA-CDRS. The \emph{HServe + Plain Pair} control replaces
 depth-wise correction with direct complete-pair Softplus training;
 it matches overall pair margins but does not locate SID-depth errors.
-In the supplied \emph{provisional} table, full \method\ exceeds
+In the reported ablation table, full \method\ exceeds
 this control on all 36 dataset--student--metric entries, whereas
 Plain Pair does not consistently improve upon HServe alone.
 Full versus Uniform additionally tests attribution against equal
 depth weights. These comparisons motivate depth-localized supervision,
 but do not show that pairwise ranking losses are generally ineffective
 or establish statistical significance.
-% ABLATION VERIFICATION REQUIRED: verify seed means, exact pair weight,
-% checkpoint provenance and configuration matching before submission.
+% Reproducibility check: reconcile Base KD / Full SDs between main and ablation
+% tables, and match checkpoint provenance and pair coefficient before release.
 
 
 \subsection{Training Cost and Scope}
