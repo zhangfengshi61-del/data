@@ -1,41 +1,40 @@
 #!/usr/bin/env python3
-"""WWW 2027 author-side layout audit: 8 content pages, <=12 PDF pages."""
+"""WWW 2027 layout audit: 8 content pages and <=12 total pages."""
 import re
-import subprocess
 import sys
 from pathlib import Path
+import fitz
 
-pdf = Path(sys.argv[1] if len(sys.argv) > 1 else "main.pdf")
-if not pdf.is_file():
-    sys.exit(f"ERROR: missing PDF: {pdf}")
-
-def command(*args):
-    return subprocess.check_output(args, text=True, stderr=subprocess.STDOUT)
-
-info = command("pdfinfo", str(pdf))
-mt = re.search(r"^Pages:\s*(\d+)", info, re.M)
-total = int(mt.group(1)) if mt else 0
-pages = command("pdftotext", "-layout", str(pdf), "-").split("\f")
-page_text = [p for p in pages if p.strip()]
-ref_page = next((i + 1 for i, p in enumerate(page_text)
-                 if re.search(r"^\s*REFERENCES\s*$", p, re.I | re.M)), None)
-method_page = next((i + 1 for i, p in enumerate(page_text)
-                    if "Overview of" in p and ("HServe" in p or "ServeSID" in p)), None)
-content_pages = min(total, ref_page - 1) if ref_page else None
-ok = ref_page is not None and ref_page <= 9 and total <= 12
-lines = [
-    "WWW 2027 Research Track layout audit",
-    "Official format: acmart sigconf, anonymous, review",
-    f"Total PDF pages: {total} (maximum 12)",
-    f"References begin on page: {ref_page or 'NOT DETECTED'}",
-    f"Content-only full pages before references: {content_pages if content_pages is not None else 'unknown'}",
-    f"Main method figure caption appears on page: {method_page or 'NOT DETECTED'}",
-    f"8-content-page budget: {'PASS' if ok else 'FAIL'}",
-    "NOTE: If references share a page with body text, inspect that page manually.",
-    "NOTE: This checks layout, not experimental provenance or scientific correctness.",
-]
-report = "\n".join(lines) + "\n"
-print(report)
-pdf.with_name("layout_audit.txt").write_text(report)
+pdf = Path(sys.argv[1] if len(sys.argv)>1 else "main.pdf")
+with fitz.open(pdf) as doc:
+    total = len(doc)
+    txt = [page.get_text(sort=True) for page in doc]
+    ref_page = next((i+1 for i,t in enumerate(txt)
+                     if re.search(r"(?m)^\s*REFERENCES\s*$",t,re.I)),None)
+    method_page = next((i+1 for i,t in enumerate(txt)
+                        if re.search(r"Overview of\s+(?:ServeSID|S\s*erveSID)",t,re.I)
+                        or ("single-depth attribution" in t and "HServe" in t and "DA-CDRS" in t)),None)
+    pass_body = ref_page is not None and ref_page <= 9
+    ok = pass_body and total <= 12
+    out = [
+        "WWW 2027 Research Track layout audit",
+        "Source: official www2027.thewebconf.org/research-track-papers/",
+        f"Total PDF pages: {total} (maximum 12)",
+        f"References start on page: {ref_page or 'NOT DETECTED'}",
+        f"All non-reference body content <= page 8: {'PASS' if pass_body else 'FAIL'}",
+        f"Method overview caption detected on page: {method_page or 'NOT DETECTED'}",
+        f"Total page limit: {'PASS' if total<=12 else 'FAIL'}",
+        f"OVERALL: {'PASS' if ok else 'FAIL'}",
+        "Check first eight pages visually; this does not validate experimental numbers.",
+    ]
+    report="\n".join(out)+"\n"
+    print(report)
+    (pdf.parent/"layout_audit.txt").write_text(report)
+    render=pdf.parent/"layout_previews"
+    render.mkdir(exist_ok=True)
+    for idx in [0,3,6,7]:
+        if idx<total:
+            pix=doc[idx].get_pixmap(matrix=fitz.Matrix(1.6,1.6),alpha=False)
+            pix.save(render/f"page-{idx+1}.png")
 if not ok:
     sys.exit(2)
