@@ -26,3 +26,4 @@ storage_fp16: false
 seed: 42
 
 run_tag: h4_ad384_hhid512_a07_d4combined_lr5e5_dp02
+seeds: [42, 43, 44]
