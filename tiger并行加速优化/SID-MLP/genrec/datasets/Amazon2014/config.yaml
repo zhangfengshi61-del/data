@@ -1,4 +1,0 @@
-category: null          # Must be specified via command line (Beauty / Sports / Toys / ...)
-metadata: sentence
-split: last_out
-amazon2014_root: /data/fszhang/RecBoard-master/data/processed

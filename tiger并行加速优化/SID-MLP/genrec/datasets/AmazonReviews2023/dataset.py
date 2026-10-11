@@ -216,7 +216,6 @@ class AmazonReviews2023(AbstractDataset):
                 f'raw_meta_{self.category}',
                 split='full',
                 cache_dir=self.cache_dir,
-                trust_remote_code=True,
             )
 
         meta_dataset = meta_dataset.filter(
@@ -338,7 +337,6 @@ class AmazonReviews2023(AbstractDataset):
                         "McAuley-Lab/Amazon-Reviews-2023",
                         f"{self.config['kcore']}_{self.config['split']}_w_his_{self.category}",
                         cache_dir=self.cache_dir,
-                        trust_remote_code=True,
                     )
 
             datasets = self._filter_non_history(datasets)

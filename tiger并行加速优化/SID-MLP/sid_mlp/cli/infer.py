@@ -89,8 +89,6 @@ def main(argv=None):
     parser.add_argument("--gamma_d3", type=float, default=1.0)
     parser.add_argument("--delta_d4", type=float, default=1.0)
     parser.add_argument("--split", type=str, default=None, choices=["val", "test"])
-    parser.add_argument("--teacher_topk", type=str, default=None)
-    parser.add_argument("--save_ranks", type=str, default=None)
     parser.add_argument("--test", action="store_true")
     parser.add_argument("--fp32", action="store_true", help="Use fp32 inference instead of default native bf16")
 

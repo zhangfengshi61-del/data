@@ -90,43 +90,8 @@ def _add_decoder_args(parser):
     parser.add_argument("--grad_clip", type=float, default=1.0)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
     parser.add_argument("--storage_fp16", action="store_true")
-    parser.add_argument("--cpu_resident", action="store_true")
-    parser.add_argument("--beam_val_max_batches", type=int, default=None)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--run_tag", type=str, default="")
-    parser.add_argument("--variant", type=str, default="base", choices=["base", "pd", "jp"])  # s23/s24
-    parser.add_argument("--pd_depth", type=int, default=4)         # s24/s32: PD-lite depth; 4 = full PD
-    parser.add_argument("--pd_mode", type=str, default="full", choices=["full", "cheap", "train_only"])
-    parser.add_argument("--list_kl", type=float, default=0.0)      # s24
-    parser.add_argument("--list_temp", type=float, default=1.0)    # s24
-    parser.add_argument("--prefix_kl", type=float, default=0.0)    # s24
-    parser.add_argument("--prefix_w2", type=float, default=1.0)     # s36
-    parser.add_argument("--prefix_w3", type=float, default=0.0)     # s36
-    parser.add_argument("--list_topm", type=int, default=0)         # s36
-    parser.add_argument("--pair_k", type=int, default=10)           # s48 doc 2.2: boundary Top-K
-    parser.add_argument("--pair_b", type=int, default=40)           # s48 doc 2.3: outsider rank upper bound
-    parser.add_argument("--pair_negs", type=int, default=0)         # s48 doc 2.3: fixed #negatives sampled (0=all)
-    parser.add_argument("--strat_kl", type=int, default=0)         # s34
-    parser.add_argument("--beam_dump", type=str, default=None)     # s24
-    parser.add_argument("--seqkd", action="store_true")            # s24
-    parser.add_argument("--pair_w", type=float, default=0.0)       # s24 wave-4
-    parser.add_argument("--pair_gamma", type=float, default=0.05)  # s24 wave-4
-    parser.add_argument("--cdrs_w", type=float, default=0.0)        # s41 CDRS
-    parser.add_argument("--cdrs_tau", type=float, default=0.0)      # s41 CDRS (0 -> reuse list_temp)
-    parser.add_argument("--cdrs_pos_k", type=int, default=10)       # s41 CDRS
-    parser.add_argument("--cdrs_neg_end", type=int, default=40)     # s41 CDRS
-    parser.add_argument("--serve_kl", type=float, default=0.0)      # s43e E1 unified serving-KL
-    parser.add_argument("--serve_w1", type=float, default=1.0)      # s43e E1 depth weights
-    parser.add_argument("--serve_w2", type=float, default=1.0)
-    parser.add_argument("--serve_w3", type=float, default=1.0)
-    parser.add_argument("--serve_w4", type=float, default=1.0)
-    parser.add_argument("--da_w", type=float, default=0.0)          # s43e DA-CDRS correction weight
-    parser.add_argument("--da_mode", type=str, default="cf")
-    parser.add_argument("--corr_mode", type=str, default="cf",
-                        choices=["cf", "uniform_valid", "posres"])        # s43e cf|uniform
-    parser.add_argument("--da_gamma", type=float, default=0.05)     # s43e counterfactual pair-hinge gamma
-    parser.add_argument("--da_huber", type=float, default=1.0)      # s43e Huber delta
-    parser.add_argument("--da_negs", type=int, default=0)           # s53 fixed negatives shared with pair anchor
     parser.add_argument("--ckpt_dir", type=str, default=None)
     parser.add_argument("--log_dir", type=str, default=None)
     parser.add_argument("--test", action="store_true")
@@ -153,8 +118,6 @@ def _add_encoder_args(parser):
     parser.add_argument("--grad_clip", type=float, default=1.0)
     parser.add_argument("--gpu_resident", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--storage_fp16", action="store_true")
-    parser.add_argument("--cpu_resident", action="store_true")
-    parser.add_argument("--beam_val_max_batches", type=int, default=None)
     parser.add_argument("--num_workers", type=int, default=0)
 
 

@@ -101,9 +101,9 @@ def get_model(model_name: Union[str, AbstractModel]):
 def get_dataset(dataset_name: Union[str, AbstractDataset]):
     if isinstance(dataset_name, AbstractDataset):
         return dataset_name
-    if dataset_name not in ("AmazonReviews2023", "Amazon2014", "MovieLens1M"):
+    if dataset_name != "AmazonReviews2023":
         raise ValueError(f'Dataset "{dataset_name}" is not included in this TIGER-only copy.')
-    return getattr(importlib.import_module("genrec.datasets"), dataset_name)
+    return getattr(importlib.import_module("genrec.datasets"), "AmazonReviews2023")
 
 
 def get_trainer(model_name: Union[str, AbstractModel]):

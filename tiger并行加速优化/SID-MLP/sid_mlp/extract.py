@@ -104,17 +104,14 @@ def extract(args):
     _ensure_import_paths()
     from genrec.pipeline import Pipeline
 
-    from sid_mlp.inference import _arch_overrides
-    config_dict = {
-        'category': args.category,
-        'custom_sem_ids_path': sem_ids_path,
-    }
-    config_dict.update(_arch_overrides())
     pipeline = Pipeline(
         model_name='TIGER',
         dataset_name=args.dataset,
         checkpoint_path=checkpoint_path,
-        config_dict=config_dict,
+        config_dict={
+            'category': args.category,
+            'custom_sem_ids_path': sem_ids_path,
+        },
     )
     model = pipeline.model
     tokenizer = pipeline.tokenizer
