@@ -550,7 +550,7 @@ attribution still requires $r_d>0$. The replacement is a local score
 calculation, not a causal intervention on model parameters. We do not
 backpropagate through $\ell_{\mathrm{pair}}$ or directly minimize it.
 
-\textbf{Scale-normalized relative-score correction.} With
+\textbf{Scale-normalized correction.} With
 depth-specific standard deviations computed from valid \emph{training}
 pairs, we set
 \begin{equation}
@@ -583,8 +583,8 @@ We construct teacher proposal lists, candidate scores, pair relations,
 and teacher increment statistics from training requests only. The frozen teacher's data are cached; student scores, marginals, replacements, and attribution weights are computed during optimization. No validation or test request contributes teacher targets to the training loss.
 
 At deployment, all teacher-dependent caches and distillation
-computations are discarded. The student retains one history-encoding
-pass, depth-wise SID prediction, validity masking, and constrained
+computations are discarded. The student encodes history once and retains
+depth-wise SID prediction, validity masking, and constrained
 beam expansion. Consequently, the deployed student retains the original verify-free inference graph without introducing teacher-dependent scoring, auxiliary prediction heads, or reranking stages. The proposed objectives modify only the offline training procedure and do not constitute a new decoding algorithm. Offline cache
 generation, storage, and additional student scoring nevertheless
 increase training-side cost; they should be reported separately from
@@ -600,8 +600,8 @@ of every teacher Top-$K$ item.
 \input{Figures/table_ablation.tex}
 
 We evaluate \method\ along three questions: (RQ1) Does structure-aware
-distillation improve next-item recommendation across datasets and
-student architectures? (RQ2) Does HServe add value beyond
+distillation improve next-item recommendation across datasets
+and students? (RQ2) Does HServe add value beyond
 complete-candidate, leaf-only distribution matching? (RQ3) Does
 depth-attributed supervision improve upon both uniform weighting and
 a direct complete-pair ranking control when combined with HServe?
