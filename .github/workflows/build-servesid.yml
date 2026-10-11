@@ -34,12 +34,21 @@ jobs:
           working_directory: ServeSID-www
           latexmk_use_xelatex: false
           args: -pdf -bibtex -interaction=nonstopmode -halt-on-error -file-line-error
+      - name: Audit WWW 2027 page budget and render checkpoints
+        run: |
+          python3 ServeSID-www/scripts/check_www_layout.py ServeSID-www/main.pdf
+          mkdir -p ServeSID-www/layout_previews
+          for p in 1 4 7 8; do
+            pdftoppm -f "$p" -l "$p" -scale-to 1350 -png -singlefile "ServeSID-www/main.pdf" "ServeSID-www/layout_previews/page-$p"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: ServeSID-revised-PDFs
           path: |
             ServeSID-www/main.pdf
             ServeSID-www/supplement.pdf
+            ServeSID-www/layout_audit.txt
+            ServeSID-www/layout_previews/*.png
           if-no-files-found: error
       - name: Commit regenerated Figure 2 vector PDF
         if: github.ref == 'refs/heads/revise-servesid-storyline-20261011'
