@@ -106,7 +106,8 @@ def _batch_loss_jp(args, model, batch, list_masks=None):
             l_pair = boundary_pair_loss(s_S, valid, gamma=float(getattr(args, "pair_gamma", 0.05)),
                                         n_pos=int(getattr(args, "pair_k", 10)),
                                         n_neg_hi=int(getattr(args, "pair_b", 40)),
-                                        n_neg_sample=int(getattr(args, "pair_negs", 0)))
+                                        n_neg_sample=int(getattr(args, "pair_negs", 0)),
+                                        margin=getattr(args, "pair_margin", None))
             loss = loss + lam_pair * l_pair
             comps["pair"] = float(l_pair.item())
         with torch.no_grad():
@@ -219,7 +220,8 @@ def _batch_loss(args, model, batch, list_masks=None):
                                         n_pos=int(getattr(args, "pair_k", 10)),
                                         n_neg_hi=int(getattr(args, "pair_b", 40)),
                                         n_neg_sample=0 if shared_neg_idx is not None else pair_negs,
-                                        neg_idx=shared_neg_idx)
+                                        neg_idx=shared_neg_idx,
+                                        margin=getattr(args, "pair_margin", None))
             loss = loss + lam_pair * l_pair
             comps["pair"] = float(l_pair.item())
         if lam_cdrs > 0:  # s41 CDRS
@@ -238,16 +240,23 @@ def _batch_loss(args, model, batch, list_masks=None):
                                     w3=float(getattr(args, "serve_w3", 1.0)), w4=float(getattr(args, "serve_w4", 1.0)))
             loss = loss + lam_serve * l_serve
             comps["serve"] = float(l_serve.item())
-        if lam_da > 0:  # s43e DA-CDRS correction (pair anchor added separately via pair_w)
+        if lam_da > 0:  # DA-CDRS is standalone; only the explicit Plain Pair arm uses pair_w
             _dascale = getattr(args, "_da_scale", None)
             if _slp is None or bm_slp is None or _dascale is None:
                 raise SystemExit("--da_w requires an augmented dump with step_logp + step_scale (run add_step_scale_s43e)")
+            weight_mode = str(getattr(args, "corr_mode", "cf"))
+            if str(getattr(args, "da_mode", "cf")) == "uniform":
+                weight_mode = "uniform_valid"  # HServe + Uniform control
             l_da = da_cdrs_loss(bm_slp, _slp, bm_cb, valid, _dascale,
-                                gamma=float(getattr(args, "da_gamma", 0.05)), huber_delta=float(getattr(args, "da_huber", 1.0)),
-                                counterfactual=(str(getattr(args, "da_mode", "cf")) != "uniform"),
+                                gamma=float(getattr(args, "da_gamma", 0.05)),
+                                margin=getattr(args, "da_margin", None),
+                                huber_delta=float(getattr(args, "da_huber", 1.0)),
+                                counterfactual=(weight_mode == "cf"), weight_mode=weight_mode,
                                 n_pos=int(getattr(args, "cdrs_pos_k", 10)), n_neg_hi=int(getattr(args, "cdrs_neg_end", 40)),
                                 neg_idx=shared_neg_idx)
-            loss = loss + lam_da * l_da
+            # Paper: lambda_D * lambda_corr * weighted Huber; kept separately for audit.
+            corr_w = float(getattr(args, "da_corr_w", 1.0))
+            loss = loss + lam_da * corr_w * l_da
             comps["da"] = float(l_da.item())
         with torch.no_grad():
             comps["ltop1"] = float((s_S.masked_fill(~valid, -1e9).argmax(1) == 0).float().mean().item())
@@ -295,7 +304,10 @@ def _setup_beam_validation(args, device):
             raise RuntimeError("SID-MLP++ validation failed to patch the TIGER teacher encoder.")
         print(f"Patched TIGER teacher encoder with SID-MLP++ encoder for validation: {args.encoder_ckpt}", flush=True)
 
-    split = "val" if "val" in pipeline.tokenized_datasets else "test"
+    # A missing validation split must NEVER silently select checkpoints on test data.
+    if "val" not in pipeline.tokenized_datasets:
+        raise RuntimeError("Validation dataset is required for checkpoint selection; refusing test fallback")
+    split = "val"
     loader = DataLoader(
         pipeline.tokenized_datasets[split],
         batch_size=args.val_batch_size,
@@ -475,6 +487,9 @@ def train_sidmlp(args):
     import os as _os, time as _time
     _bench = _os.environ.get("BENCH_COST") == "1"
     _t_all = _time.time()
+    best_val_ndcg10 = float("-inf")
+    best_val_epoch = None
+    best_path = os.path.join(ckpt_dir, f"{save_prefix}_best_val_ndcg10.pth")
     for epoch in range(1, args.epochs + 1):
         _t0 = _time.time()
         model.train()
@@ -512,6 +527,19 @@ def train_sidmlp(args):
                 if not getattr(args, "beam_val_max_batches", None)
                 else int(args.beam_val_max_batches),
             )
+            # Select checkpoints using validation recommendations, never the test split.
+            if beam_metrics.get("total", 0) > 0 and float(beam_metrics["ndcg10"]) > best_val_ndcg10:
+                best_val_ndcg10 = float(beam_metrics["ndcg10"])
+                best_val_epoch = epoch
+                torch.save({
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "args": _checkpoint_args(args),
+                    "selection_metric": "val_ndcg10",
+                    "selection_value": best_val_ndcg10,
+                    "model_type": "SID-MLP++" if args.encoder_ckpt else "SID-MLP",
+                }, best_path)
+                log(f"BEST_VAL epoch={epoch} ndcg10={best_val_ndcg10:.6f} checkpoint={best_path}")
 
         train_loss = float(np.mean(train_losses)) if train_losses else float("inf")
         comp_str = " ".join(
@@ -539,3 +567,7 @@ def train_sidmlp(args):
         log(f"TRAINTIME total_sec={_time.time() - _t_all:.1f} "
             f"peak_gb={torch.cuda.max_memory_allocated() / 1e9:.2f}")
     log(f"Saved final checkpoint: {final_path}")
+    if best_val_epoch is not None:
+        log(f"Best validation checkpoint: {best_path} epoch={best_val_epoch} NDCG@10={best_val_ndcg10:.6f}")
+    else:
+        log("WARNING: no best validation checkpoint available (fewer than five epochs or empty validation).")
