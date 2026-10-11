@@ -10,17 +10,24 @@ with fitz.open(pdf) as doc:
     total = len(doc)
     txt = [page.get_text(sort=True) for page in doc]
     ref_page = next((i+1 for i,t in enumerate(txt)
-                     if re.search(r"(?m)^\s*REFERENCES\s*$",t,re.I)),None)
+                     if re.search(r"\\b(?:REFERENCES|References)\\b",t)),None)
     method_page = next((i+1 for i,t in enumerate(txt)
                         if re.search(r"Overview of\s+(?:ServeSID|S\s*erveSID)",t,re.I)
                         or ("single-depth attribution" in t and "HServe" in t and "DA-CDRS" in t)),None)
-    pass_body = ref_page is not None and ref_page <= 9
+    aux=pdf.with_suffix(".aux")
+    body_end=None
+    if aux.is_file():
+        mat=re.search(r"\\\\newlabel\\{www:body-end\\}\\{\\{[^{}]*\\}\\{(\\d+)\\}",aux.read_text(errors="replace"))
+        if mat:
+            body_end=int(mat.group(1))
+    pass_body = body_end is not None and body_end <= 8
     ok = pass_body and total <= 12
     out = [
         "WWW 2027 Research Track layout audit",
         "Source: official www2027.thewebconf.org/research-track-papers/",
         f"Total PDF pages: {total} (maximum 12)",
         f"References start on page: {ref_page or 'NOT DETECTED'}",
+        f"Body last page via LaTeX source label: {body_end or 'NOT DETECTED'}",
         f"All non-reference body content <= page 8: {'PASS' if pass_body else 'FAIL'}",
         f"Method overview caption detected on page: {method_page or 'NOT DETECTED'}",
         f"Total page limit: {'PASS' if total<=12 else 'FAIL'}",
