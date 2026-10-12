@@ -597,6 +597,11 @@ compute detached weights, never as an independent training loss.
 The Plain Pair ablation instead directly optimizes the same
 Softplus evaluation on teacher-ordered candidates.
 
+% Declare wide results tables before the final methods paragraph to
+% keep both double-column floats inside the eight-page WWW body.
+\input{Figures/table_main_results.tex}
+\input{Figures/table_ablation.tex}
+
 \subsection{Offline Training and Verify-Free Inference}
 \label{sec:method-train-inf}
 
@@ -614,10 +619,6 @@ of every teacher Top-$K$ item.
 
 \section{Experiments}
 \label{sec:exp}
-
-% Place wide experiment tables early so they float before References.
-\input{Figures/table_main_results.tex}
-\input{Figures/table_ablation.tex}
 
 We investigate three questions: (RQ1) Does structure-aware
 distillation improve recommendation across datasets and students?
