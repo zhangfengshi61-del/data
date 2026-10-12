@@ -52,6 +52,19 @@ class DistiLLM2Tests(unittest.TestCase):
         self.assertIsNone(torch.autograd.grad(v, teacher, allow_unused=True, retain_graph=True)[0])
         self.assertIsNotNone(torch.autograd.grad(v, scores)[0])
 
+    def test_first_on_policy_depth_contributes_student_gradient(self):
+        # DistiLLM-2 on-policy uses skew-KL at all four positions.
+        first_logits = torch.randn(2, CODEBOOK_SIZE, requires_grad=True)
+        teacher = torch.log_softmax(torch.randn(2, CODEBOOK_SIZE), dim=-1)
+        loss = _skew_kl(teacher, torch.log_softmax(first_logits, -1), .9).mean()
+        grad, = torch.autograd.grad(loss, first_logits)
+        self.assertGreater(float(grad.abs().max()), 1e-7)
+        from pathlib import Path
+        code = (Path(__file__).resolve().parents[1] /
+                "sid_mlp" / "kd_baselines.py").read_text()
+        self.assertIn("_skew_kl(pT1o, pS1, alpha)", code)
+        self.assertNotIn("_jsd(pT1o, pS1.detach())", code)
+
     def test_invalid_temperature_rejected(self):
         with self.assertRaisesRegex(ValueError, "temperature"):
             contrastive_student_sid_loss(
