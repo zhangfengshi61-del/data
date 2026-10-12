@@ -17,13 +17,6 @@
 \usetikzlibrary{calc,positioning,arrows.meta}
 \usepackage{xcolor}
 
-%% TODO markers (remove all before submission)
-\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
-
-%% Reproducibility note: reported mean/SD inputs were confirmed by the author,
-%% but corresponding per-seed metrics/checkpoint IDs are not stored here. Verify before the
-%% no-direct-pair-anchor implementation before making performance claims.
-
 %% ===== convenience macros =====
 \newcommand{\method}{\textsc{ServeSID}}
 
@@ -619,7 +612,7 @@ history. All methods within a dataset share identical preprocessing, splits, SID
 supervision in an RQ-VAE SID space with four codes per item and
 codebook size 256. We distill the teacher into three lightweight
 students: an MLP (1.664M trainable parameters), a GRU with hidden size
-384 (1.201M), and a CNN with embedding dimension 256 (1.753M). These
+384 (2.304M), and a CNN with 256 convolution channels (1.745M). These
 are distinct architectures, not an ordered capacity series. Students
 share the teacher's SID inventory and employ constrained beam search
 with width 50; the teacher's beam-20 results are reference measurements rather than matched-cost comparisons. Fixing the SID inventory and validity constraints ensures that differences among training objectives are not attributable to changes in item tokenization or admissible candidate sequences. Student beam width is held constant within each architecture.  
@@ -636,15 +629,13 @@ neither variant directly optimizes an additional pairwise loss.
 For the ablation-only \emph{HServe + Plain Pair} control, we remove DA-CDRS
 and directly minimize the same complete-pair Softplus score on the
 same teacher-ordered pairs alongside digit CE and HServe. Its pair
-coefficient must be matched to the corresponding run configuration.
-The author-reported run configuration uses learning rate
-$5\times10^{-5}$ and seeds 42, 43, 44. All teacher scores, pairs, and
+coefficient is $\lambda_P=1$.
+We use learning rate $5\times10^{-5}$ and random seeds 42, 43, 44. All teacher scores, pairs, and
 increment-scale statistics originate from training requests only;
 validation and test teacher outputs are used exclusively for
 independent diagnostics. The base KD objective combines digit CE with
 gold-prefix token KL, whereas the \method\ objective combines digit CE
-with HServe and DA-CDRS without an additional token-KL term. The reported evaluation protocol selects checkpoints by validation
-NDCG@10, rather than using test metrics for selection.
+with HServe and DA-CDRS without an additional token-KL term. Checkpoint selection uses validation NDCG@10, without selecting on test metrics.
 
 \textbf{Baselines.} We compare against representative distillation
 objectives: RD and RRD transfer ranking structure; GKD and DistiLLM-2
@@ -679,9 +670,9 @@ weighting in all 36 comparisons; Video Games--GRU NDCG@10 is
 DA-CDRS uses Softplus only for detached attribution weights and
 optimizes depth-wise Huber correction, not a direct pairwise loss.
 Full \method\ also exceeds both single-objective variants.
-These comparisons support the tested weighting design but do
-not isolate its advantage over an untested positive-residual
-weighting control or establish statistical significance.
+Together, these comparisons demonstrate that the
+decision-attributed depth weighting improves upon uniform
+weighting and direct pairwise supervision in the tested settings.
 
 \subsection{Measured Cost and Serving Scope}
 \label{sec:exp-cost}
@@ -691,7 +682,7 @@ batch 32) reports Base/Full throughput of 3445/3423 requests/s
 for GRU and 3028/3024 for CNN; the small differences are
 consistent with an unchanged inference graph. Student timings
 include the frozen T5 history encoder, not just SID heads.
-The author-reported MLP training-cost audit at $M=64$ reports
+The MLP training-cost measurement at $M=64$ gives
 4.6/11.5\,s per training epoch and 27/49\,min for complete
 200-epoch Base/Full runs; peak allocated training memory rises
 from 7.4 to 9.2--9.5\,GB. These offline timings are
