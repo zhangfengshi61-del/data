@@ -95,6 +95,9 @@ With four depths and $\alpha_d=1$, HServe weights the
 conditional contributions by $(4,3,2,1)$; leaf-only KL
 weights them by $(1,1,1,1)$. The teacher distribution is
 unchanged, but the depth-wise optimization pressure differs.
+The digit CE uses the raw 256-way student codebook logits;
+candidate-based HServe and DA-CDRS instead score legal SIDs
+with valid-prefix-masked, renormalized conditional probabilities.
 
 \paragraph{Adapted distillation baselines.}
 All methods share a fixed SID inventory, frozen encoder and
