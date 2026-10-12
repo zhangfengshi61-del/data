@@ -159,6 +159,25 @@ def validate_full_paper_objective(args):
             raise ValueError("Full ServeSID requires da_margin for softplus(mu-G) weights.")
 
 
+def cache_supervision_required(args):
+    """Every non-digit training objective that consumes cached SID candidates."""
+    return (bool(getattr(args, "seqkd", False)) or any(
+        float(getattr(args, name, 0.0) or 0.0) > 0
+        for name in ("list_kl", "prefix_kl", "pair_w", "cdrs_w",
+                     "serve_kl", "da_w")
+    ))
+
+
+def validate_cache_supervision(args):
+    """Fail before opening datasets/checkpoints if a structural loss lacks a beam dump."""
+    if cache_supervision_required(args) and not getattr(args, "beam_dump", None):
+        raise ValueError(
+            "Structural ServeSID losses require --beam_dump (teacher complete SID "
+            "candidates and, for DA-CDRS, step_logp/step_scale). "
+            "Refusing to train an apparent Full model with digit CE only."
+        )
+
+
 def _batch_loss(args, model, batch, list_masks=None):
     if getattr(args, "variant", "base") == "jp":  # s24
         return _batch_loss_jp(args, model, batch, list_masks)
@@ -222,22 +241,17 @@ def _batch_loss(args, model, batch, list_masks=None):
         da_negs = int(getattr(args, "da_negs", 0))
         shared_neg_idx = None
         if lam_da > 0 and da_negs > 0:
-            pair_k = int(getattr(args, "pair_k", 10))
-            pair_b = int(getattr(args, "pair_b", 40))
             da_k = int(getattr(args, "cdrs_pos_k", 10))
             da_b = int(getattr(args, "cdrs_neg_end", 40))
-            if lam_pair <= 0 or pair_negs != da_negs or pair_k != da_k or pair_b != da_b:
-                raise SystemExit(
-                    "--da_negs requires pair_w>0, pair_negs==da_negs, "
-                    "pair_k==cdrs_pos_k, and pair_b==cdrs_neg_end so pair+DA use identical pairs"
-                )
+            # DA sampling belongs to the DA objective and must not require
+            # enabling the independently optimized Plain Pair control.
             shared_neg_idx = boundary_neg_indices(
-                bm_cb, valid, n_pos=pair_k, n_neg_hi=pair_b,
+                bm_cb, valid, n_pos=da_k, n_neg_hi=da_b,
                 n_neg_sample=da_negs, seed=int(getattr(args, "seed", 0)))
             if shared_neg_idx is None:
                 raise SystemExit("--da_negs must be smaller than the configured outsider range")
             with torch.no_grad():
-                outsider_valid = valid[:, pair_k:pair_b]
+                outsider_valid = valid[:, da_k:da_b]
                 selected_valid = outsider_valid.gather(1, shared_neg_idx)
                 comps["da_neg_valid_mean"] = float(outsider_valid.sum(1).float().mean().item())
                 comps["da_neg_sample_mean"] = float(selected_valid.sum(1).float().mean().item())
@@ -385,6 +399,7 @@ def _check_sidmlp_pp_training_tags(args):
 def train_sidmlp(args):
     validate_selection_settings(args)
     validate_full_paper_objective(args)
+    validate_cache_supervision(args)
     _check_sidmlp_pp_training_tags(args)
     if not getattr(args, "graph_dir", None):
         raise SystemExit("--graph_dir is required. Set it in the launcher script or pass it on the CLI.")
@@ -451,11 +466,8 @@ def train_sidmlp(args):
             raise SystemExit("seqkd is not supported for the pd variant")
         if variant == "jp" and getattr(args, "seqkd", False):
             raise SystemExit("seqkd is not supported for the jp variant")
-    elif (getattr(args, "seqkd", False)
-          or float(getattr(args, "list_kl", 0.0) or 0.0) > 0
-          or float(getattr(args, "prefix_kl", 0.0) or 0.0) > 0
-          or float(getattr(args, "pair_w", 0.0) or 0.0) > 0):
-        raise SystemExit("--seqkd/--list_kl/--prefix_kl/--pair_w require --beam_dump")
+    elif cache_supervision_required(args):
+        raise RuntimeError("Cached-candidate objective is active without --beam_dump")
     need_masks = variant == "jp" or (use_s24 and (
         float(getattr(args, "list_kl", 0.0) or 0.0) > 0
         or float(getattr(args, "prefix_kl", 0.0) or 0.0) > 0
@@ -596,17 +608,29 @@ def train_sidmlp(args):
         model.train()
         train_losses = []
         comp_sums, comp_counts = {}, {}
+        optimizer_steps = 0
         for batch_idx, batch in enumerate(tqdm(train_loader, desc=f"Train {epoch}/{args.epochs}", ncols=100)):
             if args.test and batch_idx >= 5:
                 break
+            if cache_supervision_required(args) and len(batch) <= 15:
+                raise RuntimeError(
+                    f"Training epoch={epoch} batch={batch_idx}: active cached-candidate "
+                    "loss requires beam candidate extras; refusing CE-only fallback"
+                )
             optimizer.zero_grad(set_to_none=True)
             loss, _logits, _labels, comps = _batch_loss(args, model, batch, list_masks)
-            if not torch.isfinite(loss):
-                continue
+            if not torch.isfinite(loss).all().item():
+                raise FloatingPointError(
+                    f"Non-finite training loss epoch={epoch} batch={batch_idx} "
+                    f"components={comps}; refusing an unreported skipped update"
+                )
             loss.backward()
             if args.grad_clip > 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), args.grad_clip, error_if_nonfinite=True
+                )
             optimizer.step()
+            optimizer_steps += 1
             train_losses.append(float(loss.item()))
             for k, v in comps.items():
                 comp_sums[k] = comp_sums.get(k, 0.0) + v
@@ -646,12 +670,15 @@ def train_sidmlp(args):
                 best_val_epoch = epoch
                 log(f"BEST_VAL epoch={epoch} ndcg10={best_val_ndcg10:.6f} checkpoint={best_path}")
 
+        if optimizer_steps == 0:
+            raise RuntimeError(f"epoch={epoch}: zero successful optimizer updates")
         train_loss = float(np.mean(train_losses)) if train_losses else float("inf")
         comp_str = " ".join(
             f"{k}={comp_sums[k] / max(comp_counts[k], 1):.4f}" for k in sorted(comp_sums)
         )
         log(
-            f"epoch={epoch} train_loss={train_loss:.6f} val_loss={digit_metrics['loss']:.6f} "
+            f"epoch={epoch} optimizer_steps={optimizer_steps} skipped_batches=0 "
+            f"train_loss={train_loss:.6f} val_loss={digit_metrics['loss']:.6f} "
             f"d1@1={digit_metrics['acc1'][0]:.4f} d2@1={digit_metrics['acc1'][1]:.4f} "
             f"d3@1={digit_metrics['acc1'][2]:.4f} d4@1={digit_metrics['acc1'][3]:.4f} "
             f"ndcg10={beam_metrics.get('ndcg10', 0.0):.6f}"
