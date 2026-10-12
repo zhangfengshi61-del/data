@@ -21,4 +21,4 @@ jobs:
       - name: Python syntax
         run: python -m compileall -q ServeSID/sid_mlp ServeSID/tests
       - name: Paper objective contract tests
-        run: python -m unittest discover -s ServeSID/tests -p "test_paper_loss_contract.py" -v
+        run: python -m unittest discover -s ServeSID/tests -p "test_*.py" -v
