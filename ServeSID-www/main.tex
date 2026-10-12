@@ -189,7 +189,7 @@ unified generative retrieval and ranking \citep{rpg,liger,onerec}.
 Unlike direct prefix-survival objectives, HServe distills probability
 marginals induced by a shared distribution over complete SID items.
 
-\subsection{Efficient Generative Recommendation and Lightweight Students}
+\subsection{Efficient Generative Recommendation}
 Speculative and blockwise decoding amortize autoregressive inference
 through parallel proposals or verification
 \citep{specdec,specsample,blockwise}; recommendation-specific systems
@@ -235,8 +235,10 @@ the same SID codebook, item assignment, and legal-prefix constraints.
 Their conditional probabilities are $p_T$ and $q_S$, respectively.
 Their complete-item scores are
 \begin{equation}
-s_T(i\mid u)=\sum_{d=1}^{L}\log p_T(z_d^i\mid u,z_{<d}^i),\qquad
-s_S(i\mid u)=\sum_{d=1}^{L}\log q_S(z_d^i\mid u,z_{<d}^i).
+\begin{aligned}
+s_T(i\mid u)&=\sum_{d=1}^{L}\log p_T(z_d^i\mid u,z_{<d}^i),\\
+s_S(i\mid u)&=\sum_{d=1}^{L}\log q_S(z_d^i\mid u,z_{<d}^i).
+\end{aligned}
 \label{eq:serving-scores}
 \end{equation}
 
@@ -315,7 +317,8 @@ log-probabilities at position $d$. Here depth denotes the SID
 position, not a neural-network layer. Increments before the
 candidates' first divergent code cancel exactly; later increments may
 have opposite signs. The sum, rather than any individual increment,
-determines the final relative ordering. These two properties---aggregation across shared SID prefixes and decomposition along generation depths---provide the structural basis for HServe and DA-CDRS.
+determines the final relative ordering. Shared-prefix aggregation and additive depth-wise scoring motivate
+HServe and DA-CDRS, respectively.
 
 \section{Diagnosis: Structural Limitations of Token-Level Distillation}
 \label{sec:diagnosis}
@@ -456,9 +459,8 @@ KL divergence at every depth:
 \mathcal L_{\mathrm{HServe}}(u)=
 \sum_{d=1}^{L}\alpha_d\,
 \KL\!\left(
-\pi_{T,M}^{(d)}(\cdot\mid u)\;\|\;
-\pi_{S,M}^{(d)}(\cdot\mid u)
-\right),\qquad \alpha_d\ge0.
+\pi_{T,M}^{(d)}(\cdot\mid u)\|\pi_{S,M}^{(d)}(\cdot\mid u)
+\right),\;\alpha_d\ge0.
 \label{eq:hserve}
 \end{equation}
 The leaf term ($d=L$) directly aligns complete-item preferences,
