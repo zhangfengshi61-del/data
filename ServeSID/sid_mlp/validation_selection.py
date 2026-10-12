@@ -59,6 +59,8 @@ def save_if_best_val_ndcg10(*, metrics, epoch, previous_best, path, payload, sav
             "selection_metric": "val_ndcg10",
             "selection_value": value,
             "selection_num_requests": n,
+            "selection_scope": ("debug_subset" if snapshot.get("args", {}).get("test", False)
+                                else "full_validation"),
             "checkpoint_role": "best_val_ndcg10",
         })
         save(snapshot, path)
