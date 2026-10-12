@@ -445,6 +445,13 @@ def da_cdrs_loss(t_steplp, s_steplp, cand_cb, valid_mask, step_scale,
     (not cumulative) gaps -> no double-supervision; pairwise ranking is not optimized; the
     attribution concentrates the correction on the depth(s) that actually flip THIS boundary.
     counterfactual=False -> uniform depth weights (the control that isolates the attribution)."""
+    if weight_mode not in ("cf", "uniform_valid", "posres"):
+        raise ValueError(
+            f"Unknown DA-CDRS weight_mode={weight_mode!r}; "
+            "choose cf, uniform_valid, or posres."
+        )
+    if weight_mode == "cf" and not counterfactual:
+        raise ValueError("weight_mode='cf' requires counterfactual=True")
     B, M, Dd = s_steplp.shape
     sp = s_steplp[:, :n_pos]
     sn_all = s_steplp[:, n_pos:n_neg_hi]
