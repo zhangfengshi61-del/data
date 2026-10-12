@@ -75,7 +75,22 @@ def attach_beam_dump(dataset: CommonLensDataset, dump_path: str, device: torch.d
     """s24: attach the teacher-beam dump (codes/scores/nvalid) to a packed dataset.
     Alignment is by row index — the dump was produced by iterating the same packed cache."""
     d = torch.load(dump_path, map_location='cpu', weights_only=False)
-    if topm and int(topm) > 0:  # s36: teacher-score-sorted truncation to top-M (A7 M-sweep)
+    codes, scores, nvalid = d['codes'], d['scores'], d['nvalid']
+    if codes.ndim != 3 or codes.shape[-1] != 4:
+        raise ValueError(f"Expected beam candidate codes (N,W,4): {dump_path}")
+    nrows, width = codes.shape[:2]
+    if scores.shape != (nrows, width) or nvalid.shape != (nrows,):
+        raise ValueError("Beam codes, scores, nvalid shapes disagree")
+    if 'step_logp' in d and d['step_logp'].shape != (nrows, width, 4):
+        raise ValueError("Beam step_logp is not aligned with (N,W,4) codes")
+    if (nvalid < 1).any() or (nvalid > width).any():
+        raise ValueError("Beam dump has invalid candidate counts")
+    if topm and int(topm) > width:
+        raise ValueError(
+            f"Requested M={topm} candidate slots but beam dump has width={width}; "
+            "a beam-search width of 40 does not by itself prove 64 final candidates"
+        )
+    if topm and int(topm) > 0:  # teacher-score-sorted top-M truncation
         W0 = d['scores'].shape[1]
         ar = torch.arange(W0).unsqueeze(0)
         sc = d['scores'].float().masked_fill(ar >= d['nvalid'].unsqueeze(1), float('-inf'))
@@ -99,6 +114,19 @@ def attach_beam_dump(dataset: CommonLensDataset, dump_path: str, device: torch.d
         raise RuntimeError(f"beam dump rows ({n_dump}) != dataset rows ({n_ds}): {dump_path}")
     if int(d['nvalid'].min()) < 1:
         raise RuntimeError(f"beam dump has empty candidate lists: {dump_path}")
+    active = torch.arange(d['scores'].shape[1]).unsqueeze(0) < d['nvalid'].unsqueeze(1)
+    if not torch.isfinite(d['scores'][active]).all():
+        raise ValueError("Non-finite scores on valid beam candidates")
+    # Training data may include a candidate-dependent EOS contribution
+    # while step_logp has only four SID increments. Log the discrepancy;
+    # do not silently force their equality or rewrite historic scores.
+    if 'step_logp' in d:
+        missing = d['scores'].float() - d['step_logp'].float().sum(-1)
+        spread = (missing.masked_fill(~active, -float('inf')).max(1).values
+                  - missing.masked_fill(~active, float('inf')).min(1).values)
+        print(f"BEAM_SCORE_AUDIT: max_candidate_dependent_score_remainder="
+              f"{spread.max().item():.5f} "
+              f"(may include EOS or a distinct score convention)", flush=True)
     dataset.bm_codes = d['codes'].to(device)
     dataset.bm_scores = d['scores'].to(device)
     dataset.bm_nvalid = d['nvalid'].to(device)
