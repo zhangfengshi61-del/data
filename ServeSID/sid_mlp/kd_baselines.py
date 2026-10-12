@@ -611,6 +611,32 @@ def build_baseline_student(args, embedding_weight, device):
     return model
 
 
+def install_on_policy_context_cache(model):
+    """Expose prefix-scoring context to GKD/DistiLLM-2 for every backbone."""
+    def _fwd_with_ctx(enc_seq, enc_mask, d1_ids=None, d2_ids=None, d3_ids=None):
+        model._last_ctx = model.encode(enc_seq, enc_mask)
+        ctx = model._last_ctx
+        logits1 = model.head1(ctx)
+        if d1_ids is None:
+            d1_ids = logits1.argmax(-1) + DIGIT_OFFSETS[0]
+        with torch.no_grad():
+            e1 = model.embedding(d1_ids)
+        logits2 = model.head2(torch.cat([ctx, e1], 1))
+        if d2_ids is None:
+            d2_ids = logits2.argmax(-1) + DIGIT_OFFSETS[1]
+        with torch.no_grad():
+            e2 = model.embedding(d2_ids)
+        logits3 = model.head3(torch.cat([ctx, e1, e2], 1))
+        if d3_ids is None:
+            d3_ids = logits3.argmax(-1) + DIGIT_OFFSETS[2]
+        with torch.no_grad():
+            e3 = model.embedding(d3_ids)
+        logits4 = model.head4(torch.cat([ctx, e1, e2, e3], 1))
+        return logits1, logits2, logits3, logits4
+    model.forward = _fwd_with_ctx
+    return model
+
+
 @torch.no_grad()
 def _validate_digits(args, model, loader):
     model.eval()
@@ -700,29 +726,7 @@ def train_baseline(args):
 
     model = build_baseline_student(args, embedding_weight, device)
     arch = str(getattr(args, "arch", "mlp")).lower()
-    # stash ctx for the on-policy samplers
-    _orig_forward = model.forward
-    def _fwd_with_ctx(enc_seq, enc_mask, d1_ids=None, d2_ids=None, d3_ids=None):
-        model._last_ctx = model.encode(enc_seq, enc_mask)
-        ctx = model._last_ctx
-        logits1 = model.head1(ctx)
-        if d1_ids is None:
-            d1_ids = logits1.argmax(-1) + DIGIT_OFFSETS[0]
-        with torch.no_grad():
-            e1 = model.embedding(d1_ids)
-        logits2 = model.head2(torch.cat([ctx, e1], 1))
-        if d2_ids is None:
-            d2_ids = logits2.argmax(-1) + DIGIT_OFFSETS[1]
-        with torch.no_grad():
-            e2 = model.embedding(d2_ids)
-        logits3 = model.head3(torch.cat([ctx, e1, e2], 1))
-        if d3_ids is None:
-            d3_ids = logits3.argmax(-1) + DIGIT_OFFSETS[2]
-        with torch.no_grad():
-            e3 = model.embedding(d3_ids)
-        logits4 = model.head4(torch.cat([ctx, e1, e2, e3], 1))
-        return logits1, logits2, logits3, logits4
-    model.forward = _fwd_with_ctx
+    install_on_policy_context_cache(model)
 
     if method == "smartgr":
         model.register_parameter("sg_theta_raw", torch.nn.Parameter(torch.zeros(1, device=device)))
