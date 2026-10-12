@@ -35,6 +35,10 @@ from .losses import (
     topk_correct,
 )
 from .models import SIDMLP, SIDMLPJP, SIDMLPPD, SIDGRU, SIDCNN  # s23/s24 + GRU/CNN students
+from .validation_selection import (
+    require_validation_split, validate_selection_settings,
+    should_beam_validate, save_if_best_val_ndcg10,
+)
 
 import torch.nn.functional as F
 
@@ -58,6 +62,16 @@ def _save_prefix(args):
         f"_hhid{args.head_hidden}_hl{args.head_layers}"
         f"_lr{_fmt_float(args.lr)}"
     )
+    arch = str(getattr(args, "arch", "mlp") or "mlp").lower()
+    if arch != "mlp":
+        base += f"_{arch}"
+        if arch == "gru":
+            base += f"_h{int(args.gru_hidden)}_l{int(args.gru_layers)}"
+        elif arch == "cnn":
+            base += f"_c{int(args.conv_dim)}_k{int(args.conv_kernel)}_l{int(args.conv_layers)}"
+    base += f"_seed{int(args.seed)}"
+    if getattr(args, "test", False):
+        base += "_debug"
     if args.run_tag:
         base += f"_{args.run_tag}"
     return base
@@ -106,12 +120,43 @@ def _batch_loss_jp(args, model, batch, list_masks=None):
             l_pair = boundary_pair_loss(s_S, valid, gamma=float(getattr(args, "pair_gamma", 0.05)),
                                         n_pos=int(getattr(args, "pair_k", 10)),
                                         n_neg_hi=int(getattr(args, "pair_b", 40)),
-                                        n_neg_sample=int(getattr(args, "pair_negs", 0)))
+                                        n_neg_sample=int(getattr(args, "pair_negs", 0)),
+                                        margin=getattr(args, "pair_margin", None))
             loss = loss + lam_pair * l_pair
             comps["pair"] = float(l_pair.item())
         with torch.no_grad():
             comps["ltop1"] = float((s_S.masked_fill(~valid, -1e9).argmax(1) == 0).float().mean().item())
     return loss, (logitsJP, logits3, logits4), (jp_cls, gd3, gd4), comps
+
+
+
+def validate_full_paper_objective(args):
+    """Guard the paper's Full objective against direct Pair Loss and token KL."""
+    hserve = float(getattr(args, "serve_kl", 0.0) or 0.0)
+    da = float(getattr(args, "da_w", 0.0) or 0.0)
+    pair = float(getattr(args, "pair_w", 0.0) or 0.0)
+    if da > 0 and pair > 0:
+        raise ValueError(
+            "DA-CDRS/Full must not optimize direct Pair Loss: set pair_w=0. "
+            "Use da_w=0 with pair_w>0 for HServe + Plain Pair."
+        )
+    if hserve > 0 and pair > 0 and da <= 0:
+        if getattr(args, "pair_margin", None) is None:
+            raise ValueError(
+                "HServe + Plain Pair requires pair_margin for softplus(mu-G); "
+                "the legacy gamma-scaled loss is not the paper's Plain Pair control."
+            )
+    if hserve > 0 and da > 0:
+        if (str(getattr(args, "loss", "")).lower() != "ce"
+                or str(getattr(args, "d4_teacher", "")).lower() != "ce"):
+            raise ValueError("Full ServeSID requires loss=ce and d4_teacher=ce.")
+        if (bool(getattr(args, "seqkd", False))
+                or float(getattr(args, "list_kl", 0.0) or 0.0) > 0
+                or float(getattr(args, "prefix_kl", 0.0) or 0.0) > 0
+                or float(getattr(args, "cdrs_w", 0.0) or 0.0) > 0):
+            raise ValueError("Full ServeSID uses only digit CE + HServe + DA-CDRS.")
+        if getattr(args, "da_margin", None) is None:
+            raise ValueError("Full ServeSID requires da_margin for softplus(mu-G) weights.")
 
 
 def _batch_loss(args, model, batch, list_masks=None):
@@ -158,6 +203,7 @@ def _batch_loss(args, model, batch, list_masks=None):
     lam_cdrs = float(getattr(args, "cdrs_w", 0.0) or 0.0)  # s41 CDRS
     lam_serve = float(getattr(args, "serve_kl", 0.0) or 0.0)  # s43e E1
     lam_da = float(getattr(args, "da_w", 0.0) or 0.0)         # s43e DA-CDRS
+    validate_full_paper_objective(args)
     if extras is not None and (lam_list > 0 or lam_pf > 0 or lam_pair > 0 or lam_cdrs > 0 or lam_serve > 0 or lam_da > 0):
         bm_cb, bm_sc, bm_nv = extras[0], extras[1], extras[2]
         bm_slp = extras[3] if len(extras) > 3 else None  # s41 CDRS: teacher per-digit logp
@@ -219,7 +265,8 @@ def _batch_loss(args, model, batch, list_masks=None):
                                         n_pos=int(getattr(args, "pair_k", 10)),
                                         n_neg_hi=int(getattr(args, "pair_b", 40)),
                                         n_neg_sample=0 if shared_neg_idx is not None else pair_negs,
-                                        neg_idx=shared_neg_idx)
+                                        neg_idx=shared_neg_idx,
+                                        margin=getattr(args, "pair_margin", None))
             loss = loss + lam_pair * l_pair
             comps["pair"] = float(l_pair.item())
         if lam_cdrs > 0:  # s41 CDRS
@@ -238,16 +285,23 @@ def _batch_loss(args, model, batch, list_masks=None):
                                     w3=float(getattr(args, "serve_w3", 1.0)), w4=float(getattr(args, "serve_w4", 1.0)))
             loss = loss + lam_serve * l_serve
             comps["serve"] = float(l_serve.item())
-        if lam_da > 0:  # s43e DA-CDRS correction (pair anchor added separately via pair_w)
+        if lam_da > 0:  # DA-CDRS is standalone; only the explicit Plain Pair arm uses pair_w
             _dascale = getattr(args, "_da_scale", None)
             if _slp is None or bm_slp is None or _dascale is None:
                 raise SystemExit("--da_w requires an augmented dump with step_logp + step_scale (run add_step_scale_s43e)")
+            weight_mode = str(getattr(args, "corr_mode", "cf"))
+            if str(getattr(args, "da_mode", "cf")) == "uniform":
+                weight_mode = "uniform_valid"  # HServe + Uniform control
             l_da = da_cdrs_loss(bm_slp, _slp, bm_cb, valid, _dascale,
-                                gamma=float(getattr(args, "da_gamma", 0.05)), huber_delta=float(getattr(args, "da_huber", 1.0)),
-                                counterfactual=(str(getattr(args, "da_mode", "cf")) != "uniform"),
+                                gamma=float(getattr(args, "da_gamma", 0.05)),
+                                margin=getattr(args, "da_margin", None),
+                                huber_delta=float(getattr(args, "da_huber", 1.0)),
+                                counterfactual=(weight_mode == "cf"), weight_mode=weight_mode,
                                 n_pos=int(getattr(args, "cdrs_pos_k", 10)), n_neg_hi=int(getattr(args, "cdrs_neg_end", 40)),
                                 neg_idx=shared_neg_idx)
-            loss = loss + lam_da * l_da
+            # Paper: lambda_D * lambda_corr * weighted Huber; kept separately for audit.
+            corr_w = float(getattr(args, "da_corr_w", 1.0))
+            loss = loss + lam_da * corr_w * l_da
             comps["da"] = float(l_da.item())
         with torch.no_grad():
             comps["ltop1"] = float((s_S.masked_fill(~valid, -1e9).argmax(1) == 0).float().mean().item())
@@ -295,7 +349,7 @@ def _setup_beam_validation(args, device):
             raise RuntimeError("SID-MLP++ validation failed to patch the TIGER teacher encoder.")
         print(f"Patched TIGER teacher encoder with SID-MLP++ encoder for validation: {args.encoder_ckpt}", flush=True)
 
-    split = "val" if "val" in pipeline.tokenized_datasets else "test"
+    split = require_validation_split(pipeline.tokenized_datasets)
     loader = DataLoader(
         pipeline.tokenized_datasets[split],
         batch_size=args.val_batch_size,
@@ -329,6 +383,8 @@ def _check_sidmlp_pp_training_tags(args):
 
 
 def train_sidmlp(args):
+    validate_selection_settings(args)
+    validate_full_paper_objective(args)
     _check_sidmlp_pp_training_tags(args)
     if not getattr(args, "graph_dir", None):
         raise SystemExit("--graph_dir is required. Set it in the launcher script or pass it on the CLI.")
@@ -367,6 +423,20 @@ def train_sidmlp(args):
     jp_pairs = None
     if use_s24:
         attach_beam_dump(train_ds, args.beam_dump, device, topm=int(getattr(args, 'list_topm', 0) or 0))  # s36
+        # A teacher beam-40 file cannot silently masquerade as M=64.
+        # The DA outsider cutoff B is distinct from support size M.
+        if (float(getattr(args, "serve_kl", 0.0) or 0.0) > 0
+                and float(getattr(args, "da_w", 0.0) or 0.0) > 0):
+            requested_m = int(getattr(args, "list_topm", 0) or 0)
+            actual_m = int(train_ds.bm_codes.shape[1])
+            outsider_b = int(getattr(args, "cdrs_neg_end", 40))
+            if requested_m <= 0 or actual_m != requested_m or outsider_b > requested_m:
+                raise RuntimeError(
+                    f"Full ServeSID requires the configured candidate width M: "
+                    f"requested M={requested_m}, dump width={actual_m}, B={outsider_b}. "
+                    "Use a teacher dump with at least M candidate slots or "
+                    "explicitly declare a smaller-M sensitivity experiment."
+                )
         if float(getattr(args, 'cdrs_w', 0.0) or 0.0) > 0:  # s41 CDRS
             args._cdrs_scale = getattr(train_ds, 'bm_score_scale', None)
             if args._cdrs_scale is None:
@@ -486,8 +556,15 @@ def train_sidmlp(args):
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     beam_t5 = beam_loader = beam_valid_tensors = None
-    if args.epochs >= BEAM_VAL_INTERVAL and variant != "jp":  # s24: JP evals via frontier only
-        beam_t5, beam_loader, beam_valid_tensors = _setup_beam_validation(args, device)
+    if variant == "jp":
+        raise ValueError(
+            "JP frontier-only evaluation is not yet compatible with "
+            "validation-NDCG@10 checkpoint selection; use a standard MLP/GRU/CNN student."
+        )
+    beam_t5, beam_loader, beam_valid_tensors = _setup_beam_validation(args, device)
+    best_val_ndcg10 = float("-inf")
+    best_val_epoch = None
+    best_path = os.path.join(ckpt_dir, f"{save_prefix}_best_val_ndcg10.pth")
 
     log(f"Training {'SID-MLP++' if args.encoder_ckpt else 'SID-MLP'}")
     log(f"train={len(train_ds)} val={len(val_ds)} checkpoint_dir={ckpt_dir}")
@@ -499,9 +576,23 @@ def train_sidmlp(args):
 
     import os as _os, time as _time
     _bench = _os.environ.get("BENCH_COST") == "1"
-    _t_all = _time.time()
+    if _bench and device.type == "cuda":
+        torch.cuda.synchronize(device)
+        torch.cuda.reset_peak_memory_stats(device)
+    _t_all = _time.perf_counter()
+    if _bench:
+        log("BENCH_PROTOCOL arch={} M={} B={} train_rows={} batch_size={} "
+            "beam_val_interval={} definition=train_step_sec_excludes_validation "
+            "epoch_total_sec_includes_validation".format(
+                str(getattr(args, "arch", "mlp")),
+                int(getattr(args, "list_topm", 0) or 0),
+                int(getattr(args, "cdrs_neg_end", 40)),
+                len(train_ds), args.batch_size, BEAM_VAL_INTERVAL))
     for epoch in range(1, args.epochs + 1):
-        _t0 = _time.time()
+        if _bench and device.type == "cuda":
+            torch.cuda.synchronize(device)
+            torch.cuda.reset_peak_memory_stats(device)
+        _t0 = _time.perf_counter()
         model.train()
         train_losses = []
         comp_sums, comp_counts = {}, {}
@@ -521,10 +612,13 @@ def train_sidmlp(args):
                 comp_sums[k] = comp_sums.get(k, 0.0) + v
                 comp_counts[k] = comp_counts.get(k, 0) + 1
 
+        if _bench and device.type == "cuda":
+            torch.cuda.synchronize(device)
+        _train_steps_done = _time.perf_counter()
         scheduler.step()
         digit_metrics = _validate_digits(args, model, val_loader, device)
         beam_metrics = {}
-        if beam_t5 is not None and epoch % BEAM_VAL_INTERVAL == 0:
+        if should_beam_validate(epoch, args.epochs, BEAM_VAL_INTERVAL):
             beam_metrics = evaluate_loader(
                 model,
                 beam_t5,
@@ -537,6 +631,20 @@ def train_sidmlp(args):
                 if not getattr(args, "beam_val_max_batches", None)
                 else int(args.beam_val_max_batches),
             )
+            best_val_ndcg10, improved = save_if_best_val_ndcg10(
+                metrics=beam_metrics, epoch=epoch,
+                previous_best=best_val_ndcg10, path=best_path,
+                payload={
+                    "model_state_dict": model.state_dict(),
+                    "args": _checkpoint_args(args),
+                    "model_type": "SID-MLP++" if args.encoder_ckpt else
+                                  f"SID-{str(getattr(args, 'arch', 'mlp')).upper()}",
+                },
+                save=torch.save,
+            )
+            if improved:
+                best_val_epoch = epoch
+                log(f"BEST_VAL epoch={epoch} ndcg10={best_val_ndcg10:.6f} checkpoint={best_path}")
 
         train_loss = float(np.mean(train_losses)) if train_losses else float("inf")
         comp_str = " ".join(
@@ -550,8 +658,17 @@ def train_sidmlp(args):
             + (f" {comp_str}" if comp_str else "")
         )
         if _bench:
-            log(f"EPOCHTIME epoch={epoch} sec={_time.time() - _t0:.1f} "
-                f"peak_gb={torch.cuda.max_memory_allocated() / 1e9:.2f}")
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+                peak_gb = torch.cuda.max_memory_allocated(device) / 1e9
+                persistent_gb = torch.cuda.memory_allocated(device) / 1e9
+            else:
+                peak_gb, persistent_gb = 0.0, 0.0
+            log(f"EPOCHTIME epoch={epoch} "
+                f"train_step_sec={_train_steps_done - _t0:.2f} "
+                f"epoch_total_sec={_time.perf_counter() - _t0:.2f} "
+                f"peak_allocated_gb={peak_gb:.3f} "
+                f"resident_allocated_gb={persistent_gb:.3f}")
 
     final_path = os.path.join(ckpt_dir, f"{save_prefix}_final.pth")
     torch.save({
@@ -561,6 +678,15 @@ def train_sidmlp(args):
         "model_type": "SID-MLP++" if args.encoder_ckpt else "SID-MLP",
     }, final_path)
     if _bench:
-        log(f"TRAINTIME total_sec={_time.time() - _t_all:.1f} "
-            f"peak_gb={torch.cuda.max_memory_allocated() / 1e9:.2f}")
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        log(f"TRAINTIME total_sec={_time.perf_counter() - _t_all:.1f} "
+            f"last_epoch_peak_allocated_gb="
+            f"{torch.cuda.max_memory_allocated(device) / 1e9:.3f}"
+            if device.type == "cuda" else
+            f"TRAINTIME total_sec={_time.perf_counter() - _t_all:.1f} CPU")
     log(f"Saved final checkpoint: {final_path}")
+    if best_val_epoch is None:
+        raise RuntimeError("No best-validation checkpoint saved; a reportable run requires it.")
+    log(f"Best validation checkpoint: {best_path} "
+        f"epoch={best_val_epoch} Val NDCG@10={best_val_ndcg10:.6f}")
