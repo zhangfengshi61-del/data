@@ -20,7 +20,7 @@ jobs:
       - name: Verify sensitivity anchors against published ablation
         run: python3 ServeSID-www/scripts/check_sensitivity_references.py
       - name: Audit single-positive Recall and NDCG consistency
-        run: python3 ServeSID-www/scripts/check_rank_metric_invariants.py --report-only
+        run: python3 ServeSID-www/scripts/check_rank_metric_invariants.py
       - name: Generate single-PDF submission appendix
         run: python3 ServeSID-www/scripts/gen_submission_appendix.py
       - uses: actions/setup-python@v5
