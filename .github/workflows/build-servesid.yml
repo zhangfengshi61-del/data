@@ -47,10 +47,10 @@ jobs:
           from pathlib import Path
           fig = Path("ServeSID-www/Figures")
           pairs = [
-              ("ServeSID_Figure1_Hierarchy_only.svg", "diag_hierarchy.pdf"),
+              ("Fig1a_LogScore_V2.svg", "diag_hierarchy.pdf"),
               ("figure_no_title_background_vector.svg", "fig_stat_h1.pdf"),
               ("depthwise_residuals_no_header_bg_vector.svg", "fig_stat_d12.pdf"),
-              ("image2.svg", "diag_replace.pdf"),
+              ("DA_score_local_center_V2.svg", "diag_replace.pdf"),
           ]
           for src, dst in pairs:
               cairosvg.svg2pdf(url=str(fig / src), write_to=str(fig / dst))
