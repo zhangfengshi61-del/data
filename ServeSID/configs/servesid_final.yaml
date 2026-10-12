@@ -35,6 +35,7 @@ serve_w4: 1
 
 pair_w: 0.0
 pair_gamma: 0.05
+pair_margin: 0.05  # Plain Pair control: softplus(mu-G), not temperature scaling
 pair_k: 10
 pair_b: 40
 pair_negs: 0
