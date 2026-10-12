@@ -19,6 +19,8 @@ jobs:
         run: python3 ServeSID-www/scripts/gen_tables.py
       - name: Verify sensitivity anchors against published ablation
         run: python3 ServeSID-www/scripts/check_sensitivity_references.py
+      - name: Audit single-positive Recall and NDCG consistency
+        run: python3 ServeSID-www/scripts/check_rank_metric_invariants.py --report-only
       - name: Generate single-PDF submission appendix
         run: python3 ServeSID-www/scripts/gen_submission_appendix.py
       - uses: actions/setup-python@v5
@@ -63,6 +65,7 @@ jobs:
             ServeSID-www/supplement.pdf
             ServeSID-www/submission.pdf
             ServeSID-www/submission_layout_audit.txt
+            ServeSID-www/metric_invariant_audit.txt
             ServeSID-www/layout_audit.txt
             ServeSID-www/layout_previews/*.png
           if-no-files-found: error
