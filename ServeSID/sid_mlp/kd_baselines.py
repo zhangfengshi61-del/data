@@ -662,13 +662,12 @@ def train_baseline(args):
 
     teacher_pipe = None
     t5 = None
-    # Validation NDCG@10 always requires the teacher history encoder and
-    # the same SID candidate support, including short (<5-epoch) runs.
-    if True:
-        teacher_pipe = build_tiger_pipeline(args)
-        t5 = teacher_pipe.model.t5.to(device).eval()
-        for p in t5.parameters():
-            p.requires_grad_(False)
+    # Validation NDCG@10 always requires the frozen teacher history encoder,
+    # including short (<5-epoch) runs.
+    teacher_pipe = build_tiger_pipeline(args)
+    t5 = teacher_pipe.model.t5.to(device).eval()
+    for param in t5.parameters():
+        param.requires_grad_(False)
 
     arch = str(getattr(args, "arch", "mlp")).lower()
     if arch == "gru":
