@@ -71,6 +71,33 @@ class TestPaperLoss(unittest.TestCase):
             self.assertIn("model = " + arch + "(", source)
             self.assertIn("class " + arch, (ROOT / "sid_mlp" / "models.py").read_text())
 
+    def test_full_missing_dump_is_rejected_before_training(self):
+        source = (ROOT / "sid_mlp" / "train_decoder.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        pure = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                and node.name in ("cache_supervision_required", "validate_cache_supervision")]
+        self.assertEqual(len(pure), 2)
+        env = {}
+        exec(compile(ast.Module(body=pure, type_ignores=[]), "<cache-check>", "exec"), env)
+        full = SimpleNamespace(serve_kl=4, da_w=1, pair_w=0, beam_dump=None)
+        with self.assertRaisesRegex(ValueError, "Refusing to train"):
+            env["validate_cache_supervision"](full)
+        full.beam_dump = "/cache/train_beam.pt"
+        env["validate_cache_supervision"](full)
+        # Digit-only validation is intentionally allowed without extras.
+        env["validate_cache_supervision"](SimpleNamespace(
+            serve_kl=0, da_w=0, pair_w=0, beam_dump=None))
+        self.assertIn("validate_cache_supervision(args)", source)
+        self.assertIn("active cached-candidate", source)
+
+    def test_da_negative_sampling_does_not_enable_plain_pair(self):
+        source = (ROOT / "sid_mlp" / "train_decoder.py").read_text(encoding="utf-8")
+        # A positive da_negs count may select DA candidates independently.
+        self.assertIn("n_pos=da_k, n_neg_hi=da_b", source)
+        self.assertNotIn("--da_negs requires pair_w>0", source)
+        self.assertIn("skipped_batches=0", source)
+        self.assertIn("error_if_nonfinite=True", source)
+
     def test_additive_margin_and_detached_attribution_implementation(self):
         source = (ROOT / "sid_mlp" / "losses.py").read_text(encoding="utf-8")
         self.assertIn("F.softplus(margin - G_S)", source)
