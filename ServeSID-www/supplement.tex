@@ -240,41 +240,146 @@ and timed inference phases. Fully matched $M=64$
 training timings require a fresh cache and corresponding
 run logs.
 
-\paragraph{Earlier exploratory sensitivity scans.}
-For completeness, earlier anonymous supplementary
-experiments on \emph{Amazon Reviews 2023 Scientific}
-(seed 42) provide the following distinct controls.
-They inform the chosen ranges but do \emph{not} establish
-robustness of the present no-direct-Pair-Loss Full model.
+\section{Sensitivity Analyses}
+\label{sec:sup-sensitivity}
+
+This section reports the author's MLP-student sensitivity tables on
+Beauty, Toys, and Video Games. Each cell is a supplied point estimate;
+sensitivity-specific SDs and run-level checkpoint identities were not
+provided. We retain the numerical values as reported and do not
+overwrite the main ablation table with these separately supplied
+summaries. Exact numerical comparisons with an ablation arm require
+matching seeds, checkpoints, candidate caches and evaluation protocols.
+
+\paragraph{HServe candidate support size $M$.}
+The HServe-only control varies the teacher candidate support while
+holding the other settings fixed. All four metrics show small
+positive changes from $M=20$ to $M=64$.
 
 \begin{table}[t]
-\centering\small
-\caption{Earlier Scientific HServe-\emph{only} support
-sweep (not current Full).}
-\label{tab:sup-legacy-m}
-\begin{tabular}{crrr}
+\centering
+\caption{Author-reported $M$ sensitivity; MLP, HServe-only, other settings fixed.}
+\label{tab:sup-sensitive-m}
+\fontsize{7.1}{8.5}\selectfont
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{@{}llrrrr@{}}
 \toprule
-$M$ & Jac@10 & R@10 & N@10\\
+Dataset & $M$ & R@5 & N@5 & R@10 & N@10 \\
 \midrule
-20 & .6451 & .0457 & .0242\\
-40 & .6668 & .0461 & .0244\\
-64 & .6731 & .0459 & .0244\\
+Beauty & 20 & .0435 & .0286 & .0667 & .0362 \\
+ & 40 & .0436 & .0287 & .0669 & .0363 \\
+ & 64 & .0437 & .0288 & .0670 & .0364 \\
+\addlinespace[2pt]
+Toys & 20 & .0390 & .0244 & .0634 & .0322 \\
+ & 40 & .0392 & .0245 & .0636 & .0323 \\
+ & 64 & .0393 & .0246 & .0637 & .0324 \\
+\addlinespace[2pt]
+Video Games & 20 & .0595 & .0389 & .0929 & .0496 \\
+ & 40 & .0597 & .0390 & .0931 & .0497 \\
+ & 64 & .0598 & .0391 & .0932 & .0498 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\paragraph{Outsider-rank boundary $B$.}
+The MLP HServe + Plain Pair control varies the maximum eligible
+teacher outsider rank with \emph{ten fixed negative samples}.
+The gains saturate around $B=40$--$50$. This is a direct-pair
+ablation and must not be conflated with Full DA-CDRS, which
+does not optimize a separate pairwise loss.
+
 \begin{table}[t]
-\centering\small
-\caption{Earlier Scientific HServe+\emph{Plain Pair}
-outsider-range scan with ten fixed negative samples
-(not current Full).}
-\label{tab:sup-legacy-b}
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{crrrrr}
+\centering
+\caption{Author-reported $B$ sensitivity; MLP, HServe + Plain Pair, ten fixed negatives.}
+\label{tab:sup-sensitive-b}
+\fontsize{7.1}{8.5}\selectfont
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{@{}llrrrr@{}}
 \toprule
-$B$ & 20 & 30 & 40 & 50 & 60\\
+Dataset & $B$ & R@5 & N@5 & R@10 & N@10 \\
 \midrule
-Jac@10 & .6633 & .6715 & .6739 & .6755 & .6757\\
+Beauty & 20 & .0438 & .0289 & .0673 & .0365 \\
+ & 30 & .0439 & .0290 & .0674 & .0365 \\
+ & 40 & .0440 & .0290 & .0675 & .0366 \\
+ & 50 & .0440 & .0290 & .0675 & .0366 \\
+ & 60 & .0440 & .0289 & .0674 & .0365 \\
+\addlinespace[2pt]
+Toys & 20 & .0398 & .0249 & .0638 & .0326 \\
+ & 30 & .0399 & .0249 & .0639 & .0327 \\
+ & 40 & .0400 & .0250 & .0640 & .0328 \\
+ & 50 & .0400 & .0250 & .0640 & .0328 \\
+ & 60 & .0399 & .0249 & .0639 & .0327 \\
+\addlinespace[2pt]
+Video Games & 20 & .0599 & .0392 & .0938 & .0499 \\
+ & 30 & .0600 & .0393 & .0939 & .0500 \\
+ & 40 & .0601 & .0393 & .0940 & .0501 \\
+ & 50 & .0601 & .0393 & .0940 & .0501 \\
+ & 60 & .0600 & .0392 & .0939 & .0500 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{DA correction coefficient $\beta$.}
+The supplied MLP sensitivity results favor $\beta=31.42$
+among the four evaluated values across all three datasets.
+In the paper's no-direct-pair Full objective, $\beta=0$
+formally removes the DA correction and reduces that objective
+to CE plus HServe, provided every other training setting is
+held fixed. The supplied $\beta=0$ values have not been
+matched to identical HServe-only training records and are not
+used to infer an equivalence between independently reported
+checkpoints.
+
+\begin{table}[t]
+\centering
+\caption{Author-reported MLP correction-coefficient sensitivity; SDs unavailable.}
+\label{tab:sup-sensitive-beta}
+\small
+\setlength{\tabcolsep}{3.8pt}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Dataset & $\beta$ & R@10 & N@10 \\
+\midrule
+Beauty & 0 & .0675 & .0366 \\
+ & 31.42 & .0679 & .0369 \\
+ & 62.83 & .0678 & .0368 \\
+ & 125.66 & .0675 & .0366 \\
+\addlinespace[2pt]
+Toys & 0 & .0640 & .0328 \\
+ & 31.42 & .0644 & .0330 \\
+ & 62.83 & .0643 & .0329 \\
+ & 125.66 & .0640 & .0327 \\
+\addlinespace[2pt]
+Video Games & 0 & .0940 & .0501 \\
+ & 31.42 & .0944 & .0505 \\
+ & 62.83 & .0943 & .0504 \\
+ & 125.66 & .0940 & .0501 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{HServe distribution temperature $\tau$.}
+The reported MLP HServe-only comparison slightly favors
+$\tau=1$ over $\tau=2$ on all three datasets.
+
+\begin{table}[t]
+\centering
+\caption{Author-reported HServe-only temperature sensitivity; MLP student.}
+\label{tab:sup-sensitive-tau}
+\small
+\setlength{\tabcolsep}{3.8pt}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Dataset & $\tau$ & R@10 & N@10 \\
+\midrule
+Beauty & 1 & .0670 & .0364 \\
+ & 2 & .0668 & .0363 \\
+\addlinespace[2pt]
+Toys & 1 & .0637 & .0324 \\
+ & 2 & .0635 & .0323 \\
+\addlinespace[2pt]
+Video Games & 1 & .0932 & .0498 \\
+ & 2 & .0930 & .0497 \\
 \bottomrule
 \end{tabular}
 \end{table}
