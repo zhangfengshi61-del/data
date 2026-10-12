@@ -201,12 +201,17 @@ The benchmark does not measure teacher autoregressive decoding,
 does not infer batch-one p95 latency from throughput, and does not
 claim that correcting Full Loss changes its inference graph.
 
-The author's J4 historical training results use **M=40** and therefore
-are not treated as M=64 Full measurements. The previous anonymous
-Scientific (2023) HServe-only M-sweep and HServe+Plain-Pair B-sweep
-used a different objective. Numerical results and their scopes are
-preserved in `verification/J4_COST_AND_BM_PROVENANCE.md`; they
-must not be relabeled as present-day Full-loss sensitivity tests.
+The author clarified that the J4 Beauty training-cost audit used
+**M=64**, not M=40; the earlier 40-candidate statement was a reporting
+error. The same report independently specifies **B=40** and an
+historical **cache-export beam width of 40**. No timing or memory
+numbers were modified. Original logs and cache-width metadata have
+not been independently audited, so reproducibility still requires
+checking the `BENCH_COST=1` run against the intended M=64 dump.
+The older Scientific (2023) HServe-only M-sweep and
+HServe+Plain-Pair B-sweep used different objectives; those results
+must not be labeled as the present Full-loss sensitivity test.
+The full provenance is in `verification/J4_COST_AND_BM_PROVENANCE.md`.
 
 ## Acknowledgments
 
