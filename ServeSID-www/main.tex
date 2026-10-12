@@ -281,9 +281,9 @@ cross-entropy and token-level knowledge distillation:
 &=-\sum_{d=1}^{L}\log q_{S,d}^{\mathrm{raw}}(z_d^{\mathrm{gt}}\mid u,z_{<d}^{\mathrm{gt}}),\\
 \mathcal L_{\mathrm{tok}}
 &=\sum_{d=1}^{L}\KL\!\left(
-p_T(\cdot\mid u,z_{<d}^{\mathrm{gt}})
+p_T^{\mathrm{raw}}(\cdot\mid u,z_{<d}^{\mathrm{gt}})
 \,\|\,
-q_S(\cdot\mid u,z_{<d}^{\mathrm{gt}})
+q_{S,d}^{\mathrm{raw}}(\cdot\mid u,z_{<d}^{\mathrm{gt}})
 \right).
 \end{aligned}
 \label{eq:base-obj}
@@ -421,16 +421,20 @@ token-KL term. Ground-truth supervision remains necessary because
 matching a teacher's preferences does not guarantee relevance to the
 observed next item. The following losses operate on teacher-proposed
 complete candidates, with gradients applied only to the student.
-Request-level objectives are averaged across the training minibatch, and the teacher is fixed throughout optimization, keeping the distillation targets stationary while the student adapts.
+Digit CE and HServe average over training requests; DA instead averages over all valid candidate pairs in the minibatch. The teacher remains frozen.
 
 \subsection{HServe: Hierarchical Serving-Distribution Alignment}
 \label{sec:method-hserve}
 
 \textbf{Shared complete-candidate support.} For each training
 request, we obtain the teacher's top-$M$ beam-reachable, valid
-complete SIDs and cache the resulting support $\C_M(u)$. Both models
-evaluate these same complete sequences using accumulated conditional
-log-probabilities $s_m(i\mid u)$, where $m\in\{T,S\}$. Teacher scores can be precomputed, whereas student scores are recomputed as parameters change. We define a distribution normalized within
+complete SIDs and cache the resulting support $\C_M(u)$. The teacher supplies cached complete-candidate scores
+$s_T^{\mathrm{cache}}$; the student recomputes valid-prefix scores
+$s_S$ from Eq.~\ref{eq:serving-scores}. Both are normalized on the
+same finite candidate support. Teacher cached scores can include
+terms not present in the four recorded SID increments (e.g., EOS),
+so HServe's distributional comparison uses the cached totals,
+while DA uses the four recorded increments. We define a distribution normalized within
 this support:
 \begin{equation}
 \pi_{m,M}(i\mid u)=
@@ -502,20 +506,22 @@ K_{\mathrm{tr}}<\operatorname{rank}_T(i^-\mid u)\le B\},
 \label{eq:pairs}
 \end{equation}
 where $B\le M$. Pair labels describe teacher preferences, not
-ground-truth relevance. For model $m\in\{T,S\}$, the complete score gap is
+ground-truth relevance. Define the per-position increment as
+$a_{T,d}(i)=t_d(i\mid u)$ for the teacher and
+$a_{S,d}(i)=\log q^{\mathrm{valid}}_{S,d}
+(z_d^i\mid u,z_{<d}^i)$ for the student.
+For the candidate pair $b=(i^+,i^-)$,
 \begin{equation}
-G_m(b)=s_m(i^+\mid u)-s_m(i^-\mid u)
-=\sum_{d=1}^{L}\Delta G_m^{(d)}(b),
+\begin{aligned}
+\Delta G_m^{(d)}(b)&=a_{m,d}(i^+)-a_{m,d}(i^-),\\
+G_m(b)&=\sum_{d=1}^{L}\Delta G_m^{(d)}(b).
+\end{aligned}
 \label{eq:pairs-gap}
 \end{equation}
-where
-\begin{equation}
-\Delta G_m^{(d)}(b)=
-\log q_m(z_d^{i^+}\mid u,z_{<d}^{i^+})-
-\log q_m(z_d^{i^-}\mid u,z_{<d}^{i^-}),
-\label{eq:pairs-inc}
-\end{equation}
-and $q_T=p_T$ by notation.
+Thus $G_T$ is the \emph{four-SID-increment} gap, not
+necessarily the gap between cached teacher totals; pair identities
+follow the teacher's cached ranking. The two coincide if the
+cached score remainder is constant across a request's candidates.
 
 \textbf{Decision-attributed depth weighting.} The signed residual is
 \begin{equation}
@@ -556,12 +562,14 @@ w_d(b)=\operatorname{stopgrad}\left(
 \right).
 \label{eq:weights}
 \end{equation}
-Unlike normalized positive-residual weighting, the magnitude here
-depends on the current complete student gap through the nonlinear
-pairwise evaluation. Since the function is monotone, positive
-attribution still requires $r_d>0$. The replacement is a local score
-calculation, not a causal intervention on model parameters. We do not
-backpropagate through $\ell_{\mathrm{pair}}$ or directly minimize it.
+The evaluation is nonlinear in the complete student gap.
+For a small positive $r_d$,
+$A_d=\sigma(\mu-G_S)r_d+O(r_d^2)$; its common first-order
+factor cancels in normalized $w_d$, which then approaches
+normalized positive-residual weighting. Larger residuals can
+yield different weights. These score replacements attribute
+changes in a ranking surrogate, not causal effects of
+parameter interventions; the surrogate is not itself optimized.
 
 \textbf{Scale-normalized correction.} With
 depth-specific standard deviations computed from valid \emph{training}
@@ -626,12 +634,15 @@ interactions are ordered chronologically, with leave-one-out next-item
 evaluation and at most 20 recent interactions retained as request
 history. All methods within a dataset share identical preprocessing, splits, SID assignments, and validity constraints. We report Recall@5/10 and NDCG@5/10 against the held-out next item. Recall@$K$ measures whether the held-out next item appears among the top-$K$ recommendations, while NDCG@$K$ additionally accounts for its ranking position. These relevance-based metrics assess recommendation utility independently of teacher--student preference agreement.
 
-\textbf{Teacher and students.} A frozen TIGER teacher provides
-supervision in an RQ-VAE SID space with four codes per item and
-codebook size 256. We distill the teacher into three light context modules on shared frozen T5 features:
-attention-based MLP (1.664M trainable parameters), GRU with hidden
-size 384 (2.304M), and CNN with 256 channels (1.745M).
-All use prefix-conditioned MLP prediction heads. Students
+\textbf{Teacher and students.} A frozen TIGER T5
+encoder--autoregressive-decoder model provides supervision in
+an RQ-VAE SID space (four 256-way codes per item).
+Students retain its frozen history encoder and SID embeddings,
+but replace the teacher decoder with an attention-based SID-MLP,
+GRU (hidden 384), or CNN (256-channel) context reader and
+four prefix-conditioned MLP heads. The \emph{total trainable}
+reader-plus-head budgets are 1.664M, 2.304M, and 1.745M,
+respectively; the frozen modules are excluded. Students
 share the teacher's SID inventory and employ constrained beam search
 with width 50; the teacher's beam-20 results are reference measurements rather than matched-cost comparisons. Fixing the SID inventory and validity constraints ensures that differences among training objectives are not attributable to changes in item tokenization or admissible candidate sequences. Student beam width is held constant within each architecture.  
 
@@ -658,7 +669,8 @@ with HServe and DA-CDRS without an additional token-KL term. Checkpoint selectio
 \textbf{Baselines.} Table~\ref{tab:main-all} evaluates adapted
 RD, RRD, RCE-KD, GKD, DistiLLM-2, and SmartGR objectives on
 the same frozen teacher, SID inventory, and student backbones.
-The Supplement details these supervised adaptations.
+The integrated appendix gives the common training objective,
+candidate protocol and adaptation choices for these baselines.
 
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
