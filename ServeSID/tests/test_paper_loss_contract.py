@@ -63,7 +63,9 @@ class TestPaperLoss(unittest.TestCase):
             validate(SimpleNamespace(**(full | {"loss": "combined"})))
         with self.assertRaisesRegex(ValueError, "only digit CE"):
             validate(SimpleNamespace(**(full | {"seqkd": True})))
-        validate(SimpleNamespace(serve_kl=4, da_w=0, pair_w=1))
+        with self.assertRaisesRegex(ValueError, "pair_margin"):
+            validate(SimpleNamespace(serve_kl=4, da_w=0, pair_w=1))
+        validate(SimpleNamespace(serve_kl=4, da_w=0, pair_w=1, pair_margin=0.05))
         self.assertIn("loss = loss + lam_da * corr_w * l_da", source)
         for arch in ("SIDGRU", "SIDCNN"):
             self.assertIn("model = " + arch + "(", source)
