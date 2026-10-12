@@ -79,34 +79,29 @@ Distillation for Semantic-ID Generative Recommendation}
 \renewcommand{\shortauthors}{Anonymous}
 
 \begin{abstract}
-Semantic-ID (SID) generative recommendation ranks complete items by
-accumulating autoregressive token scores. On Web platforms, transferring
-teacher preferences to lightweight, verify-free students can improve
-personalized item retrieval without changing the inference graph.
-Yet gold-prefix token distillation directly aligns local conditional
-distributions rather than preferences among complete SID candidates.
-We identify two structural manifestations of this supervision gap:
-teacher--student shifts in hierarchical prefix-group probability mass
-and directionally mixed residuals in depth-wise relative scores.
-We propose \method, which transfers the same complete-candidate
-preferences along two complementary views. HServe aligns complete-item
-distributions and their consistent prefix marginals, while DA-CDRS
-allocates depth-wise relative-score distillation using the improvement
-in a complete-pair ranking evaluation under single-depth teacher
-replacement. The pairwise evaluation is used only for detached weights,
-not as an independent training loss. Both objectives jointly train
-the same lightweight student under unchanged decoding and validity
-constraints. We assess recommendation utility by held-out Recall
-and NDCG across three datasets and student architectures, achieving
-up to 18.8\% relative NDCG@10 improvement over token-KD students.
+Semantic-ID (SID) recommenders rank items by accumulating scores
+along identifier paths. Distilling their autoregressive decoder into
+lightweight students must transfer preferences among complete items,
+whereas gold-prefix token KD supervises the observed SID path.
+We study this gap through probability masses over shared-prefix groups
+and depth-wise complete-pair score differences. \method\ combines
+two offline objectives on teacher-proposed complete candidates.
+HServe aligns the candidate distribution and its nested prefix
+marginals, emphasizing coarse-to-fine SID preferences.
+DA-CDRS evaluates how replacing one student score increment with a
+teacher increment changes a pairwise ranking surrogate and uses
+positive reductions as detached weights for relative-score matching.
+A frozen T5 history encoder is retained at inference; trainable
+context readers and prefix-conditioned MLP heads replace repeated
+teacher-decoder evaluation. Across Beauty, Toys, and Video Games,
+three student variants improve next-item NDCG@10 by 1.61\%--5.13\%
+relative to the strongest compared non-\method\ baseline.
 \par\smallskip\noindent\textbf{Relevance.}
-This work addresses efficient, personalized recommendation on the Web
-by transferring complete-item preferences from a large generative
-teacher to compact sequential recommenders. It directly relates to
-the \emph{Search, Recommendation, and Retrieval-Augmented AI} and
-\emph{User Modeling, Personalization and Agentic Web Users} tracks,
-with an emphasis on training-time preference alignment under an
-unchanged lightweight serving architecture.
+This work addresses personalized item retrieval on the Web:
+transferring complete-item preferences to a lightweight SID decoder
+without introducing an additional online scoring stage. It relates
+to the \emph{Search, Recommendation, and Retrieval-Augmented AI}
+track and personalized user modeling.
 \end{abstract}
 
 %% CCS concepts and keywords are required only for camera-ready; generate
@@ -121,53 +116,45 @@ serving; hierarchical alignment}
 \section{Introduction}
 \label{sec:intro}
 
-Earlier sequential recommenders modeled interaction histories using
-recurrent and attention-based architectures \citep{gru4rec,sasrec,bert4rec,s3rec},
-while language-style and large-scale sequence models extended these
-ideas to generative recommendation \citep{p5,hstu}.
-Semantic-ID (SID) generative recommenders retrieve items by
-autoregressively predicting discrete identifiers. TIGER \citep{tiger}
-scores complete candidates using accumulated SID token
-log-probabilities, but repeated Transformer decoding is costly.
-Verify-free students such as SID-MLP \citep{sidmlp} use compact
-prediction heads and constrained beam search. We seek stronger teacher
-supervision without changing this lightweight inference graph.
+Semantic-ID (SID) generative recommenders map items to discrete
+code paths and score completed identifiers to retrieve a user's next
+item. A TIGER teacher \citep{tiger} uses an autoregressive Transformer
+decoder; lightweight SID-MLP-style students \citep{sidmlp} retain the
+frozen T5 history encoder but replace repeated teacher decoding with
+a trainable context reader and four prefix-conditioned MLP heads.
+The MLP, GRU, and CNN variants differ only in their context readers.
+Our goal is to improve their training supervision without adding
+online decoding components.
 
-Gold-prefix token distillation aligns conditional distributions along
-observed SID paths, whereas serving decisions compare complete
-candidates. Local agreement therefore does not directly guarantee
-candidate-preference agreement under limited student capacity. This
-gap motivates \emph{complete-candidate distribution alignment}
-(Motivation 1).
+Gold-prefix token KD trains conditionals on the observed next-item
+SID, while recommending requires comparing alternative complete
+candidates. The difference is visible in our Video Games diagnostic:
+a GRU has lower gold-prefix token KL than an MLP (0.0827 vs.\
+0.0882), yet higher complete-candidate KL on the same teacher-proposed
+support (0.1020 vs.\ 0.0768). This counterexample to a monotonic
+relationship motivates directly supervising complete candidates;
+it does not by itself establish a recommendation-quality reversal.
 
-Moreover, shared SID prefixes organize complete items into nested
-groups. Their preference masses are deterministic sums of descendant
-candidate probabilities, yet teacher and student may disagree across
-prefix depths. Explicitly matching these marginals supplies consistent
-multi-granularity optimization constraints (Motivation 2). Together,
-these observations motivate HServe.
+Two structures make those candidates useful training targets.
+First, items with shared SID prefixes form nested groups.
+HServe sums complete-candidate probabilities within each prefix
+group and matches the resulting marginals across SID depths.
+Their role is to reweight optimization over granularities, not
+to create independent teacher targets. Second, a complete-pair
+score difference is the sum of depth-wise differences; signed
+teacher--student residuals can offset each other. For each pair,
+DA-CDRS measures how substituting one teacher increment changes a
+pairwise ranking surrogate and uses positive improvements as
+detached weights for increment matching.
 
-A second SID property motivates DA-CDRS: complete-candidate score gaps
-decompose into depth-wise relative-score increments. Teacher--student
-residuals can have opposing signs and partially cancel; correcting a
-large absolute error need not favor the teacher-preferred ordering
-(Motivation 3). A direct complete-pair margin supervises the summed gap,
-without distinguishing the local increments contributing to it.
-DA-CDRS instead allocates detached, gap-sensitive depth weights
-through single-depth teacher replacements.
-
-Our \method\ framework combines HServe's complete-item and
-shared-prefix KL alignment with DA-CDRS's weighted relative-score
-Huber correction. Both losses train the same student offline; neither
-requires an online teacher, verifier, or reranker. We evaluate held-out
-Recall and NDCG, rather than teacher preference agreement alone, on
-Beauty, Toys, and Video Games using MLP, GRU, and CNN students.
-
-We contribute \textbf{(1)} diagnostic evidence for the
-local-to-candidate, hierarchical, and directional supervision gaps;
-\textbf{(2)} HServe's consistent multi-level preference matching; and
-\textbf{(3)} decision-attributed cross-depth distillation, examined
-with controlled structural ablations.
+Both losses operate offline on teacher-proposed candidates and
+update the same student. The deployed model continues to encode
+history once and generate valid SID extensions with its own heads.
+We evaluate held-out Recall and NDCG rather than teacher agreement
+alone. Our contributions are (1) diagnostics of the
+gold-prefix/complete-candidate gap, (2) hierarchical preference
+alignment on a shared candidate support, and (3) depth-attributed
+relative-score supervision with controlled ablations.
 
 \section{Related Work}
 \label{sec:related}
@@ -221,32 +208,64 @@ single-depth changes to a complete-pair evaluation.
 \subsection{SID Recommendation and Verify-Free Students}
 \label{sec:prelim-models}
 
-Let $\mathcal I$ denote the item catalog and $u$ a recommendation
-request containing the user's interaction history. Each item
-$i\in\mathcal I$ is assigned a length-$L$ Semantic ID (SID),
-$z^i=(z_1^i,\ldots,z_L^i)$, whose elements belong to a discrete
-codebook. We fix a TIGER autoregressive teacher $T$ and distill it into MLP,
-GRU, and CNN students $S$, following the lightweight, verify-free
-SID-prediction setting of SID-MLP. The teacher and all students share
-the same SID codebook, item assignment, and legal-prefix constraints.
-Their conditional probabilities are $p_T$ and $q_S$, respectively.
-Their complete-item scores are
+Let $u$ denote a recommendation request with history $x_u$,
+and let item $i$ have a four-position SID
+$z^i=(z_1^i,\ldots,z_4^i)$ in a 256-way codebook at each position.
+The fixed TIGER teacher consists of a T5 history encoder $E_T$
+and an autoregressive decoder that provides offline supervision.
+All students reuse $E_T$ and frozen SID embeddings. Their trainable
+reader $R_\phi$ (SID-MLP cross-attention, GRU, or temporal CNN)
+operates on the encoder states, followed by the \emph{same kind}
+of four prefix-conditioned MLP prediction heads $g_{\psi_d}$:
 \begin{equation}
-\begin{aligned}
-s_T(i\mid u)&=\sum_{d=1}^{L}\log p_T(z_d^i\mid u,z_{<d}^i),\\
-s_S(i\mid u)&=\sum_{d=1}^{L}\log q_S(z_d^i\mid u,z_{<d}^i).
-\end{aligned}
+H_T(u)=E_T(x_u),\quad h_S(u)=R_\phi(H_T(u)),
+\label{eq:student-flow}
+\end{equation}
+\begin{equation}
+\ell_{S,d}(u,p)=g_{\psi_d}(h_S(u),\operatorname{Emb}(p)),
+\label{eq:student-head}
+\end{equation}
+where $p=z_{<d}$ is the already generated SID prefix. The
+reader and heads are trainable; the encoder and SID embeddings
+are fixed.
+
+Digit cross-entropy uses the raw 256-way conditional
+$q^{\mathrm{raw}}_{S,d}=\operatorname{softmax}(\ell_{S,d})$.
+For candidate scoring and serving, let $\mathcal V_d(p)$ be
+the legal extensions of prefix $p$; the student uses
+\begin{equation}
+q^{\mathrm{valid}}_{S,d}(c\mid u,p)=
+\frac{q^{\mathrm{raw}}_{S,d}(c\mid u,p)
+\mathbf1[c\in\mathcal V_d(p)]}
+{\sum_{a\in\mathcal V_d(p)}
+q^{\mathrm{raw}}_{S,d}(a\mid u,p)}.
+\label{eq:valid-conditional}
+\end{equation}
+The implemented student leaves the first position at its raw
+256-way softmax and applies legal-child masking at positions 2--4.
+Consequently the same logits underlie two different probability
+normalizations; CE and valid-candidate scoring are not interchangeable.
+The student score and its depth increments are
+\begin{equation}
+s_S(i\mid u)=\sum_{d=1}^{4}
+\log q^{\mathrm{valid}}_{S,d}(z_d^i\mid u,z_{<d}^i).
 \label{eq:serving-scores}
 \end{equation}
+For the teacher, $t_d(i\mid u)$ denotes its cached SID
+log-probability increment and $s_T^{\mathrm{SID}}=\sum_dt_d$.
+The beam cache also provides its completed-candidate score
+$s_T^{\mathrm{cache}}$, used to rank and normalize the teacher
+candidate list; a cached termination contribution, if any,
+is not silently equated with the four SID increments.
+HServe uses these cached complete scores, whereas DA matches
+the recorded depth increments. These definitions make their
+shared candidate support explicit without assuming the
+two teacher score conventions are identical.
 
-Recommendations use constrained beam search over valid SID prefixes.
-A frozen T5 history encoder first produces representations; the
-lightweight student heads then score SID positions without invoking
-the teacher's autoregressive decoder or an additional verifier.
-Both models use the same SID space and prefix constraints. We keep the
-teacher and SID assignment fixed, so differences among trained
-students reflect their learned conditional scoring functions rather
-than changes to identifier construction.
+The student decodes legal SIDs with constrained beam search
+and no online teacher-decoder call. The teacher candidate list
+is filtered to the same SID inventory; the student and teacher
+need not have used identical beam-search procedures.
 
 \subsection{Gold-Prefix Token Distillation Baseline}
 \label{sec:prelim-base}
@@ -259,7 +278,7 @@ cross-entropy and token-level knowledge distillation:
 &=\mathcal L_{\mathrm{digit}}
 +\lambda_{\mathrm{tok}}\mathcal L_{\mathrm{tok}},\\
 \mathcal L_{\mathrm{digit}}
-&=-\sum_{d=1}^{L}\log q_S(z_d^{\mathrm{gt}}\mid u,z_{<d}^{\mathrm{gt}}),\\
+&=-\sum_{d=1}^{L}\log q_{S,d}^{\mathrm{raw}}(z_d^{\mathrm{gt}}\mid u,z_{<d}^{\mathrm{gt}}),\\
 \mathcal L_{\mathrm{tok}}
 &=\sum_{d=1}^{L}\KL\!\left(
 p_T(\cdot\mid u,z_{<d}^{\mathrm{gt}})
