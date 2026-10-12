@@ -1,0 +1,90 @@
+name: Export ServeSID LaTeX source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/export-servesid-latex.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Regenerate editable tables and integrated appendix
+        run: |
+          python3 ServeSID-www/scripts/gen_tables.py
+          python3 ServeSID-www/scripts/gen_submission_appendix.py
+      - name: Package complete editable LaTeX project
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+
+          project = Path("ServeSID-www")
+          revision = os.environ["GITHUB_SHA"]
+          readme = project / "README-SOURCE-PACKAGE.md"
+          readme.write_text(
+              "# ServeSID WWW 2027 — Editable LaTeX source\n\n"
+              f"GitHub `main` source revision: `{revision}`.\n\n"
+              "## Build\n"
+              "Upload the entire `ServeSID-www` folder to Overleaf, "
+              "or run `latexmk -pdf -bibtex submission.tex` from that folder.\n\n"
+              "**Official single-PDF entrypoint:** `submission.tex`. "
+              "It includes `main.tex` and the generated integrated appendix "
+              "`Figures/submission_appendix.tex`.\n\n"
+              "The stand-alone `supplement.tex` is an expanded working supplement, "
+              "not a replacement for the integrated `submission.tex`.\n\n"
+              "Includes: all LaTeX sources, ACM class/reference style, "
+              "both BibTeX databases, generated and original tables, all SVG/PDF "
+              "figures (including `Fig1a_LogScore_V2.svg` and "
+              "`DA_score_local_center_V2.svg`), data CSVs and regeneration scripts.\n\n"
+              "If you modify experimental means, run "
+              "`python3 scripts/gen_tables.py` then "
+              "`python3 scripts/gen_submission_appendix.py`.\n",
+              encoding="utf-8",
+          )
+          exclude_dirs = {"__pycache__", ".git", "layout_previews"}
+          exclude_suffix = {".aux", ".bbl", ".blg", ".log", ".fls", ".fdb_latexmk", ".synctex.gz"}
+          out = Path("ServeSID_WWW2027_LaTeX_Source.zip")
+          with ZipFile(out, "w", ZIP_DEFLATED, compresslevel=9) as z:
+              for file in sorted(project.rglob("*")):
+                  if not file.is_file() or any(x in exclude_dirs for x in file.parts):
+                      continue
+                  if any(file.name.endswith(ext) for ext in exclude_suffix):
+                      continue
+                  z.write(file, file.as_posix())
+          print(f"Created {out}, {out.stat().st_size} bytes")
+          with ZipFile(out) as z:
+              names = set(z.namelist())
+              essential = [
+                  "ServeSID-www/submission.tex",
+                  "ServeSID-www/main.tex",
+                  "ServeSID-www/supplement.tex",
+                  "ServeSID-www/acmart.cls",
+                  "ServeSID-www/ACM-Reference-Format.bst",
+                  "ServeSID-www/refs.bib",
+                  "ServeSID-www/extra-refs.bib",
+                  "ServeSID-www/Figures/submission_appendix.tex",
+                  "ServeSID-www/Figures/Fig1a_LogScore_V2.svg",
+                  "ServeSID-www/Figures/DA_score_local_center_V2.svg",
+              ]
+              missing = [x for x in essential if x not in names]
+              if missing:
+                  raise SystemExit("Missing required source files: " + repr(missing))
+              print(f"Verified {len(names)} source files and all 10 essential assets")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ServeSID-WWW2027-LaTeX-source
+          path: ServeSID_WWW2027_LaTeX_Source.zip
+          if-no-files-found: error
+          retention-days: 30
