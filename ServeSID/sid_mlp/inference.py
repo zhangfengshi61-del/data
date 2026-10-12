@@ -347,6 +347,7 @@ def evaluate_loader(
     delta_d4=1.0,
     max_batches=None,
     teacher_topk=None,
+    cost_profile=None,
 ):
     (mask_d1_d2, mask_d1d2_d3, d4_keys_sorted, d4_masks_sorted,
      keys4_sorted, vals4_sorted, _item_mapping, valid_items_4) = valid_tensors
@@ -370,21 +371,53 @@ def evaluate_loader(
 
     lens.eval()
     t5.eval()
+    # Optional synchronized phase audit. Disabled by default; ordinary
+    # quality evaluation retains its uninstrumented throughput behavior.
+    prof = cost_profile
+    if prof is not None:
+        if device.type != "cuda":
+            raise RuntimeError("Synchronized GPU cost profiling requires CUDA.")
+        warmup = int(prof.get("warmup_batches", 3))
+        if warmup < 0:
+            raise ValueError("warmup_batches must be nonnegative")
+        for label in ("transfer_and_gt", "frozen_encoder", "student_context",
+                      "sid_beam_and_lookup", "cpu_ranking"):
+            prof[label + "_sec"] = 0.0
+        prof["measured_batches"] = 0
+        prof["measured_requests"] = 0
+        prof["batch_elapsed_sec"] = []
+        prof["persistent_allocated_bytes"] = torch.cuda.memory_allocated(device)
+        prof["gpu_name"] = torch.cuda.get_device_name(device)
+        prof["gpu_total_memory_bytes"] = torch.cuda.get_device_properties(device).total_memory
 
     for batch_idx, batch in enumerate(tqdm(loader, desc="SID-MLP beam", ncols=100)):
         if max_batches is not None and batch_idx >= max_batches:
             break
 
+        if prof is not None:
+            torch.cuda.synchronize(device)
+            if batch_idx == warmup:
+                torch.cuda.reset_peak_memory_stats(device)
+            _p0 = time.perf_counter()
         input_ids = batch["input_ids"].to(device, non_blocking=True)
         attn_mask = batch["attention_mask"].to(device, non_blocking=True)
         gt_sids, gt_item_indices = _resolve_ground_truth_items(batch["labels"], valid_items_4)
         batch_size = input_ids.shape[0]
+        if prof is not None:
+            torch.cuda.synchronize(device)
+            _p1 = time.perf_counter()
 
         enc_out = t5.encoder(input_ids=input_ids, attention_mask=attn_mask, return_dict=True)
         enc_hidden = enc_out.last_hidden_state
         enc_pad_mask = ~attn_mask.bool()
+        if prof is not None:
+            torch.cuda.synchronize(device)
+            _p2 = time.perf_counter()
 
         ctx = lens.encode(enc_hidden, enc_pad_mask)
+        if prof is not None:
+            torch.cuda.synchronize(device)
+            _p3 = time.perf_counter()
         logits1 = lens.head1(ctx).float()
         d1_lp = F.log_softmax(logits1 / d1_temp, dim=-1)
         d1_scores, d1_idx = torch.topk(d1_lp, beam, dim=1)
@@ -482,6 +515,9 @@ def evaluate_loader(
             (d4_final - DIGIT_OFFSETS[3]).clamp(0, CODEBOOK_SIZE - 1),
         ).view(batch_size * final_n)
         item_ids = lookup_item_idx(keys4_sorted, vals4_sorted, key4).view(batch_size, final_n)
+        if prof is not None:
+            torch.cuda.synchronize(device)
+            _p4 = time.perf_counter()
 
         item_rows = item_ids.detach().cpu().tolist()
         d1_beams = d1_tokens.detach().cpu().tolist()
@@ -516,6 +552,38 @@ def evaluate_loader(
                 coverage["d1d2d3"] += 1
             if rank != -1:
                 coverage["item"] += 1
+
+        if prof is not None:
+            torch.cuda.synchronize(device)
+            _p5 = time.perf_counter()
+            if batch_idx >= warmup:
+                for label, lo, hi in (
+                    ("transfer_and_gt", _p0, _p1),
+                    ("frozen_encoder", _p1, _p2),
+                    ("student_context", _p2, _p3),
+                    ("sid_beam_and_lookup", _p3, _p4),
+                    ("cpu_ranking", _p4, _p5),
+                ):
+                    prof[label + "_sec"] += hi - lo
+                prof["measured_batches"] += 1
+                prof["measured_requests"] += batch_size
+                prof["batch_elapsed_sec"].append(_p5 - _p0)
+
+    if prof is not None:
+        n = prof["measured_requests"]
+        sec = sum(prof[k + "_sec"] for k in (
+            "transfer_and_gt", "frozen_encoder", "student_context",
+            "sid_beam_and_lookup", "cpu_ranking"))
+        prof["profiled_sec"] = sec
+        prof["amortized_ms_per_request"] = (1000.0 * sec / n) if n else None
+        prof["instrumented_req_per_sec"] = n / sec if sec > 0 else None
+        prof["peak_allocated_bytes"] = torch.cuda.max_memory_allocated(device)
+        prof["allocated_after_bytes"] = torch.cuda.memory_allocated(device)
+        prof["memory_scope"] = (
+            "CUDA max_memory_allocated of the complete resident inference pipeline "
+            "(including any loaded TIGER encoder/decoder modules), after warmup; "
+            "not decoder-only incremental memory"
+        )
 
     metrics = {"total": total}
     for cutoff in test_ns:
@@ -612,6 +680,8 @@ def run_inference(args):
         torch.cuda.reset_peak_memory_stats(device)
         torch.cuda.synchronize(device)
     start = time.time()
+    _cost = ({"warmup_batches": int(getattr(args, "cost_warmup_batches", 3))}
+             if getattr(args, "cost_json", None) else None)
     metrics = evaluate_loader(
         lens,
         t5,
@@ -629,6 +699,7 @@ def run_inference(args):
         delta_d4=args.delta_d4,
         max_batches=5 if args.test else None,
         teacher_topk=t_topk,
+        cost_profile=_cost,
     )
     if device.type == "cuda":
         torch.cuda.synchronize(device)
@@ -646,6 +717,26 @@ def run_inference(args):
     )
     import json as _json
     print("METRICS_JSON " + _json.dumps(metrics), flush=True)
+    if _cost is not None:
+        # Keep the synchronized breakdown distinct from the wall-clock
+        # inference metrics: CUDA synchronization changes throughput.
+        _cost["checkpoint"] = os.path.abspath(args.lens_path)
+        _cost["teacher_checkpoint"] = os.path.abspath(args.checkpoint)
+        _cost["dataset_tag"] = args.dataset_tag
+        _cost["split"] = split
+        _cost["batch_size"] = int(args.batch_size)
+        _cost["beam_size"] = int(args.beam_size)
+        _cost["final_top_n"] = int(args.final_top_n)
+        _cost["decoder_trainable_parameters"] = sum(
+            p.numel() for p in lens.parameters() if p.requires_grad)
+        _cost["resident_t5_parameters"] = sum(p.numel() for p in t5.parameters())
+        _cost["encoder_parameters"] = sum(p.numel() for p in t5.encoder.parameters())
+        _cost["dtype"] = "bf16" if native_bf16 else "fp32"
+        path = os.path.abspath(args.cost_json)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as stream:
+            _json.dump(_cost, stream, indent=2, sort_keys=True)
+        print(f"COST_JSON {path}", flush=True)
     if "peak_mem_gb" in metrics:
         print(f"peak_mem={metrics['peak_mem_gb']:.3f} GB", flush=True)
     return metrics, lens_ckpt
