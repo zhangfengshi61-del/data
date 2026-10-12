@@ -691,13 +691,13 @@ batch 32) reports Base/Full throughput of 3445/3423 requests/s
 for GRU and 3028/3024 for CNN; the small differences are
 consistent with an unchanged inference graph. Student timings
 include the frozen T5 history encoder, not just SID heads.
-A separate MLP training-cost audit at \emph{M=40} reports
+The author-reported MLP training-cost audit at $M=64$ reports
 4.6/11.5\,s per training epoch and 27/49\,min for complete
 200-epoch Base/Full runs; peak allocated training memory rises
 from 7.4 to 9.2--9.5\,GB. These offline timings are
-configuration-specific: the final paper uses $M=64$, while
-DA-CDRS forms pairs only through $B=40$. Full-width cost
-reproduction requires an $M=64$ teacher dump. The Supplement
+measured at the stated $M=64$ support width; $B=40$
+is the separate DA-CDRS outsider cutoff. Cache-export
+beam width 40 is a distinct generation setting. The Supplement
 documents the cache, timing phases, and distinct measurement
 boundaries. No new online decoder, teacher-scoring stage, or
 reranker is introduced by \method.
