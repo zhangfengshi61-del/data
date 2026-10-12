@@ -421,7 +421,7 @@ def loss_distillm2(args, model, enc, msk, batch, extras, list_masks, t5, valid_q
     pS2o = F.log_softmax(l2o, -1)
     pS3o = F.log_softmax(l3o, -1)
     pS4o = F.log_softmax(l4o, -1)
-    skew_on = (_jsd(pT1o, pS1.detach()) + _skew_kl(pT2o, pS2o, alpha)
+    skew_on = (_skew_kl(pT1o, pS1, alpha) + _skew_kl(pT2o, pS2o, alpha)
                + _skew_kl(pT3o, pS3o, alpha) + _skew_kl(pT4o, pS4o, alpha)).mean()
 
     # contrastive over student-sampled sequences vs the GT positive
