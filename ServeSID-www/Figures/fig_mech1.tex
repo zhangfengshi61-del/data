@@ -2,11 +2,11 @@
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.945\textwidth]{Figures/diag_hierarchy.pdf}
-\caption{Illustrative teacher--student SID candidate ranking mismatch.
-Tree nodes display cumulative SID log-scores, whereas HServe obtains
-prefix-group probabilities by normalizing the complete-candidate scores
-over a common support and summing descendant probabilities.
-Selected paths are shown.}
+\caption{Teacher and student complete-SID rankings on selected
+identifier paths. Node labels show cumulative log-scores (sums
+of conditional log-probabilities), not normalized prefix masses.
+HServe normalizes the completed candidate scores on a common
+support and then sums their probabilities within shared-prefix groups.}
 \Description{Teacher and student SID trees show selected paths, cumulative
 log-scores and candidate orders. The displayed node scores are not
 normalized HServe prefix marginals.}
