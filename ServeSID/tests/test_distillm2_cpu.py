@@ -25,8 +25,8 @@ class DistiLLM2Tests(unittest.TestCase):
         self.assertEqual(len(parts), 4)
         for logp in parts:
             torch.testing.assert_close(logp.exp().sum(-1), torch.ones(2), atol=1e-6, rtol=0)
-            self.assertLess(float(_jsd(logp, logp)), 1e-6)
-            self.assertLess(abs(float(_skew_kl(logp, logp))), 1e-6)
+            self.assertLess(float(_jsd(logp, logp).abs().max()), 1e-6)
+            self.assertLess(abs(float(_skew_kl(logp, logp).abs().max())), 1e-6)
         expected = torch.log_softmax(torch.arange(CODEBOOK_SIZE).float()/20, -1)
         torch.testing.assert_close(parts[0][0], expected)
 
