@@ -6,3 +6,13 @@
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+
+# Canonical generated submission artifacts (published by CI, never committed).
+/main.pdf
+/supplement.pdf
+/submission.pdf
+/layout_audit.txt
+/submission_layout_audit.txt
+/metric_invariant_audit.txt
+/layout_previews/
+/Figures/submission_appendix.tex
