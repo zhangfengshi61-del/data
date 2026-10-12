@@ -48,9 +48,9 @@ and candidate validity rules for all methods on each dataset.
 \label{sec:sup-hyper}
 
 All methods share the same fixed TIGER teacher checkpoint, RQ-VAE
-tokenizer, and four-token SID space with codebook size 256. The
-three student backbones encode the last 20 interactions and score
-each SID depth with lightweight heads:
+tokenizer, and four-token SID space with codebook size 256. The frozen T5 history encoder represents at most 20 prior
+interactions. The MLP, GRU, or CNN student readout and
+SID heads process these shared frozen sequence features:
 
 \begin{itemize}
 \item \textbf{MLP}: 1.664M trainable parameters;
@@ -78,6 +78,40 @@ We report the mean and standard deviation of next-item recommendation
 metrics across these seeds. Teacher supports, prefix marginals,
 candidate pairs, and increment scales are constructed from
 training requests; held-out requests are reserved for evaluation.
+
+\section{Mechanism and Baseline Adaptations}
+\label{sec:sup-mechanism}
+
+\paragraph{Hierarchical KL reweighting.}
+Let $K_d=\mathrm{KL}(\pi_T^{(d)}\|\pi_S^{(d)})$ on the
+same candidate support. If $D_t$ is the
+teacher-prefix-mass-weighted conditional KL at SID depth $t$,
+the chain rule yields $K_d=\sum_{t=1}^{d}D_t$. Therefore,
+\[
+\sum_{d=1}^{L}\alpha_d K_d
+=\sum_{t=1}^{L}\Bigl(\sum_{d=t}^{L}\alpha_d\Bigr)D_t.
+\]
+With four depths and $\alpha_d=1$, HServe weights the
+conditional contributions by $(4,3,2,1)$; leaf-only KL
+weights them by $(1,1,1,1)$. The teacher distribution is
+unchanged, but the depth-wise optimization pressure differs.
+
+\paragraph{Adapted distillation baselines.}
+All methods share a fixed SID inventory, frozen encoder and
+a selected MLP/GRU/CNN readout, and each adapted distillation
+objective is combined with the digit training objective.
+RD uses teacher-rank weights and dynamic student ranks;
+RRD contrasts top teacher candidates with sampled negatives.
+RCE-KD matches teacher and student candidate distributions
+under ranking-aware cross-entropy.
+Our LOHRec-style control adapts order, hierarchical depth and
+positive--negative ranking losses to the common student;
+it is not the full standalone LOHRec architecture.
+GKD uses teacher-forced and student-sampled prefix matching.
+DistiLLM-2 combines skew-divergence and contrastive
+student-sampled SID losses. SmartGR combines SID-level KL
+with beam-prefix preference constraints. Each baseline
+uses validation NDCG@10 for checkpoint selection.
 
 \section{Full Main-Result Tables}
 \label{sec:sup-main}
