@@ -55,18 +55,21 @@ conda env create -f environment.yml   # or: pip install -r requirements.txt
 bash scripts/build_valid_set.sh
 bash scripts/extract.sh
 
-# 2a. train the full ServeSID student (MLP encoder, default)
-bash scripts/train.sh.servesid
+# 2. run Full ServeSID (the SAME sid_mlp implementation for all backbones)
+# Set GRAPH_DIR, MODEL_DIR, BEAM_DUMP to your real, corresponding assets.
+# Default SEEDS="42 43 44". The launcher reads this checkout's
+# configs/servesid_final.yaml and saves best-Val checkpoints.
+GRAPH_DIR="$GRAPH_DIR" MODEL_DIR="$MODEL_DIR" BEAM_DUMP="$BEAM_DUMP" \
+    bash scripts/train.sh.servesid sidmlp Beauty 0
+ARCH=gru GRAPH_DIR="$GRAPH_DIR" MODEL_DIR="$MODEL_DIR" BEAM_DUMP="$BEAM_DUMP" \
+    bash scripts/train.sh.servesid sidmlp Beauty 0
+ARCH=cnn GRAPH_DIR="$GRAPH_DIR" MODEL_DIR="$MODEL_DIR" BEAM_DUMP="$BEAM_DUMP" \
+    bash scripts/train.sh.servesid sidmlp Beauty 0
 
-# 2b. or train a GRU / CNN student encoder
-python -m sid_mlp.cli.train sidmlp --config configs/sidmlp_gru.yaml --arch gru \
-    --checkpoint $MODEL_DIR/<category>/checkpoint.pth --category <category> \
-    --graph_dir $GRAPH_DIR --sem_ids $SEM_IDS
-python -m sid_mlp.cli.train sidmlp --config configs/sidmlp_cnn.yaml --arch cnn \
-    --checkpoint $MODEL_DIR/<category>/checkpoint.pth --category <category> \
-    --graph_dir $GRAPH_DIR --sem_ids $SEM_IDS
+# Base-KD examples use configs/sidmlp_gru.yaml or sidmlp_cnn.yaml instead
+# of the Full loss. They are experiment arms, not separate code versions.
 
-# 3. evaluate with constrained beam search
+# 3. evaluate the best-Val checkpoint with constrained beam search
 bash scripts/infer.sh
 ```
 
