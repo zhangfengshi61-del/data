@@ -10,7 +10,7 @@ import unittest
 
 import torch
 
-from sid_mlp.kd_baselines import build_baseline_student
+from sid_mlp.kd_baselines import build_baseline_student, install_on_policy_context_cache
 from sid_mlp.inference import build_sidmlp_from_checkpoint
 
 
@@ -33,8 +33,11 @@ class TestThreeBackbones(unittest.TestCase):
                     conv_kernel=3, conv_layers=2, seed=42,
                 )
                 model = build_baseline_student(args, embedding, torch.device("cpu"))
+                install_on_policy_context_cache(model)
                 model.train()
                 logits = model(enc, mask, d1_ids=d1, d2_ids=d2, d3_ids=d3)
+                self.assertEqual(model._last_ctx.shape[0], 2)
+                self.assertEqual(model._last_ctx.shape[1], 128 if arch == "mlp" else 16)
                 self.assertEqual(len(logits), 4)
                 self.assertTrue(all(v.shape == (2, 256) for v in logits))
                 sum(v.square().mean() for v in logits).backward()
