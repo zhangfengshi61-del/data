@@ -1,20 +1,21 @@
 %% ServeSID -- WWW submission -- Supplementary Material
 %% Compile together with main.tex in the same folder.
 
-\documentclass[sigconf, anonymous]{acmart}
+\documentclass[sigconf, anonymous, review]{acmart}
 
 \usepackage{amsmath}
-\usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{xcolor}
 
-\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
-
 \newcommand{\method}{\textsc{ServeSID}}
+
+% Match the main paper's ACM Web Conference 2027 metadata.
+\acmYear{2027}
+\acmConference[WWW '27]{The ACM Web Conference 2027}{May 10--14, 2027}{Dublin, Ireland}
 
 \settopmatter{printacmref=false, printccs=false, printfolios=true}
 
-\title{\method: Hierarchy-Aligned and Direction-Aware Knowledge
+\title{\method: Hierarchy-Aligned and Decision-Attributed Knowledge
 Distillation for Semantic-ID Generative Recommendation\\
 Supplementary Material}
 
@@ -32,47 +33,35 @@ Supplementary Material}
 
 \maketitle
 
-\section{Dataset Statistics}
+\section{Datasets and Evaluation Protocol}
 \label{sec:sup-datasets}
 
-\TODO{fill in the Beauty/Toys/Video Games statistics (users, items,
-interactions, average sequence length, number of valid SIDs) in the
-same style as the previous submission.}
-
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{lcccc}
-\toprule
-Dataset & \#Users & \#Items & \#Interactions & Avg.\ len. \\
-\midrule
-Amazon Beauty 2014 & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
-Amazon Toys 2014   & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
-Video Games 2023   & \TODO{--} & \TODO{--} & \TODO{--} & \TODO{--} \\
-\bottomrule
-\end{tabular}
-\caption{Dataset statistics.}
-\label{tab:sup-stats}
-\end{table}
+We evaluate Amazon Beauty and Toys from Amazon Reviews 2014 and Video
+Games from Amazon Reviews 2023 using chronological leave-one-out
+next-item evaluation, with at most 20 preceding interactions per
+request. Preprocessing, user/item mapping, SID assignments, and
+train/validation/test splits are shared among methods within each
+dataset. The evaluation uses identical preprocessing, SID assignments,
+and candidate validity rules for all methods on each dataset.
 
 \section{Implementation and Hyperparameters}
 \label{sec:sup-hyper}
 
 All methods share the same fixed TIGER teacher checkpoint, RQ-VAE
-tokenizer, and four-token SID space with codebook size 256. The
-three student backbones encode the last 20 interactions and score
-each SID depth with lightweight heads:
+tokenizer, and four-token SID space with codebook size 256. The frozen T5 history encoder represents at most 20 prior
+interactions. An attention-based, GRU, or CNN context module reads these
+shared features, followed by prefix-conditioned MLP SID heads:
 
 \begin{itemize}
 \item \textbf{MLP}: 1.664M trainable parameters;
-\item \textbf{GRU}: hidden size 384, 1.201M trainable parameters;
-\item \textbf{CNN}: embedding dimension 256, 1.753M trainable parameters.
+\item \textbf{GRU}: hidden size 384, 2.304M trainable parameters;
+\item \textbf{CNN}: 256 convolution channels, 1.745M trainable parameters.
 \end{itemize}
 
-\noindent\emph{Caveat:} the GRU/CNN runs used slightly different
-parameter budgets than the MLP due to a launch-script issue; a
-strictly matched rerun is planned and will be reported in the final
-version.
+\noindent\emph{Architecture comparison:} the MLP, GRU, and CNN students
+have different parameter budgets, so cross-architecture scores should
+not be interpreted as capacity-matched comparisons. Within each
+architecture, the method comparisons use its fixed student backbone.
 
 Students decode with constrained beam search of width $W=50$
 (top-50); the TIGER teacher reference is decoded with beam 20 (the
@@ -84,17 +73,75 @@ $K_{\mathrm{tr}}=10$, maximum outsider rank $B=40$, online beam
 $W=50$, HServe weight $\lambda_H=4$, DA-CDRS weight $\lambda_D=1$,
 depth weights $\alpha_d=1$ for $d=1,\dots,L$, pair margin $\mu=.05$,
 increment-correction weight $\lambda_{\mathrm{corr}}=31.42$, learning
-rate $5\times10^{-5}$, seeds $\{42,43,44\}$. All reported numbers are
-three-seed means. Teacher supports, marginals, pairs, and increment
-scales are built from training requests only; validation/test teacher
-outputs never enter optimization.
+rate $5\times10^{-5}$, and three random seeds $\{42,43,44\}$.
+We report the mean and standard deviation of next-item recommendation
+metrics across these seeds. Teacher supports, prefix marginals,
+candidate pairs, and increment scales are constructed from
+training requests; held-out requests are reserved for evaluation.
+
+\section{Mechanism and Baseline Adaptations}
+\label{sec:sup-mechanism}
+
+\paragraph{Hierarchical KL reweighting.}
+Let $K_d=\mathrm{KL}(\pi_T^{(d)}\|\pi_S^{(d)})$ on the
+same candidate support. If $D_t$ is the
+teacher-prefix-mass-weighted conditional KL at SID depth $t$,
+the chain rule yields $K_d=\sum_{t=1}^{d}D_t$. Therefore,
+\[
+\sum_{d=1}^{L}\alpha_d K_d
+=\sum_{t=1}^{L}\Bigl(\sum_{d=t}^{L}\alpha_d\Bigr)D_t.
+\]
+With four depths and $\alpha_d=1$, HServe weights the
+conditional contributions by $(4,3,2,1)$; leaf-only KL
+weights them by $(1,1,1,1)$. The teacher distribution is
+unchanged, but the depth-wise optimization pressure differs.
+Digit CE uses raw 256-way student codebook logits. Candidate-based
+HServe and DA use prefix-validity masking and renormalization.
+For GKD/DistiLLM-2, teacher logits are likewise normalized
+\emph{within each 256-token position-specific codebook} before
+computing on-policy JSD or skew divergence; sampling decisions
+are detached, while student distribution scores retain gradients.
+
+\paragraph{Adapted distillation baselines.}
+All methods share a fixed SID inventory, frozen encoder and
+a selected MLP/GRU/CNN readout, and each adapted distillation
+objective is combined with the digit training objective.
+RD uses teacher-rank weights and dynamic student ranks;
+RRD contrasts top teacher candidates with sampled negatives.
+RCE-KD matches teacher and student candidate distributions
+under ranking-aware cross-entropy.
+The training code also supports a LOHRec-style adaptation of
+order, hierarchy and positive--negative ranking losses; it is
+not among the reported Table~1 comparisons and is not the
+original complete LOHRec system.
+GKD uses teacher-forced and student-sampled prefix matching.
+DistiLLM-2 combines skew-divergence and contrastive
+student-sampled SID losses. SmartGR combines SID-level KL
+with beam-prefix preference constraints. Each baseline
+uses validation NDCG@10 for checkpoint selection.
+
+\paragraph{Reference reproduction settings.}
+The common external-baseline training entrypoint defaults to 200
+epochs, batch size 512, learning rate $5\times10^{-5}$, and
+base digit KD with coefficient $\alpha=0.7$ on teacher KL
+(and $0.3$ on digit CE). Its objective-specific defaults are:
+RD top-$K=50$, rank temperature $2$, decay $0.01$,
+and 100 dynamically sampled negatives;
+RRD $K=10$, $L=40$; RCE-KD $K=L=50$,
+$\tau=1$, $T=10$, $\beta=5$; GKD mixture $0.5$;
+DistiLLM-2 skew coefficient $0.9$, contrastive coefficient
+$0.1$, eight sampled SIDs, and on-policy mixture $0.5$.
+These are executable entrypoint defaults, not a claim of
+an independently verified tuning-search budget.
 
 \section{Full Main-Result Tables}
 \label{sec:sup-main}
 
-Tables~\ref{tab:supp-utility-Beauty}--\ref{tab:supp-jac-VG} give the
-full per-dataset metrics (R@5, N@5, R@10, N@10) and teacher-agreement
-(Jac@5, Jac@10) for all methods and students.
+Tables~\ref{tab:supp-utility-Beauty}--\ref{tab:supp-jac-VG} report
+the complete mean and standard deviation of each next-item metric
+(R@5, N@5, R@10, N@10) for all methods and students, alongside
+teacher-agreement results (Jac@5, Jac@10). The main paper reports
+means only to maintain readable two-column tables.
 
 \input{Figures/table_supp_main.tex}
 
@@ -102,10 +149,285 @@ full per-dataset metrics (R@5, N@5, R@10, N@10) and teacher-agreement
 \label{sec:sup-ablation}
 
 Tables~\ref{tab:supp-ablation-Beauty}--\ref{tab:supp-ablation-VG} give
-all six metrics for every ablation arm on each dataset. Ablation arms
-are defined in the main paper (Section~6.3).
+all four Top-$K$ metric means and their standard deviations
+(parenthesized) for every student and ablation arm. The order mirrors
+the HServe, DA-CDRS and Full groupings in the mean-only body table.
+Individual seed outcomes are not tabulated. Ablation arms are defined
+in the main paper (Section~6.3).
 
 \input{Figures/table_supp_ablation.tex}
+
+\section{Diagnostic Metrics and Protocol}
+\label{sec:sup-diagnostics}
+
+We evaluate diagnostics on 10,000 held-out requests per domain
+using teacher-proposed top-40 valid SIDs as a common support.
+For each prefix depth, preferred-prefix disagreement is the fraction
+of requests where teacher and student select different groups of
+maximum aggregated probability. Mixed-sign pairs have at least one
+positive and one negative residual among eligible depths from the
+first SID divergence through $L-1$. We also report the fractions with
+at least two positive residuals and with a negative largest-magnitude
+residual. The cancellation ratio summarizes how positive and negative
+signed residuals offset when accumulated over the eligible depths.
+
+
+\section{Cost Measurement and Parameter Sensitivity}
+\label{sec:sup-cost}
+
+\paragraph{Distinct measurement scopes.}
+We distinguish the candidate support $M$, training pair range $B$,
+and online beam width $W$. The final Full objective uses
+$M=64$, $B=40$, $K_{\mathrm{tr}}=10$, and $W=50$.
+The Beauty 2014 cost measurement uses $M=64$ HServe candidates.
+Teacher cache generation uses beam width 40, the DA outsider
+rank bound is $B=40$, and student serving uses beam width
+$W=50$; these parameters control different stages.
+The deployed inference graph is unchanged.
+
+\paragraph{Training-side trade-off.}
+The J4 controlled timing used a single assigned GPU with
+PyTorch 2.7.1 and bf16 autocast; pure training-step epochs
+were timed separately from periodic beam validation. The
+200-epoch wall-clock measurements include additional
+evaluation and management costs.
+
+\begin{table}[t]
+\centering\small
+\caption{Beauty training cost in the separately timed
+$M=64$ audit. Epoch timings exclude beam validation;
+complete-run walls include it. Dashes indicate unreported
+matched quantities, not zero.}
+\label{tab:sup-cost-train}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrr}
+\toprule
+Student/run & s/epoch & 200-ep min & Peak GB\\
+\midrule
+MLP Base KD & 4.6 & 27 & 7.4\\
+MLP Full & 11.5 & 49 & 9.2--9.5\\
+GRU Base KD & 5.5 & -- & --\\
+GRU Full & 11.9 & -- & --\\
+CNN Full & 14.5 & 65 & --\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Beauty shared-cache measurements are 26.2\,min for
+teacher beam-40 export, 105.4\,MB for the beam dump,
+8.5\,MB for the separate teacher Top-$K$ lists, and
+5.7\,GB for the fp32 frozen-encoder hidden-state cache.
+These costs were shared by the \emph{specific} Base-KD and
+Full runs in the J4 protocol; complete teacher-beam caching
+is not inherently required by every gold-prefix token-KD
+implementation. Beam-dump export takes 26.7\,min for Toys and
+38.6\,min for Video Games; the latter uses four parallel
+shards and is therefore a different wall-clock protocol.
+
+\paragraph{End-to-end serving.}
+Student measurements use batch 32 and beam 50 on Beauty
+test requests, including frozen-T5 history encoding,
+the student context computation, SID beam scoring,
+masking, and item lookup. Teacher factorized-beam
+throughput was measured with batch 64 and beam 50;
+it is shown as a separate reference rather than
+a matched-batch speedup claim.
+
+\begin{table}[t]
+\centering\small
+\caption{J4 Beauty serving throughput (requests/s).
+Base and Full are independently executed for each
+student architecture; small run-to-run differences are
+not attributed to the distillation objective.}
+\label{tab:sup-cost-online}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrr}
+\toprule
+Architecture & Base KD & Full\\
+\midrule
+MLP (batch 32) & 2769 & 3036\\
+GRU (batch 32) & 3445 & 3423\\
+CNN (batch 32) & 3028 & 3024\\
+\midrule
+TIGER (batch 64) & \multicolumn{2}{c}{1346}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\caption{J4 synchronized phase times (ms per request,
+batch-amortized), with rounded figures. The frozen
+encoder remains on the student serving path.}
+\label{tab:sup-cost-phases}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lrr}
+\toprule
+Phase & GRU Full & CNN Full\\
+\midrule
+Frozen T5 encoder & 0.154 & 0.151\\
+Student context & 0.031 & 0.046\\
+SID prediction/beam scoring & 0.089 & 0.114\\
+Beam bookkeeping & 0.019 & 0.019\\
+\midrule
+Total & 0.292 & 0.331\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The online phase times are \emph{batch-amortized}, rather
+than batch-one or p95 response latency. The Beauty evaluation
+includes 22,171 mapped requests from 22,363 test rows.
+The cost measurement separates standard throughput runs
+from synchronized, post-warmup stage profiling and records
+the frozen encoder, student decoder, and beam-search stages.
+
+\section{Sensitivity Analyses}
+\label{sec:sup-sensitivity}
+
+We evaluate the sensitivity of MLP students to the candidate
+support size $M$, outsider-rank boundary $B$, DA correction
+coefficient $\beta$, and HServe temperature $\tau$ across
+Beauty, Toys, and Video Games. Default settings are
+$M=64$, $B=40$, $\beta=31.42$, and $\tau=1$.
+Here $\beta=\lambda_D\lambda_{\mathrm{corr}}$ with
+$\lambda_D=1$. HServe applies temperature by normalizing
+candidate scores $s/\tau$ and multiplying the KL loss by
+$\tau^2$, as in the training implementation.
+
+\paragraph{HServe candidate support size $M$.}
+HServe-only performance is relatively insensitive to
+candidate support width over $M\in\{20,40,64\}$:
+NDCG@10 varies by at most 0.0003 across the tested settings.
+We use $M=64$ to retain the largest evaluated candidate support.
+
+\begin{table}[t]
+\centering
+\caption{MLP HServe-only candidate-support sensitivity.}
+\label{tab:sup-sensitive-m}
+\fontsize{7.1}{8.5}\selectfont
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+Dataset & $M$ & R@5 & N@5 & R@10 & N@10 \\
+\midrule
+Beauty & 20 & .0435 & .0286 & .0667 & .0362 \\
+ & 40 & .0436 & .0287 & .0669 & .0363 \\
+ & 64 & .0436 & .0287 & .0670 & .0363 \\
+\addlinespace[2pt]
+Toys & 20 & .0390 & .0244 & .0634 & .0322 \\
+ & 40 & .0392 & .0245 & .0636 & .0323 \\
+ & 64 & .0390 & .0245 & .0633 & .0323 \\
+\addlinespace[2pt]
+Video Games & 20 & .0595 & .0389 & .0929 & .0496 \\
+ & 40 & .0597 & .0390 & .0931 & .0497 \\
+ & 64 & .0597 & .0390 & .0935 & .0499 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Outsider-rank boundary $B$.}
+The HServe + Plain Pair control uses ten negative samples
+per request while varying the maximum outsider rank.
+Results vary modestly over $B\in\{20,30,40,50,60\}$,
+without a consistent monotonic trend. We retain $B=40$
+as the training cutoff for the full DA-CDRS objective;
+unlike Plain Pair, Full does not optimize the pairwise
+Softplus loss directly.
+
+\begin{table}[t]
+\centering
+\caption{MLP HServe + Plain Pair outsider-rank sensitivity with ten negatives.}
+\label{tab:sup-sensitive-b}
+\fontsize{7.1}{8.5}\selectfont
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+Dataset & $B$ & R@5 & N@5 & R@10 & N@10 \\
+\midrule
+Beauty & 20 & .0438 & .0289 & .0673 & .0365 \\
+ & 30 & .0439 & .0290 & .0674 & .0365 \\
+ & 40 & .0435 & .0288 & .0668 & .0363 \\
+ & 50 & .0440 & .0290 & .0675 & .0366 \\
+ & 60 & .0440 & .0289 & .0674 & .0365 \\
+\addlinespace[2pt]
+Toys & 20 & .0398 & .0249 & .0638 & .0326 \\
+ & 30 & .0399 & .0249 & .0639 & .0327 \\
+ & 40 & .0388 & .0246 & .0631 & .0322 \\
+ & 50 & .0400 & .0250 & .0640 & .0328 \\
+ & 60 & .0399 & .0249 & .0639 & .0327 \\
+\addlinespace[2pt]
+Video Games & 20 & .0599 & .0392 & .0938 & .0499 \\
+ & 30 & .0600 & .0393 & .0939 & .0500 \\
+ & 40 & .0595 & .0389 & .0936 & .0497 \\
+ & 50 & .0601 & .0393 & .0940 & .0501 \\
+ & 60 & .0600 & .0392 & .0939 & .0500 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{DA correction coefficient $\beta$.}
+Setting $\beta=0$ removes the DA-CDRS correction, leaving
+digit cross-entropy and HServe. Across the evaluated values,
+$\beta=31.42$ gives the highest R@10 and NDCG@10 on
+all three datasets, while larger weights slightly reduce
+recommendation utility.
+
+\begin{table}[t]
+\centering
+\caption{MLP DA-CDRS correction-coefficient sensitivity.}
+\label{tab:sup-sensitive-beta}
+\small
+\setlength{\tabcolsep}{3.8pt}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Dataset & $\beta$ & R@10 & N@10 \\
+\midrule
+Beauty & 0 & .0670 & .0363 \\
+ & 31.42 & .0679 & .0369 \\
+ & 62.83 & .0678 & .0368 \\
+ & 125.66 & .0675 & .0366 \\
+\addlinespace[2pt]
+Toys & 0 & .0633 & .0323 \\
+ & 31.42 & .0644 & .0330 \\
+ & 62.83 & .0643 & .0329 \\
+ & 125.66 & .0640 & .0327 \\
+\addlinespace[2pt]
+Video Games & 0 & .0935 & .0499 \\
+ & 31.42 & .0944 & .0505 \\
+ & 62.83 & .0943 & .0504 \\
+ & 125.66 & .0940 & .0501 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{HServe distribution temperature $\tau$.}
+Comparing $\tau=1$ and 2 shows only small differences
+in R@10 and NDCG@10, with neither temperature
+dominating every dataset and metric. We use $\tau=1$
+as the default.
+
+\begin{table}[t]
+\centering
+\caption{MLP HServe-only distribution-temperature sensitivity.}
+\label{tab:sup-sensitive-tau}
+\small
+\setlength{\tabcolsep}{3.8pt}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Dataset & $\tau$ & R@10 & N@10 \\
+\midrule
+Beauty & 1 & .0670 & .0363 \\
+ & 2 & .0668 & .0363 \\
+\addlinespace[2pt]
+Toys & 1 & .0633 & .0323 \\
+ & 2 & .0635 & .0323 \\
+\addlinespace[2pt]
+Video Games & 1 & .0935 & .0499 \\
+ & 2 & .0930 & .0497 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Reproducibility Notes}
 \label{sec:sup-repro}
@@ -117,7 +439,16 @@ is the Jaccard between the student's beam-50 top-$K$ list and the
 teacher's beam-20 top-$K$ list.
 \item The base student (SID-MLP / base KD) minimizes ground-truth SID
 cross-entropy plus gold-prefix token KL (Eq.~2 of the main paper).
-ServeSID replaces the token KL with HServe and DA-CDRS.
+ServeSID replaces token KL with HServe and DA-CDRS. The
+complete-pair Softplus function is used only to calculate detached
+DA attribution weights; no direct pairwise anchor loss is optimized.
+The \emph{HServe + Plain Pair} control instead minimizes
+the mean complete-candidate Softplus pair loss directly, with
+coefficient $\lambda_P=1$, alongside digit CE and HServe,
+using the same teacher-ordered pair support and margin.
+This comparison contrasts global pair-ranking supervision
+against depth-localized residual correction under the
+same student architecture.
 \item Held-out diagnostic pairs (teacher ranks $1{:}K$ vs.\
 $K{+}1{:}B$) are used only for mechanism statistics and never enter
 optimization.

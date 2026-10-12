@@ -1,10 +1,14 @@
 % Figure 1: authors' hierarchy-only mechanism diagram (ServeSID_figures_no_pairloss).
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.64\textwidth]{Figures/diag_hierarchy.pdf}
-\caption{Hierarchical candidate-preference mismatch. Teacher and
-student assign different preference masses to shared SID prefix
-groups. The example is illustrative.}
-\Description{Illustration of hierarchical candidate preference mismatch.}
+\includegraphics[width=0.945\textwidth]{Figures/diag_hierarchy.pdf}
+\caption{Illustrative teacher--student SID candidate ranking mismatch.
+Tree nodes display cumulative SID log-scores, whereas HServe obtains
+prefix-group probabilities by normalizing the complete-candidate scores
+over a common support and summing descendant probabilities.
+Selected paths are shown.}
+\Description{Teacher and student SID trees show selected paths, cumulative
+log-scores and candidate orders. The displayed node scores are not
+normalized HServe prefix marginals.}
 \label{fig:hierarchical}
 \end{figure*}

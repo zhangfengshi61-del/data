@@ -1,0 +1,293 @@
+# Author-reported means and standard deviations for main comparisons; no per-seed logs in this file.
+# For the 72 shared Base KD / Full ServeSID statistics, the author selected the second
+# (ablation) summary as the reporting source on 2026-10-11. 67 SD fields were harmonized.
+# Means are unchanged. Selection of a source does not independently verify seed-level SDs.
+dataset,student,method,metric,mean,sd,source_note
+Beauty,MLP,RD,R@5,0.0422,0.00028,author_reported_not_independently_audited
+Beauty,MLP,RD,NDCG@5,0.0281,0.00013,author_reported_not_independently_audited
+Beauty,MLP,RD,R@10,0.0657,0.00028,author_reported_not_independently_audited
+Beauty,MLP,RD,NDCG@10,0.0357,0.00013,author_reported_not_independently_audited
+Beauty,MLP,RRD,R@5,0.0430,0.00020,author_reported_not_independently_audited
+Beauty,MLP,RRD,NDCG@5,0.0287,0.00018,author_reported_not_independently_audited
+Beauty,MLP,RRD,R@10,0.0659,0.00047,author_reported_not_independently_audited
+Beauty,MLP,RRD,NDCG@10,0.0361,0.00018,author_reported_not_independently_audited
+Beauty,MLP,RCE-KD,R@5,0.0434,0.00026,author_reported_not_independently_audited
+Beauty,MLP,RCE-KD,NDCG@5,0.0286,0.00010,author_reported_not_independently_audited
+Beauty,MLP,RCE-KD,R@10,0.0666,0.00019,author_reported_not_independently_audited
+Beauty,MLP,RCE-KD,NDCG@10,0.0363,0.00016,author_reported_not_independently_audited
+Beauty,MLP,GKD,R@5,0.0428,0.00021,author_reported_not_independently_audited
+Beauty,MLP,GKD,NDCG@5,0.0286,0.00011,author_reported_not_independently_audited
+Beauty,MLP,GKD,R@10,0.0668,0.00026,author_reported_not_independently_audited
+Beauty,MLP,GKD,NDCG@10,0.0363,0.00027,author_reported_not_independently_audited
+Beauty,MLP,DistiLLM-2,R@5,0.0428,0.00017,author_reported_not_independently_audited
+Beauty,MLP,DistiLLM-2,NDCG@5,0.0287,0.00021,author_reported_not_independently_audited
+Beauty,MLP,DistiLLM-2,R@10,0.0666,0.00026,author_reported_not_independently_audited
+Beauty,MLP,DistiLLM-2,NDCG@10,0.0361,0.00015,author_reported_not_independently_audited
+Beauty,MLP,SID-MLP (base KD),R@5,0.0429,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Beauty,MLP,SID-MLP (base KD),NDCG@5,0.0282,0.00006,author_selected_second_ablation_summary_not_independently_audited
+Beauty,MLP,SID-MLP (base KD),R@10,0.0660,0.00022,author_selected_second_ablation_summary_not_independently_audited
+Beauty,MLP,SID-MLP (base KD),NDCG@10,0.0356,0.00020,author_selected_second_ablation_summary_not_independently_audited
+Beauty,MLP,SmartGR,R@5,0.0434,0.00031,author_reported_not_independently_audited
+Beauty,MLP,SmartGR,NDCG@5,0.0286,0.00015,author_reported_not_independently_audited
+Beauty,MLP,SmartGR,R@10,0.0668,0.00031,author_reported_not_independently_audited
+Beauty,MLP,SmartGR,NDCG@10,0.0363,0.00023,author_reported_not_independently_audited
+Beauty,MLP,ServeSID (ours),R@5,0.0442,0.00011,author_selected_second_ablation_summary_not_independently_audited
+Beauty,MLP,ServeSID (ours),NDCG@5,0.0292,0.00011,author_selected_second_ablation_summary_not_independently_audited
+Beauty,MLP,ServeSID (ours),R@10,0.0679,0.00025,author_selected_second_ablation_summary_not_independently_audited
+Beauty,MLP,ServeSID (ours),NDCG@10,0.0369,0.00022,author_selected_second_ablation_summary_not_independently_audited
+Beauty,GRU,RD,R@5,0.0433,0.00026,author_reported_not_independently_audited
+Beauty,GRU,RD,NDCG@5,0.0285,0.00015,author_reported_not_independently_audited
+Beauty,GRU,RD,R@10,0.0671,0.00043,author_reported_not_independently_audited
+Beauty,GRU,RD,NDCG@10,0.0362,0.00010,author_reported_not_independently_audited
+Beauty,GRU,RRD,R@5,0.0422,0.00027,author_reported_not_independently_audited
+Beauty,GRU,RRD,NDCG@5,0.0281,0.00012,author_reported_not_independently_audited
+Beauty,GRU,RRD,R@10,0.0664,0.00030,author_reported_not_independently_audited
+Beauty,GRU,RRD,NDCG@10,0.0359,0.00015,author_reported_not_independently_audited
+Beauty,GRU,RCE-KD,R@5,0.0432,0.00025,author_reported_not_independently_audited
+Beauty,GRU,RCE-KD,NDCG@5,0.0286,0.00017,author_reported_not_independently_audited
+Beauty,GRU,RCE-KD,R@10,0.0671,0.00037,author_reported_not_independently_audited
+Beauty,GRU,RCE-KD,NDCG@10,0.0361,0.00017,author_reported_not_independently_audited
+Beauty,GRU,GKD,R@5,0.0416,0.00021,author_reported_not_independently_audited
+Beauty,GRU,GKD,NDCG@5,0.0281,0.00019,author_reported_not_independently_audited
+Beauty,GRU,GKD,R@10,0.0656,0.00040,author_reported_not_independently_audited
+Beauty,GRU,GKD,NDCG@10,0.0358,0.00012,author_reported_not_independently_audited
+Beauty,GRU,DistiLLM-2,R@5,0.0416,0.00030,author_reported_not_independently_audited
+Beauty,GRU,DistiLLM-2,NDCG@5,0.0281,0.00010,author_reported_not_independently_audited
+Beauty,GRU,DistiLLM-2,R@10,0.0656,0.00026,author_reported_not_independently_audited
+Beauty,GRU,DistiLLM-2,NDCG@10,0.0358,0.00014,author_reported_not_independently_audited
+Beauty,GRU,SID-MLP (base KD),R@5,0.0416,0.00028,author_selected_second_ablation_summary_not_independently_audited
+Beauty,GRU,SID-MLP (base KD),NDCG@5,0.0281,0.00014,author_selected_second_ablation_summary_not_independently_audited
+Beauty,GRU,SID-MLP (base KD),R@10,0.0656,0.00039,author_selected_second_ablation_summary_not_independently_audited
+Beauty,GRU,SID-MLP (base KD),NDCG@10,0.0358,0.00020,author_selected_second_ablation_summary_not_independently_audited
+Beauty,GRU,SmartGR,R@5,0.0426,0.00021,author_reported_not_independently_audited
+Beauty,GRU,SmartGR,NDCG@5,0.0286,0.00009,author_reported_not_independently_audited
+Beauty,GRU,SmartGR,R@10,0.0669,0.00020,author_reported_not_independently_audited
+Beauty,GRU,SmartGR,NDCG@10,0.0361,0.00011,author_reported_not_independently_audited
+Beauty,GRU,ServeSID (ours),R@5,0.0441,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Beauty,GRU,ServeSID (ours),NDCG@5,0.0291,0.00011,author_selected_second_ablation_summary_not_independently_audited
+Beauty,GRU,ServeSID (ours),R@10,0.0682,0.00045,author_selected_second_ablation_summary_not_independently_audited
+Beauty,GRU,ServeSID (ours),NDCG@10,0.0368,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Beauty,CNN,RD,R@5,0.0419,0.00029,author_reported_not_independently_audited
+Beauty,CNN,RD,NDCG@5,0.0274,0.00014,author_reported_not_independently_audited
+Beauty,CNN,RD,R@10,0.0649,0.00032,author_reported_not_independently_audited
+Beauty,CNN,RD,NDCG@10,0.0348,0.00023,author_reported_not_independently_audited
+Beauty,CNN,RRD,R@5,0.0420,0.00022,author_reported_not_independently_audited
+Beauty,CNN,RRD,NDCG@5,0.0281,0.00014,author_reported_not_independently_audited
+Beauty,CNN,RRD,R@10,0.0649,0.00031,author_reported_not_independently_audited
+Beauty,CNN,RRD,NDCG@10,0.0354,0.00012,author_reported_not_independently_audited
+Beauty,CNN,RCE-KD,R@5,0.0409,0.00019,author_reported_not_independently_audited
+Beauty,CNN,RCE-KD,NDCG@5,0.0276,0.00018,author_reported_not_independently_audited
+Beauty,CNN,RCE-KD,R@10,0.0651,0.00038,author_reported_not_independently_audited
+Beauty,CNN,RCE-KD,NDCG@10,0.0354,0.00018,author_reported_not_independently_audited
+Beauty,CNN,GKD,R@5,0.0380,0.00015,author_reported_not_independently_audited
+Beauty,CNN,GKD,NDCG@5,0.0254,0.00019,author_reported_not_independently_audited
+Beauty,CNN,GKD,R@10,0.0580,0.00017,author_reported_not_independently_audited
+Beauty,CNN,GKD,NDCG@10,0.0319,0.00015,author_reported_not_independently_audited
+Beauty,CNN,DistiLLM-2,R@5,0.0380,0.00028,author_reported_not_independently_audited
+Beauty,CNN,DistiLLM-2,NDCG@5,0.0254,0.00007,author_reported_not_independently_audited
+Beauty,CNN,DistiLLM-2,R@10,0.0580,0.00020,author_reported_not_independently_audited
+Beauty,CNN,DistiLLM-2,NDCG@10,0.0319,0.00010,author_reported_not_independently_audited
+Beauty,CNN,SID-MLP (base KD),R@5,0.0380,0.00011,author_selected_second_ablation_summary_not_independently_audited
+Beauty,CNN,SID-MLP (base KD),NDCG@5,0.0254,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Beauty,CNN,SID-MLP (base KD),R@10,0.0580,0.00036,author_selected_second_ablation_summary_not_independently_audited
+Beauty,CNN,SID-MLP (base KD),NDCG@10,0.0319,0.00020,author_selected_second_ablation_summary_not_independently_audited
+Beauty,CNN,SmartGR,R@5,0.0374,0.00018,author_reported_not_independently_audited
+Beauty,CNN,SmartGR,NDCG@5,0.0250,0.00018,author_reported_not_independently_audited
+Beauty,CNN,SmartGR,R@10,0.0594,0.00039,author_reported_not_independently_audited
+Beauty,CNN,SmartGR,NDCG@10,0.0320,0.00024,author_reported_not_independently_audited
+Beauty,CNN,ServeSID (ours),R@5,0.0437,0.00020,author_selected_second_ablation_summary_not_independently_audited
+Beauty,CNN,ServeSID (ours),NDCG@5,0.0288,0.00011,author_selected_second_ablation_summary_not_independently_audited
+Beauty,CNN,ServeSID (ours),R@10,0.0686,0.00034,author_selected_second_ablation_summary_not_independently_audited
+Beauty,CNN,ServeSID (ours),NDCG@10,0.0368,0.00011,author_selected_second_ablation_summary_not_independently_audited
+Toys,MLP,RD,R@5,0.0380,0.00013,author_reported_not_independently_audited
+Toys,MLP,RD,NDCG@5,0.0234,0.00011,author_reported_not_independently_audited
+Toys,MLP,RD,R@10,0.0615,0.00020,author_reported_not_independently_audited
+Toys,MLP,RD,NDCG@10,0.0309,0.00014,author_reported_not_independently_audited
+Toys,MLP,RRD,R@5,0.0396,0.00013,author_reported_not_independently_audited
+Toys,MLP,RRD,NDCG@5,0.0245,0.00014,author_reported_not_independently_audited
+Toys,MLP,RRD,R@10,0.0625,0.00042,author_reported_not_independently_audited
+Toys,MLP,RRD,NDCG@10,0.0319,0.00012,author_reported_not_independently_audited
+Toys,MLP,RCE-KD,R@5,0.0387,0.00028,author_reported_not_independently_audited
+Toys,MLP,RCE-KD,NDCG@5,0.0244,0.00014,author_reported_not_independently_audited
+Toys,MLP,RCE-KD,R@10,0.0631,0.00040,author_reported_not_independently_audited
+Toys,MLP,RCE-KD,NDCG@10,0.0324,0.00021,author_reported_not_independently_audited
+Toys,MLP,GKD,R@5,0.0373,0.00025,author_reported_not_independently_audited
+Toys,MLP,GKD,NDCG@5,0.0237,0.00017,author_reported_not_independently_audited
+Toys,MLP,GKD,R@10,0.0627,0.00030,author_reported_not_independently_audited
+Toys,MLP,GKD,NDCG@10,0.0318,0.00016,author_reported_not_independently_audited
+Toys,MLP,DistiLLM-2,R@5,0.0375,0.00018,author_reported_not_independently_audited
+Toys,MLP,DistiLLM-2,NDCG@5,0.0238,0.00015,author_reported_not_independently_audited
+Toys,MLP,DistiLLM-2,R@10,0.0614,0.00021,author_reported_not_independently_audited
+Toys,MLP,DistiLLM-2,NDCG@10,0.0315,0.00017,author_reported_not_independently_audited
+Toys,MLP,SID-MLP (base KD),R@5,0.0374,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Toys,MLP,SID-MLP (base KD),NDCG@5,0.0235,0.00006,author_selected_second_ablation_summary_not_independently_audited
+Toys,MLP,SID-MLP (base KD),R@10,0.0626,0.00031,author_selected_second_ablation_summary_not_independently_audited
+Toys,MLP,SID-MLP (base KD),NDCG@10,0.0315,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Toys,MLP,SmartGR,R@5,0.0381,0.00019,author_reported_not_independently_audited
+Toys,MLP,SmartGR,NDCG@5,0.0241,0.00009,author_reported_not_independently_audited
+Toys,MLP,SmartGR,R@10,0.0623,0.00026,author_reported_not_independently_audited
+Toys,MLP,SmartGR,NDCG@10,0.0319,0.00010,author_reported_not_independently_audited
+Toys,MLP,ServeSID (ours),R@5,0.0408,0.00028,author_selected_second_ablation_summary_not_independently_audited
+Toys,MLP,ServeSID (ours),NDCG@5,0.0254,0.00011,author_selected_second_ablation_summary_not_independently_audited
+Toys,MLP,ServeSID (ours),R@10,0.0644,0.00039,author_selected_second_ablation_summary_not_independently_audited
+Toys,MLP,ServeSID (ours),NDCG@10,0.0330,0.00008,author_selected_second_ablation_summary_not_independently_audited
+Toys,GRU,RD,R@5,0.0381,0.00024,author_reported_not_independently_audited
+Toys,GRU,RD,NDCG@5,0.0245,0.00009,author_reported_not_independently_audited
+Toys,GRU,RD,R@10,0.0614,0.00042,author_reported_not_independently_audited
+Toys,GRU,RD,NDCG@10,0.0318,0.00022,author_reported_not_independently_audited
+Toys,GRU,RRD,R@5,0.0381,0.00027,author_reported_not_independently_audited
+Toys,GRU,RRD,NDCG@5,0.0245,0.00016,author_reported_not_independently_audited
+Toys,GRU,RRD,R@10,0.0622,0.00035,author_reported_not_independently_audited
+Toys,GRU,RRD,NDCG@10,0.0322,0.00009,author_reported_not_independently_audited
+Toys,GRU,RCE-KD,R@5,0.0380,0.00019,author_reported_not_independently_audited
+Toys,GRU,RCE-KD,NDCG@5,0.0246,0.00017,author_reported_not_independently_audited
+Toys,GRU,RCE-KD,R@10,0.0622,0.00019,author_reported_not_independently_audited
+Toys,GRU,RCE-KD,NDCG@10,0.0324,0.00019,author_reported_not_independently_audited
+Toys,GRU,GKD,R@5,0.0382,0.00014,author_reported_not_independently_audited
+Toys,GRU,GKD,NDCG@5,0.0243,0.00010,author_reported_not_independently_audited
+Toys,GRU,GKD,R@10,0.0613,0.00046,author_reported_not_independently_audited
+Toys,GRU,GKD,NDCG@10,0.0316,0.00018,author_reported_not_independently_audited
+Toys,GRU,DistiLLM-2,R@5,0.0367,0.00016,author_reported_not_independently_audited
+Toys,GRU,DistiLLM-2,NDCG@5,0.0233,0.00008,author_reported_not_independently_audited
+Toys,GRU,DistiLLM-2,R@10,0.0565,0.00018,author_reported_not_independently_audited
+Toys,GRU,DistiLLM-2,NDCG@10,0.0296,0.00012,author_reported_not_independently_audited
+Toys,GRU,SID-MLP (base KD),R@5,0.0367,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Toys,GRU,SID-MLP (base KD),NDCG@5,0.0233,0.00014,author_selected_second_ablation_summary_not_independently_audited
+Toys,GRU,SID-MLP (base KD),R@10,0.0565,0.00036,author_selected_second_ablation_summary_not_independently_audited
+Toys,GRU,SID-MLP (base KD),NDCG@10,0.0296,0.00014,author_selected_second_ablation_summary_not_independently_audited
+Toys,GRU,SmartGR,R@5,0.0382,0.00014,author_reported_not_independently_audited
+Toys,GRU,SmartGR,NDCG@5,0.0242,0.00016,author_reported_not_independently_audited
+Toys,GRU,SmartGR,R@10,0.0604,0.00028,author_reported_not_independently_audited
+Toys,GRU,SmartGR,NDCG@10,0.0314,0.00011,author_reported_not_independently_audited
+Toys,GRU,ServeSID (ours),R@5,0.0388,0.00011,author_selected_second_ablation_summary_not_independently_audited
+Toys,GRU,ServeSID (ours),NDCG@5,0.0250,0.00008,author_selected_second_ablation_summary_not_independently_audited
+Toys,GRU,ServeSID (ours),R@10,0.0650,0.00022,author_selected_second_ablation_summary_not_independently_audited
+Toys,GRU,ServeSID (ours),NDCG@10,0.0334,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Toys,CNN,RD,R@5,0.0380,0.00015,author_reported_not_independently_audited
+Toys,CNN,RD,NDCG@5,0.0241,0.00012,author_reported_not_independently_audited
+Toys,CNN,RD,R@10,0.0603,0.00021,author_reported_not_independently_audited
+Toys,CNN,RD,NDCG@10,0.0312,0.00022,author_reported_not_independently_audited
+Toys,CNN,RRD,R@5,0.0378,0.00027,author_reported_not_independently_audited
+Toys,CNN,RRD,NDCG@5,0.0239,0.00014,author_reported_not_independently_audited
+Toys,CNN,RRD,R@10,0.0585,0.00031,author_reported_not_independently_audited
+Toys,CNN,RRD,NDCG@10,0.0306,0.00010,author_reported_not_independently_audited
+Toys,CNN,RCE-KD,R@5,0.0364,0.00026,author_reported_not_independently_audited
+Toys,CNN,RCE-KD,NDCG@5,0.0232,0.00013,author_reported_not_independently_audited
+Toys,CNN,RCE-KD,R@10,0.0587,0.00029,author_reported_not_independently_audited
+Toys,CNN,RCE-KD,NDCG@10,0.0303,0.00012,author_reported_not_independently_audited
+Toys,CNN,GKD,R@5,0.0328,0.00012,author_reported_not_independently_audited
+Toys,CNN,GKD,NDCG@5,0.0210,0.00006,author_reported_not_independently_audited
+Toys,CNN,GKD,R@10,0.0533,0.00029,author_reported_not_independently_audited
+Toys,CNN,GKD,NDCG@10,0.0276,0.00015,author_reported_not_independently_audited
+Toys,CNN,DistiLLM-2,R@5,0.0328,0.00022,author_reported_not_independently_audited
+Toys,CNN,DistiLLM-2,NDCG@5,0.0210,0.00006,author_reported_not_independently_audited
+Toys,CNN,DistiLLM-2,R@10,0.0533,0.00022,author_reported_not_independently_audited
+Toys,CNN,DistiLLM-2,NDCG@10,0.0276,0.00011,author_reported_not_independently_audited
+Toys,CNN,SID-MLP (base KD),R@5,0.0328,0.00008,author_selected_second_ablation_summary_not_independently_audited
+Toys,CNN,SID-MLP (base KD),NDCG@5,0.0210,0.00008,author_selected_second_ablation_summary_not_independently_audited
+Toys,CNN,SID-MLP (base KD),R@10,0.0533,0.00017,author_selected_second_ablation_summary_not_independently_audited
+Toys,CNN,SID-MLP (base KD),NDCG@10,0.0276,0.00008,author_selected_second_ablation_summary_not_independently_audited
+Toys,CNN,SmartGR,R@5,0.0329,0.00012,author_reported_not_independently_audited
+Toys,CNN,SmartGR,NDCG@5,0.0206,0.00010,author_reported_not_independently_audited
+Toys,CNN,SmartGR,R@10,0.0520,0.00037,author_reported_not_independently_audited
+Toys,CNN,SmartGR,NDCG@10,0.0267,0.00010,author_reported_not_independently_audited
+Toys,CNN,ServeSID (ours),R@5,0.0398,0.00022,author_selected_second_ablation_summary_not_independently_audited
+Toys,CNN,ServeSID (ours),NDCG@5,0.0250,0.00008,author_selected_second_ablation_summary_not_independently_audited
+Toys,CNN,ServeSID (ours),R@10,0.0639,0.00022,author_selected_second_ablation_summary_not_independently_audited
+Toys,CNN,ServeSID (ours),NDCG@10,0.0328,0.00014,author_selected_second_ablation_summary_not_independently_audited
+VG,MLP,RD,R@5,0.0575,0.00024,author_reported_not_independently_audited
+VG,MLP,RD,NDCG@5,0.0372,0.00027,author_reported_not_independently_audited
+VG,MLP,RD,R@10,0.0927,0.00050,author_reported_not_independently_audited
+VG,MLP,RD,NDCG@10,0.0485,0.00023,author_reported_not_independently_audited
+VG,MLP,RRD,R@5,0.0592,0.00044,author_reported_not_independently_audited
+VG,MLP,RRD,NDCG@5,0.0390,0.00016,author_reported_not_independently_audited
+VG,MLP,RRD,R@10,0.0918,0.00037,author_reported_not_independently_audited
+VG,MLP,RRD,NDCG@10,0.0496,0.00029,author_reported_not_independently_audited
+VG,MLP,RCE-KD,R@5,0.0593,0.00036,author_reported_not_independently_audited
+VG,MLP,RCE-KD,NDCG@5,0.0388,0.00015,author_reported_not_independently_audited
+VG,MLP,RCE-KD,R@10,0.0926,0.00068,author_reported_not_independently_audited
+VG,MLP,RCE-KD,NDCG@10,0.0497,0.00028,author_reported_not_independently_audited
+VG,MLP,GKD,R@5,0.0593,0.00031,author_reported_not_independently_audited
+VG,MLP,GKD,NDCG@5,0.0388,0.00028,author_reported_not_independently_audited
+VG,MLP,GKD,R@10,0.0929,0.00039,author_reported_not_independently_audited
+VG,MLP,GKD,NDCG@10,0.0496,0.00022,author_reported_not_independently_audited
+VG,MLP,DistiLLM-2,R@5,0.0594,0.00019,author_reported_not_independently_audited
+VG,MLP,DistiLLM-2,NDCG@5,0.0387,0.00027,author_reported_not_independently_audited
+VG,MLP,DistiLLM-2,R@10,0.0927,0.00063,author_reported_not_independently_audited
+VG,MLP,DistiLLM-2,NDCG@10,0.0494,0.00027,author_reported_not_independently_audited
+VG,MLP,SID-MLP (base KD),R@5,0.0588,0.00034,author_selected_second_ablation_summary_not_independently_audited
+VG,MLP,SID-MLP (base KD),NDCG@5,0.0383,0.00014,author_selected_second_ablation_summary_not_independently_audited
+VG,MLP,SID-MLP (base KD),R@10,0.0922,0.00022,author_selected_second_ablation_summary_not_independently_audited
+VG,MLP,SID-MLP (base KD),NDCG@10,0.0488,0.00011,author_selected_second_ablation_summary_not_independently_audited
+VG,MLP,SmartGR,R@5,0.0593,0.00035,author_reported_not_independently_audited
+VG,MLP,SmartGR,NDCG@5,0.0388,0.00025,author_reported_not_independently_audited
+VG,MLP,SmartGR,R@10,0.0929,0.00055,author_reported_not_independently_audited
+VG,MLP,SmartGR,NDCG@10,0.0496,0.00037,author_reported_not_independently_audited
+VG,MLP,ServeSID (ours),R@5,0.0604,0.00011,author_selected_second_ablation_summary_not_independently_audited
+VG,MLP,ServeSID (ours),NDCG@5,0.0396,0.00014,author_selected_second_ablation_summary_not_independently_audited
+VG,MLP,ServeSID (ours),R@10,0.0944,0.00034,author_selected_second_ablation_summary_not_independently_audited
+VG,MLP,ServeSID (ours),NDCG@10,0.0505,0.00011,author_selected_second_ablation_summary_not_independently_audited
+VG,GRU,RD,R@5,0.0595,0.00017,author_reported_not_independently_audited
+VG,GRU,RD,NDCG@5,0.0388,0.00019,author_reported_not_independently_audited
+VG,GRU,RD,R@10,0.0938,0.00037,author_reported_not_independently_audited
+VG,GRU,RD,NDCG@10,0.0498,0.00020,author_reported_not_independently_audited
+VG,GRU,RRD,R@5,0.0596,0.00027,author_reported_not_independently_audited
+VG,GRU,RRD,NDCG@5,0.0393,0.00017,author_reported_not_independently_audited
+VG,GRU,RRD,R@10,0.0892,0.00065,author_reported_not_independently_audited
+VG,GRU,RRD,NDCG@10,0.0490,0.00024,author_reported_not_independently_audited
+VG,GRU,RCE-KD,R@5,0.0595,0.00020,author_reported_not_independently_audited
+VG,GRU,RCE-KD,NDCG@5,0.0394,0.00023,author_reported_not_independently_audited
+VG,GRU,RCE-KD,R@10,0.0938,0.00069,author_reported_not_independently_audited
+VG,GRU,RCE-KD,NDCG@10,0.0503,0.00020,author_reported_not_independently_audited
+VG,GRU,GKD,R@5,0.0597,0.00031,author_reported_not_independently_audited
+VG,GRU,GKD,NDCG@5,0.0393,0.00020,author_reported_not_independently_audited
+VG,GRU,GKD,R@10,0.0937,0.00041,author_reported_not_independently_audited
+VG,GRU,GKD,NDCG@10,0.0502,0.00027,author_reported_not_independently_audited
+VG,GRU,DistiLLM-2,R@5,0.0596,0.00026,author_reported_not_independently_audited
+VG,GRU,DistiLLM-2,NDCG@5,0.0392,0.00029,author_reported_not_independently_audited
+VG,GRU,DistiLLM-2,R@10,0.0939,0.00064,author_reported_not_independently_audited
+VG,GRU,DistiLLM-2,NDCG@10,0.0503,0.00029,author_reported_not_independently_audited
+VG,GRU,SID-MLP (base KD),R@5,0.0591,0.00022,author_selected_second_ablation_summary_not_independently_audited
+VG,GRU,SID-MLP (base KD),NDCG@5,0.0389,0.00017,author_selected_second_ablation_summary_not_independently_audited
+VG,GRU,SID-MLP (base KD),R@10,0.0935,0.00067,author_selected_second_ablation_summary_not_independently_audited
+VG,GRU,SID-MLP (base KD),NDCG@10,0.0499,0.00028,author_selected_second_ablation_summary_not_independently_audited
+VG,GRU,SmartGR,R@5,0.0594,0.00025,author_reported_not_independently_audited
+VG,GRU,SmartGR,NDCG@5,0.0391,0.00014,author_reported_not_independently_audited
+VG,GRU,SmartGR,R@10,0.0933,0.00031,author_reported_not_independently_audited
+VG,GRU,SmartGR,NDCG@10,0.0500,0.00015,author_reported_not_independently_audited
+VG,GRU,ServeSID (ours),R@5,0.0607,0.00034,author_selected_second_ablation_summary_not_independently_audited
+VG,GRU,ServeSID (ours),NDCG@5,0.0400,0.00017,author_selected_second_ablation_summary_not_independently_audited
+VG,GRU,ServeSID (ours),R@10,0.0954,0.00064,author_selected_second_ablation_summary_not_independently_audited
+VG,GRU,ServeSID (ours),NDCG@10,0.0512,0.00025,author_selected_second_ablation_summary_not_independently_audited
+VG,CNN,RD,R@5,0.0580,0.00020,author_reported_not_independently_audited
+VG,CNN,RD,NDCG@5,0.0373,0.00025,author_reported_not_independently_audited
+VG,CNN,RD,R@10,0.0921,0.00053,author_reported_not_independently_audited
+VG,CNN,RD,NDCG@10,0.0483,0.00024,author_reported_not_independently_audited
+VG,CNN,RRD,R@5,0.0591,0.00024,author_reported_not_independently_audited
+VG,CNN,RRD,NDCG@5,0.0389,0.00017,author_reported_not_independently_audited
+VG,CNN,RRD,R@10,0.0884,0.00058,author_reported_not_independently_audited
+VG,CNN,RRD,NDCG@10,0.0483,0.00035,author_reported_not_independently_audited
+VG,CNN,RCE-KD,R@5,0.0589,0.00030,author_reported_not_independently_audited
+VG,CNN,RCE-KD,NDCG@5,0.0387,0.00021,author_reported_not_independently_audited
+VG,CNN,RCE-KD,R@10,0.0919,0.00030,author_reported_not_independently_audited
+VG,CNN,RCE-KD,NDCG@10,0.0493,0.00020,author_reported_not_independently_audited
+VG,CNN,GKD,R@5,0.0569,0.00023,author_reported_not_independently_audited
+VG,CNN,GKD,NDCG@5,0.0370,0.00014,author_reported_not_independently_audited
+VG,CNN,GKD,R@10,0.0896,0.00055,author_reported_not_independently_audited
+VG,CNN,GKD,NDCG@10,0.0475,0.00016,author_reported_not_independently_audited
+VG,CNN,DistiLLM-2,R@5,0.0587,0.00025,author_reported_not_independently_audited
+VG,CNN,DistiLLM-2,NDCG@5,0.0384,0.00019,author_reported_not_independently_audited
+VG,CNN,DistiLLM-2,R@10,0.0914,0.00026,author_reported_not_independently_audited
+VG,CNN,DistiLLM-2,NDCG@10,0.0489,0.00023,author_reported_not_independently_audited
+VG,CNN,SID-MLP (base KD),R@5,0.0553,0.00031,author_selected_second_ablation_summary_not_independently_audited
+VG,CNN,SID-MLP (base KD),NDCG@5,0.0358,0.00017,author_selected_second_ablation_summary_not_independently_audited
+VG,CNN,SID-MLP (base KD),R@10,0.0870,0.00034,author_selected_second_ablation_summary_not_independently_audited
+VG,CNN,SID-MLP (base KD),NDCG@10,0.0460,0.00020,author_selected_second_ablation_summary_not_independently_audited
+VG,CNN,SmartGR,R@5,0.0549,0.00027,author_reported_not_independently_audited
+VG,CNN,SmartGR,NDCG@5,0.0359,0.00017,author_reported_not_independently_audited
+VG,CNN,SmartGR,R@10,0.0870,0.00030,author_reported_not_independently_audited
+VG,CNN,SmartGR,NDCG@10,0.0462,0.00020,author_reported_not_independently_audited
+VG,CNN,ServeSID (ours),R@5,0.0605,0.00031,author_selected_second_ablation_summary_not_independently_audited
+VG,CNN,ServeSID (ours),NDCG@5,0.0399,0.00025,author_selected_second_ablation_summary_not_independently_audited
+VG,CNN,ServeSID (ours),R@10,0.0944,0.00045,author_selected_second_ablation_summary_not_independently_audited
+VG,CNN,ServeSID (ours),NDCG@10,0.0508,0.00031,author_selected_second_ablation_summary_not_independently_audited

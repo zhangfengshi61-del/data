@@ -1,9 +1,6 @@
-% Additional references for the WWW (ServeSID) submission.
-%
-% TODO: verify the entries below, especially those marked "TODO".
-% The authors should replace placeholder metadata with the exact
-% publication data of the adapted baselines.
-
+% Additional references for the WWW ServeSID submission.
+% Adapted baseline metadata checked against published paper pages.
+ 
 @inproceedings{genrec,
   title={Recommender Systems with Generative Retrieval},
   author={Rajput, Shashank and Mehta, Nikhil and Singh, Anima and
@@ -17,24 +14,20 @@
 }
 
 @inproceedings{apao,
-  title={{APAO}: Bridging the Training-Inference Gap in Generative
-         Recommendation via Adaptive Prefix-Aware Optimization},
-  author={Yu, Yuanqing and others},
-  booktitle={Proceedings of the 32nd ACM SIGKDD Conference on Knowledge
-             Discovery and Data Mining},
+  title={{APAO}: Bridging the Training-Inference Gap in Generative Recommendation via Adaptive Prefix-Aware Optimization},
+  author={Yu, Yuanqing and Wang, Yifan and Ma, Weizhi and Guo, Zhiqiang and Zhang, Min},
+  booktitle={Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
   year={2026},
+  doi={10.1145/3770855.3818052}
 }
 
 @inproceedings{rrd,
-  title={{DE-RRD}: A Knowledge Distillation Framework for Recommender
-         System},
-  author={Kang, SeongKu and Hwang, Junyoung and Kweon, Wonbin and
-          Yu, Hwanjo},
-  booktitle={Proceedings of the 29th ACM International Conference on
-             Information and Knowledge Management},
+  title={{DE-RRD}: A Knowledge Distillation Framework for Recommender System},
+  author={Kang, SeongKu and Hwang, Junyoung and Kweon, Wonbin and Yu, Hwanjo},
+  booktitle={Proceedings of the 29th ACM International Conference on Information and Knowledge Management},
   pages={605--614},
   year={2020},
-  organization={ACM}
+  note={RRD refers to relaxed ranking distillation}
 }
 
 @inproceedings{gkd,
@@ -49,47 +42,48 @@
 }
 
 @inproceedings{distillm,
-  title={{DistiLLM}: Towards Streamlined Distillation for Large Language
-         Models},
-  author={Ko, Jongwoo and Kim, Sungnyun and Chen, Tianyi and
-          Yun, Se-Young},
-  booktitle={Proceedings of the 41st International Conference on Machine
-             Learning},
+  title={{DistiLLM}-2: A Contrastive Approach Boosts the Distillation of LLMs},
+  author={Ko, Jongwoo and Chen, Tianyi and Kim, Sungnyun and Ding, Tianyu and Liang, Luming and Zharkov, Ilya and Yun, Se-Young},
+  booktitle={Proceedings of the 42nd International Conference on Machine Learning},
+  series={Proceedings of Machine Learning Research},
+  volume={267},
+  pages={31044--31062},
   year={2025},
+  url={https://proceedings.mlr.press/v267/ko25a.html}
 }
 
-% ----------------------------------------------------------------------
-% TODO: replace the three entries below with the exact references of the
-% adapted baselines (SmartGR, RCE-KD, LOHRec). The current metadata is a
-% placeholder and MUST be completed before submission.
-% ----------------------------------------------------------------------
-@misc{ripor,
-  title={{RIPOR}: Prefix-Oriented Ranking Optimization for Generative
-         Information Retrieval},
-  author={Zeng, [TODO: given names] and others},
+@inproceedings{ripor,
+  title={Scalable and Effective Generative Information Retrieval},
+  author={Zeng, Hansi and Luo, Chen and Jin, Bowen and Sarwar, Sheikh Muhammad and Wei, Tianxin and Zamani, Hamed},
+  booktitle={Proceedings of the ACM Web Conference 2024},
   year={2024},
-  note={TODO: verify metadata}
+  eprint={2311.09134},
+  archivePrefix={arXiv}
 }
 
 @misc{smartgr,
-  title={{SmartGR}: Hierarchy-Aware and Beam-Aware Distillation for
-         Semantic-ID Generative Recommendation},
-  author={Zhang, [TODO: given names] and others},
+  title={{SmartGR}: Hierarchy and Beam-Aware Knowledge Distillation for Generative Recommendation},
+  author={Zhang, Ziheng and Cui, Yu and Wang, Bohao and He, Yong and Yu, Chao and Yuan, Chuan and Sun, Wujie and Wang, Can and Chen, Jiawei},
   year={2026},
-  note={TODO: verify metadata}
+  eprint={2608.02048},
+  archivePrefix={arXiv},
+  url={https://arxiv.org/abs/2608.02048}
 }
 
-@misc{rcekd,
-  title={{RCE-KD}: Student--Teacher-Aware Sampling and Adaptive Loss
-         Combination for Ranking Distillation in Recommendation},
-  author={Zhu, [TODO: given names] and Zhang, [TODO: given names]},
+@inproceedings{rcekd,
+  title={Rejuvenating Cross-Entropy Loss in Knowledge Distillation for Recommender Systems},
+  author={Zhu, Zhangchi and Zhang, Wei},
+  booktitle={International Conference on Learning Representations},
   year={2026},
-  note={TODO: verify metadata}
+  eprint={2509.20989},
+  archivePrefix={arXiv}
 }
-@misc{lohrec,
-  title={{LOHRec}: Order- and Hierarchy-Aware Lightweight Generative
-         Sequential Recommendation},
-  author={Xie, [TODO: given names] and others},
+@inproceedings{lohrec,
+  title={{LOHRec}: Leveraging Order and Hierarchy in Generative Sequential Recommendation},
+  author={Xie, Jiawen and Wu, Haiyang and Ji, Deyi and Yang, Yuekui and Ma, Shaoping},
+  booktitle={Findings of the Association for Computational Linguistics: EMNLP 2025},
+  pages={17968--17983},
   year={2025},
-  note={TODO: verify metadata}
+  doi={10.18653/v1/2025.findings-emnlp.977},
+  url={https://aclanthology.org/2025.findings-emnlp.977/}
 }

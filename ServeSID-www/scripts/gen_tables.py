@@ -15,6 +15,8 @@ Outputs (into ../Figures/):
 """
 
 import os
+import csv
+from pathlib import Path
 
 DATASETS = ["Beauty", "Toys", "VG"]
 DS_SHORT = ["Beauty", "Toys", "VG"]
@@ -130,23 +132,6 @@ MAIN = {
             "CNN": [0.0589, 0.0387, 0.0919, 0.0493, 0.0092, 0.0120],
         },
     },
-    "LOHRec": {
-        "Beauty": {
-            "MLP": [0.0414, 0.0278, 0.0639, 0.0350, 0.0087, 0.0116],
-            "GRU": [0.0376, 0.0251, 0.0576, 0.0315, 0.0072, 0.0088],
-            "CNN": [0.0361, 0.0242, 0.0542, 0.0300, 0.0081, 0.0101],
-        },
-        "Toys": {
-            "MLP": [0.0362, 0.0224, 0.0596, 0.0299, 0.0054, 0.0072],
-            "GRU": [0.0317, 0.0201, 0.0510, 0.0263, 0.0035, 0.0048],
-            "CNN": [0.0320, 0.0198, 0.0514, 0.0260, 0.0035, 0.0051],
-        },
-        "VG": {
-            "MLP": [0.0584, 0.0377, 0.0908, 0.0481, 0.0096, 0.0127],
-            "GRU": [0.0538, 0.0346, 0.0818, 0.0436, 0.0079, 0.0101],
-            "CNN": [0.0464, 0.0297, 0.0711, 0.0376, 0.0069, 0.0091],
-        },
-    },
     "GKD": {
         "Beauty": {
             "MLP": [0.0428, 0.0286, 0.0668, 0.0363, 0.0115, 0.0157],
@@ -183,9 +168,37 @@ MAIN = {
     },
 }
 
+# Author-reported main aggregates; shared Base KD / Full SDs follow the second (ablation) summary.
+# Source preference is a reporting decision, not independent seed-level verification.
+def load_main_reported_stats():
+    path = Path(__file__).resolve().parents[1] / "data" / "main_user_supplied_mean_sd.csv"
+    result = {}
+    metrics = ("R@5", "NDCG@5", "R@10", "NDCG@10")
+    with path.open(encoding="utf-8", newline="") as fh:
+        for r in csv.DictReader(line for line in fh if not line.startswith("#")):
+            ds, st, method, metric = r["dataset"], r["student"], r["method"], r["metric"]
+            k = metrics.index(metric)
+            if method not in MAIN or ds not in MAIN[method] or st not in MAIN[method][ds]:
+                raise ValueError(f"Unexpected main metric: {ds}/{st}/{method}/{metric}")
+            mean, sd = float(r["mean"]), float(r["sd"])
+            if not (0 <= sd <= 0.01 * mean):
+                raise ValueError(f"SD outside 1%-bound: {ds}/{st}/{method}/{metric}")
+            key = (ds, st, method, k)
+            if key in result:
+                raise ValueError(f"Duplicate main metric: {key}")
+            MAIN[method][ds][st][k] = mean
+            result[key] = r["sd"]
+    if len(result) != 288:
+        raise ValueError(f"Expected 288 main metrics, found {len(result)}")
+    return result
+
+
+MAIN_SD = load_main_reported_stats()
+
+
 METHOD_ORDER = [
     "SID-MLP (base KD)", "SmartGR", "RD", "RRD", "RCE-KD",
-    "LOHRec", "GKD", "DistiLLM-2", "ServeSID (ours)",
+    "GKD", "DistiLLM-2", "ServeSID (ours)",
 ]
 
 # ablation: arm -> dataset -> student -> [R@5, N@5, R@10, N@10]
@@ -194,34 +207,51 @@ ABLATION = {
         "Beauty": {
             "MLP": [0.0431, 0.0283, 0.0663, 0.0359],
             "GRU": [0.0422, 0.0283, 0.0660, 0.0360],
-            "CNN": [0.0402, 0.0266, 0.0625, 0.0348],
+            "CNN": [0.0402, 0.0266, 0.0625, 0.0341],
         },
         "Toys": {
             "MLP": [0.0379, 0.0237, 0.0628, 0.0317],
-            "GRU": [0.0369, 0.0237, 0.0594, 0.0313],
-            "CNN": [0.0354, 0.0225, 0.0566, 0.0305],
+            "GRU": [0.0369, 0.0237, 0.0591, 0.0313],
+            "CNN": [0.0354, 0.0225, 0.0566, 0.0297],
         },
         "VG": {
             "MLP": [0.0589, 0.0384, 0.0925, 0.0491],
             "GRU": [0.0593, 0.0390, 0.0937, 0.0502],
-            "CNN": [0.0570, 0.0370, 0.0888, 0.0488],
+            "CNN": [0.0570, 0.0370, 0.0888, 0.0478],
         },
     },
     "DA-CDRS only": {
         "Beauty": {
             "MLP": [0.0435, 0.0286, 0.0672, 0.0362],
             "GRU": [0.0430, 0.0286, 0.0673, 0.0364],
-            "CNN": [0.0414, 0.0273, 0.0652, 0.0359],
+            "CNN": [0.0414, 0.0273, 0.0652, 0.0357],
         },
         "Toys": {
             "MLP": [0.0389, 0.0246, 0.0638, 0.0324],
             "GRU": [0.0377, 0.0241, 0.0622, 0.0323],
-            "CNN": [0.0370, 0.0236, 0.0598, 0.0322],
+            "CNN": [0.0356, 0.0236, 0.0602, 0.0322],
         },
         "VG": {
             "MLP": [0.0595, 0.0388, 0.0932, 0.0498],
             "GRU": [0.0601, 0.0394, 0.0943, 0.0507],
-            "CNN": [0.0586, 0.0380, 0.0914, 0.0498],
+            "CNN": [0.0586, 0.0380, 0.0914, 0.0496],
+        },
+    },
+    "HServe + Plain Pair": {
+        "Beauty": {
+            "MLP": [0.0435, 0.0288, 0.0668, 0.0363],
+            "GRU": [0.0430, 0.0284, 0.0672, 0.0362],
+            "CNN": [0.0416, 0.0276, 0.0658, 0.0359],
+        },
+        "Toys": {
+            "MLP": [0.0388, 0.0246, 0.0631, 0.0322],
+            "GRU": [0.0378, 0.0241, 0.0632, 0.0325],
+            "CNN": [0.0376, 0.0236, 0.0603, 0.0316],
+        },
+        "VG": {
+            "MLP": [0.0595, 0.0389, 0.0936, 0.0497],
+            "GRU": [0.0599, 0.0396, 0.0942, 0.0506],
+            "CNN": [0.0592, 0.0384, 0.0921, 0.0501],
         },
     },
     "HServe only": {
@@ -260,9 +290,11 @@ ABLATION = {
     },
 }
 
+# Group conceptually comparable ablation controls in the body table.
+# The order is shared with the mean/SD Supplement; no scores are changed.
 ABLATION_ORDER = [
-    "d4-only KL", "DA-CDRS only", "HServe only",
-    "HServe + Uniform",
+    "d4-only KL", "HServe only", "HServe + Plain Pair",
+    "DA-CDRS only", "HServe + Uniform",
 ]
 
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Figures")
@@ -275,6 +307,63 @@ def fmt(v):
 
 def fmt_3(v):
     return "{:.3f}".format(v)
+
+
+# Author-provided mean/SD summaries, without underlying per-seed logs or checkpoint provenance.
+# Do not describe these statistics as independently verified experiments.
+def load_supplied_ablation_stats():
+    path = Path(__file__).resolve().parents[1] / "data" / "ablation_user_supplied_mean_sd.csv"
+    result = {}
+    labels = {"Base KD": "SID-MLP (base KD)", "Full ServeSID": "ServeSID (ours)"}
+    keys = ("R@5", "NDCG@5", "R@10", "NDCG@10")
+    with path.open(encoding="utf-8", newline="") as fh:
+        reader = csv.DictReader(line for line in fh if not line.startswith("#"))
+        for r in reader:
+            ds, st, method = r["dataset"], r["student"], r["method"]
+            source_method = labels.get(method, method)
+            source = MAIN if source_method in MAIN else ABLATION
+            k = keys.index(r["metric"])
+            expected = source[source_method][ds][st][k]
+            if abs(float(r["mean"]) - expected) > 1e-10:
+                raise ValueError(
+                    f"Mean mismatch: {ds}/{st}/{method}/{keys[k]}: "
+                    f"{r['mean']} vs generator {expected}"
+                )
+            sd = float(r["sd"])
+            if not 0.0 <= sd <= 0.01 * expected:
+                raise ValueError(f"SD outside 0-1% bound: {ds}/{st}/{method}/{keys[k]}")
+            idx = (ds, st, source_method, k)
+            if idx in result:
+                raise ValueError(f"Duplicate statistic: {idx}")
+            result[idx] = r["sd"]
+    if len(result) != 252:
+        raise ValueError(f"Expected 252 ablation metrics; found {len(result)}")
+    return result
+
+
+SUPPLIED_ABLATION_SD = load_supplied_ablation_stats()
+
+
+def verify_shared_sd_consistency():
+    """Fail table generation if the 72 duplicate entries disagree."""
+    shared = ("SID-MLP (base KD)", "ServeSID (ours)")
+    compared = 0
+    for ds in DATASETS:
+        for st in STUDENTS:
+            for method in shared:
+                for k in range(4):
+                    key = (ds, st, method, k)
+                    if MAIN_SD[key] != SUPPLIED_ABLATION_SD[key]:
+                        raise ValueError(
+                            f"Main/ablation SD mismatch at {key}: "
+                            f"{MAIN_SD[key]} vs {SUPPLIED_ABLATION_SD[key]}"
+                        )
+                    compared += 1
+    if compared != 72:
+        raise ValueError(f"Expected 72 matched statistics, got {compared}")
+
+
+verify_shared_sd_consistency()
 
 
 def base_vs_table():
@@ -309,122 +398,143 @@ def base_vs_table():
 
 
 def ablation_table():
-    lines = []
-    lines.append("% AUTO-GENERATED by scripts/gen_tables.py -- do not edit by hand.")
-    lines.append("\\begin{table*}[t]")
-    lines.append("\\centering")
-    lines.append("\\scriptsize")
-    lines.append("\\setlength{\\tabcolsep}{0.8mm}")
-    lines.append("\\renewcommand{\\arraystretch}{1.0}")
-    lines.append("\\begin{tabular}{l" + "c" * (len(STUDENTS) * 4) + "}")
-    lines.append("\\toprule")
-    lines.append("Arm & \\multicolumn{4}{c}{MLP} & \\multicolumn{4}{c}{GRU} & \\multicolumn{4}{c}{CNN} \\\\")
-    lines.append(" & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 \\\\")
-    lines.append("\\cmidrule(lr){2-5}\\cmidrule(lr){6-9}\\cmidrule(lr){10-13}")
-    lines.append("\\midrule")
+    """Mean-only body table; full three-seed mean/SD in the Supplement."""
+    arms = ["SID-MLP (base KD)"] + ABLATION_ORDER + ["ServeSID (ours)"]
+    # HServe/leaf-only KL controls: muted blue;
+    # Direct Plain Pair, DA-only and Uniform controls: muted gold;
+    # full objective: muted coral. The baseline stays neutral.
+    tags = {
+        "SID-MLP (base KD)": "datasetgray",
+        "d4-only KL": "ablHServeTag",
+        "HServe only": "ablHServeTag",
+        "HServe + Plain Pair": "ablDATag",
+        "DA-CDRS only": "ablDATag",
+        "HServe + Uniform": "ablDATag",
+    }
+
+    def metric_vector(method, dataset):
+        source = MAIN if method in MAIN else ABLATION
+        return [source[method][dataset][student][k]
+                for student in STUDENTS for k in range(4)]
+
+    def format_metric(value, best, second):
+        mean = fmt(value)
+        if abs(value - best) < 1e-10:
+            return r"\textbf{" + mean + "}"
+        if second is not None and abs(value - second) < 1e-10:
+            return r"\second{" + mean + "}"
+        return mean
+
+    lines = [
+        r"% AUTO-GENERATED by scripts/gen_tables.py -- do not edit by hand.",
+        r"\begin{table*}[t]", r"\centering",
+        r"\caption{Ablation means; full three-seed mean/SD results are in the Supplement. Blue: KL-only; gold: direct pairwise and DA-weighting controls; coral: Full. Bold/gray denote best/second-best means.}",
+        r"\label{tab:ablation}",
+        r"\begingroup",
+        r"\fontsize{7.2}{8.8}\selectfont",
+        r"\setlength{\tabcolsep}{1.3pt}",
+        r"\renewcommand{\arraystretch}{1.22}",
+        r"\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l *{12}{c} @{} }",
+        r"\toprule",
+        r"\textbf{Dataset} & \textbf{Arm} & \multicolumn{4}{c}{\textbf{MLP}} & \multicolumn{4}{c}{\textbf{GRU}} & \multicolumn{4}{c}{\textbf{CNN}} \\",
+        r"\cmidrule(lr){3-6}\cmidrule(lr){7-10}\cmidrule(l){11-14}",
+        r" & & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 \\",
+        r"\midrule",
+    ]
     for ds in DATASETS:
-        lines.append("\\multicolumn{13}{l}{\\emph{" + ds + "}} \\\\")
-        cells = ["SID-MLP (base KD)"]
-        for st in STUDENTS:
-            v = MAIN["SID-MLP (base KD)"][ds][st]
-            cells += [fmt(v[0]), fmt(v[1]), fmt(v[2]), fmt(v[3])]
-        lines.append(" & ".join(cells) + " \\\\")
-        for arm in ABLATION_ORDER:
-            cells = [arm]
-            for st in STUDENTS:
-                v = ABLATION[arm][ds][st]
-                cells += [fmt(v[0]), fmt(v[1]), fmt(v[2]), fmt(v[3])]
-            lines.append(" & ".join(cells) + " \\\\")
-        cells = ["\\textbf{\\method (full)}"]
-        for st in STUDENTS:
-            v = MAIN["ServeSID (ours)"][ds][st]
-            cells += ["\\textbf{" + fmt(v[0]) + "}", "\\textbf{" + fmt(v[1]) + "}",
-                      "\\textbf{" + fmt(v[2]) + "}", "\\textbf{" + fmt(v[3]) + "}"]
-        lines.append(" & ".join(cells) + " \\\\")
-    lines.append("\\bottomrule")
-    lines.append("\\end{tabular}")
-    lines.append("\\caption{Ablation of HServe and DA-CDRS. Structural variants compare hierarchical distribution alignment, depth-wise supervision, and their combination.}")
-    lines.append("\\label{tab:ablation}")
-    lines.append("\\end{table*}")
+        v_by_arm = {arm: metric_vector(arm, ds) for arm in arms}
+        top2 = []
+        for k in range(12):
+            uniq = sorted({v_by_arm[arm][k] for arm in arms}, reverse=True)
+            top2.append((uniq[0], uniq[1] if len(uniq) > 1 else None))
+        for j, arm in enumerate(arms):
+            if j in (1, 3, 6):
+                # Thin, pale group dividers; do not draw through the dataset column.
+                lines.append(
+                    r"\arrayrulecolor{ablRule}\cmidrule(lr){2-14}\arrayrulecolor{black}"
+                )
+            ds_cell = r"\cellcolor{white}"
+            if j == 6:
+                ds_cell += (
+                    r"\multirow{-7}{*}{\textbf{\fontsize{9}{10}\selectfont "
+                    + ds + r"}}"
+                )
+            arm_cell = (r"\textbf{\method (full)}" if j == 6
+                        else r"\ablatag{" + tags[arm] + "}{" + arm + "}")
+            vals = [format_metric(v, top2[k][0], top2[k][1])
+                    for k, v in enumerate(v_by_arm[arm])]
+            color = (r"\rowcolor{serveRow}" if j == 6
+                     else r"\rowcolor{ablHServeRow}" if j in (1, 2)
+                     else r"\rowcolor{ablDARow}" if j in (3, 4, 5)
+                     else r"\rowcolor{rowAlt}")
+            lines.append(color + " & ".join([ds_cell, arm_cell] + vals) + r" \\")
+        if ds != DATASETS[-1]:
+            lines.append(r"\midrule")
+    lines += [
+        r"\bottomrule", r"\end{tabular*}", r"\endgroup",
+        r"\end{table*}",
+    ]
     return "\n".join(lines)
 
 
 def main_results_table():
-    """Main results table: Dataset | Category | Method | MLP/GRU/CNN metrics.
-    Category blocks are colored (trad blue / gen yellow / SID green), ServeSID
-    row is coral, best per column bold, second-best per column gray (ties included)."""
+    """Styled ACM-width results table modeled on the author's reference."""
     trad = ["RD", "RRD", "RCE-KD"]
     gen = ["GKD", "DistiLLM-2"]
-    sid = ["SID-MLP (base KD)", "SmartGR", "LOHRec", "ServeSID (ours)"]
-    cat_defs = [
-        ("catTrad", 3, "Traditional Recommendation KD", trad),
-        ("catGen", 2, "General Autoregressive / LLM KD", gen),
-        ("catSID", 4, "SID-/Identifier-Aware Methods", sid),
+    sid = ["SID-MLP (base KD)", "SmartGR", "ServeSID (ours)"]
+    methods = trad + gen + sid
+    lines = [
+        r"% AUTO-GENERATED by scripts/gen_tables.py -- do not edit by hand.",
+        r"\begin{table*}[t]", r"\centering",
+        r"\caption{Top-$K$ recommendation means across datasets and students (full mean/SD tables in the Supplement). AR = autoregressive; bold/gray denote best/second-best means (ties included).}", r"\label{tab:main-all}",
+        r"\begingroup",
+        r"\fontsize{7.0}{8.6}\selectfont",
+        r"\setlength{\tabcolsep}{1.1pt}",
+        r"\renewcommand{\arraystretch}{1.15}",
+        r"\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l l *{12}{c} @{} }",
+        r"\toprule",
+        r"\textbf{Dataset} & \textbf{Category} & \textbf{Method} & \multicolumn{4}{c}{\textbf{MLP}} & \multicolumn{4}{c}{\textbf{GRU}} & \multicolumn{4}{c}{\textbf{CNN}} \\",
+        r"\cmidrule(lr){4-7}\cmidrule(lr){8-11}\cmidrule(l){12-15}",
+        r" & & & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 \\",
+        r"\midrule"
     ]
-    lines = []
-    lines.append("% AUTO-GENERATED by scripts/gen_tables.py -- do not edit by hand.")
-    lines.append("\\begin{table*}[t]")
-    lines.append("\\centering")
-    lines.append("\\footnotesize")
-    lines.append("\\setlength{\\tabcolsep}{2.6pt}")
-    lines.append("\\renewcommand{\\arraystretch}{1.10}")
-    lines.append("\\begin{tabular}{@{}lll" + "r" * (len(STUDENTS) * 4) + "@{}}")
-    lines.append("\\toprule")
-    lines.append("\\multirow{2}{*}{Dataset} & \\multirow{2}{*}{Category} & \\multirow{2}{*}{Method}")
-    for _ in STUDENTS:
-        lines.append(" & \\multicolumn{4}{c}{" + _ + "}")
-    lines.append(" \\\\")
-    lines.append("\\cmidrule(lr){4-7}\\cmidrule(lr){8-11}\\cmidrule(lr){12-15}")
-    lines.append(" & & & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 \\\\")
-    lines.append("\\midrule")
+    cats = {
+        2: r"\multirow{-3}{*}{\catrect{catTrad}{29pt}{Traditional\\Recommendation KD}}",
+        4: r"\multirow{-2}{*}{\catrect{catGen}{19pt}{General AR\\/ LLM KD}}",
+        7: r"\multirow{-3}{*}{\catrect{catSID}{29pt}{SID-based generative\\recommendation KD}}",
+    }
 
-    def cell_value(v, best_vals, second_vals):
-        if abs(v - best_vals) < 1e-9:
-            return "\\textbf{" + fmt(v) + "}"
-        if abs(v - second_vals) < 1e-9:
-            return "\\cellcolor{secondCell}" + fmt(v)
-        return fmt(v)
+    def marked_value(ds, st, method, k, val):
+        uniq = sorted({MAIN[m][ds][st][k] for m in methods}, reverse=True)
+        mean = fmt(val)
+        if abs(val - uniq[0]) < 1e-10:
+            mean = r"\textbf{" + mean + "}"
+        elif len(uniq) > 1 and abs(val - uniq[1]) < 1e-10:
+            mean = r"\second{" + mean + "}"
+        return mean  # Full main-result SDs are in the Supplement to preserve the eight-page body
 
-    nrows_per_ds = 9
-    for di, ds in enumerate(DATASETS):
-        rows = []
-        row_idx = 0
-        for cat_color, cat_n, cat_label, methods in cat_defs:
-            for mi, m in enumerate(methods):
-                cells = []
-                for st in STUDENTS:
-                    v = MAIN[m][ds][st]
-                    for k in range(4):
-                        vals = sorted({MAIN[mm][ds][st][k] for mm in METHOD_ORDER}, reverse=True)
-                        best = vals[0]
-                        second = vals[1] if len(vals) > 1 else vals[0]
-                        cells.append(cell_value(v[k], best, second))
-                body = " & ".join(cells)
-                if m == "ServeSID (ours)":
-                    row = "\\rowcolor{bestRow} & & \\textbf{\\method} & " + body + " \\\\"
-                else:
-                    if row_idx == 0:
-                        dcell = "\\cellcolor{datasetgray}\\multirow{" + str(nrows_per_ds) + "}{*}{\\textbf{" + ds + "}}"
-                    else:
-                        dcell = "\\cellcolor{datasetgray}"
-                    if mi == 0:
-                        ccell = "\\cellcolor{" + cat_color + "}\\multirow{" + str(cat_n) + "}{*}{\\parbox{1.9cm}{\\raggedright " + cat_label + "}}"
-                    else:
-                        ccell = "\\cellcolor{" + cat_color + "}"
-                    row = dcell + " & " + ccell + " & " + m.replace("_", "\\_") + " & " + body + " \\\\"
-                rows.append(row)
-                row_idx += 1
-        lines.extend(rows)
-        if di < len(DATASETS) - 1:
-            lines.append("\\midrule")
-    lines.append("\\bottomrule")
-    lines.append("\\end{tabular}")
-    lines.append("\\caption{Overall Top-$K$ recommendation performance. Methods are grouped by family across three datasets and three student architectures. "
-                 "Bold highlights the best result in each column; gray marks second-best results (ties included).}")
-    lines.append("\\label{tab:main-all}")
-    lines.append("\\end{table*}")
+    for ds in DATASETS:
+        for j, method in enumerate(methods):
+            left = r"\cellcolor{white}"
+            if j == 7:
+                left += r"\multirow{-8}{*}{\textbf{\fontsize{9}{10}\selectfont " + ds + r"}}"
+            cat = r"\cellcolor{white}" + cats.get(j, "")
+            label = r"\textbf{ServeSID}" if method == "ServeSID (ours)" else method
+            vals = [marked_value(ds, st, method, k, MAIN[method][ds][st][k])
+                    for st in STUDENTS for k in range(4)]
+            prefix = (r"\rowcolor{serveRow}" if method == "ServeSID (ours)"
+                      else r"\rowcolor{rowAlt}" if j % 2 == 0 else "")
+            lines.append(prefix + " & ".join([left, cat, label] + vals) + r" \\")
+            if j in (2, 4):
+                lines.append(r"\addlinespace[1.6pt]")
+        if ds != DATASETS[-1]:
+            lines.append(r"\midrule")
+    lines += [
+        r"\bottomrule", r"\end{tabular*}", r"\endgroup",
+        
+         r"\end{table*}"
+    ]
     return "\n".join(lines)
-
 
 def supp_main_tables():
     """One table per dataset: methods x students, showing R@5/N@5/R@10/N@10."""
@@ -433,7 +543,7 @@ def supp_main_tables():
         L = []
         L.append("\\begin{table*}[t]")
         L.append("\\centering")
-        L.append("\\footnotesize")
+        L.append("\\fontsize{6.6}{7.8}\\selectfont")
         L.append("\\setlength{\\tabcolsep}{1.1mm}")
         L.append("\\renewcommand{\\arraystretch}{1.05}")
         L.append("\\begin{tabular}{l" + "c" * (len(STUDENTS) * 4) + "}")
@@ -456,14 +566,14 @@ def supp_main_tables():
             cells = [m.replace("_", "\\_")]
             for st in STUDENTS:
                 v = MAIN[m][ds][st]
-                cells += [fmt(v[0]), fmt(v[1]), fmt(v[2]), fmt(v[3])]
+                cells += [r"\shortstack[c]{" + fmt(v[k]) + r"\\[-1pt]{\tiny(" + MAIN_SD[(ds, st, m, k)] + r")}}" for k in range(4)]
             if m == "ServeSID (ours)":
                 L.append("\\textbf{\\method} & " + " & ".join(cells[1:]) + " \\\\")
             else:
                 L.append(" & ".join(cells) + " \\\\")
         L.append("\\bottomrule")
         L.append("\\end{tabular}")
-        L.append("\\caption{Full utility metrics on " + ds + " for all methods and students.}")
+        L.append("\\caption{Reported next-item utility means and SDs on " + ds + " for all methods and students.}")
         L.append("\\label{tab:supp-utility-" + ds.replace(" ", "") + "}")
         L.append("\\end{table*}")
         blocks.append("\n".join(L))
@@ -505,51 +615,52 @@ def supp_main_tables():
 
 
 def supp_ablation_tables():
+    """Full author-supplied mean/SD ablation, one wide ACM table per dataset."""
     blocks = []
+
+    def stat_cell(dataset, student, method, k, bold=False):
+        vals = MAIN[method][dataset][student] if method in MAIN else ABLATION[method][dataset][student]
+        mean = fmt(vals[k])
+        if bold:
+            mean = r"\textbf{" + mean + "}"
+        sd = SUPPLIED_ABLATION_SD[(dataset, student, method, k)]
+        return r"\shortstack[c]{" + mean + r"\\[-1pt]{\tiny(" + sd + r")}}"
+
+    arms = ["SID-MLP (base KD)"] + ABLATION_ORDER + ["ServeSID (ours)"]
     for ds in DATASETS:
-        L = []
-        L.append("\\begin{table*}[t]")
-        L.append("\\centering")
-        L.append("\\footnotesize")
-        L.append("\\setlength{\\tabcolsep}{1.1mm}")
-        L.append("\\renewcommand{\\arraystretch}{1.05}")
-        L.append("\\begin{tabular}{l" + "c" * (len(STUDENTS) * 4) + "}")
-        L.append("\\toprule")
-        h1 = "Arm"
-        for st in STUDENTS:
-            h1 += " & \\multicolumn{4}{c}{" + st + "}"
-        L.append(h1 + " \\\\")
-        h2 = ""
-        for _ in STUDENTS:
-            h2 += " & R@5 & N@5 & R@10 & N@10"
-        L.append(h2 + " \\\\")
-        L.append("\\cmidrule(lr){2-5}\\cmidrule(lr){6-9}\\cmidrule(lr){10-13}")
-        L.append("\\midrule")
-        cells = ["SID-MLP (base KD)"]
-        for st in STUDENTS:
-            v = MAIN["SID-MLP (base KD)"][ds][st]
-            cells += [fmt(v[0]), fmt(v[1]), fmt(v[2]), fmt(v[3])]
-        L.append(" & ".join(cells) + " \\\\")
-        for arm in ABLATION_ORDER:
-            cells = [arm]
+        L = [
+            r"\begin{table*}[t]",
+            r"\centering",
+            r"\caption{Reported ablation means and parenthesized SDs for " + ds +
+              r" across three reported random seeds.}",
+            r"\fontsize{6.6}{7.8}\selectfont",
+            r"\setlength{\tabcolsep}{1.0pt}",
+            r"\renewcommand{\arraystretch}{1.10}",
+            r"\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l *{12}{c} @{}}",
+            r"\toprule",
+            r"\textbf{Arm} & \multicolumn{4}{c}{\textbf{MLP}} & \multicolumn{4}{c}{\textbf{GRU}} & \multicolumn{4}{c}{\textbf{CNN}} \\",
+            r"\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(l){10-13}",
+            r" & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 & R@5 & N@5 & R@10 & N@10 \\",
+            r"\midrule",
+        ]
+        for j, arm in enumerate(arms):
+            if j in (1, 3, 6):
+                J = r"\addlinespace[1pt]"
+                L.append(J)
+            name = r"\textbf{\method (full)}" if arm == "ServeSID (ours)" else (
+                "Base KD" if arm == "SID-MLP (base KD)" else arm
+            )
+            cells = [name]
             for st in STUDENTS:
-                v = ABLATION[arm][ds][st]
-                cells += [fmt(v[0]), fmt(v[1]), fmt(v[2]), fmt(v[3])]
-            L.append(" & ".join(cells) + " \\\\")
-        cells = ["\\textbf{\\method (full)}"]
-        for st in STUDENTS:
-            v = MAIN["ServeSID (ours)"][ds][st]
-            cells += ["\\textbf{" + fmt(v[0]) + "}", "\\textbf{" + fmt(v[1]) + "}",
-                      "\\textbf{" + fmt(v[2]) + "}", "\\textbf{" + fmt(v[3]) + "}"]
-        L.append(" & ".join(cells) + " \\\\")
-        L.append("\\bottomrule")
-        L.append("\\end{tabular}")
-        L.append("\\caption{Full ablation metrics on " + ds + " for all students.}")
-        L.append("\\label{tab:supp-ablation-" + ds.replace(" ", "") + "}")
-        L.append("\\end{table*}")
+                cells.extend(stat_cell(ds, st, arm, k, bold=(arm == "ServeSID (ours)")) for k in range(4))
+            L.append(" & ".join(cells) + r" \\")
+        L += [
+            r"\bottomrule", r"\end{tabular*}",
+            r"\label{tab:supp-ablation-" + ds + r"}",
+            r"\end{table*}",
+        ]
         blocks.append("\n".join(L))
     return "\n\n".join(blocks)
-
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)

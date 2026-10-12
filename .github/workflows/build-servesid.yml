@@ -1,0 +1,91 @@
+name: Build ServeSID paper
+on:
+  push:
+    branches:
+      - revise-servesid-storyline-20261011
+      - www27-eight-page-layout-20261011
+      - servesid-visual-skills-polish-20261011
+      - servesid-ablation-sd-provenance-20261011
+      - servesid-main-results-sd-20261011
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Regenerate manuscript tables
+        run: python3 ServeSID-www/scripts/gen_tables.py
+      - name: Verify sensitivity anchors against published ablation
+        run: python3 ServeSID-www/scripts/check_sensitivity_references.py
+      - name: Audit single-positive Recall and NDCG consistency
+        run: python3 ServeSID-www/scripts/check_rank_metric_invariants.py
+      - name: Generate single-PDF submission appendix
+        run: python3 ServeSID-www/scripts/gen_submission_appendix.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Rebuild publication figures as cropped vector PDFs
+        run: |
+          python -m pip install --quiet cairosvg
+          python - <<'PY'
+          import cairosvg
+          from pathlib import Path
+          fig = Path("ServeSID-www/Figures")
+          for src, dst in [
+              ("ServeSID_Figure1_Hierarchy_only.svg", "diag_hierarchy.pdf"),
+              ("figure_no_title_background_vector.svg", "fig_stat_h1.pdf"),
+              ("depthwise_residuals_no_header_bg_vector.svg", "fig_stat_d12.pdf"),
+              ("image2.svg", "diag_replace.pdf"),
+          ]:
+              cairosvg.svg2pdf(url=str(fig / src), write_to=str(fig / dst))
+          PY
+      - uses: xu-cheng/latex-action@v3
+        with:
+          root_file: |
+            main.tex
+            supplement.tex
+            submission.tex
+          working_directory: ServeSID-www
+          latexmk_use_xelatex: false
+          args: -pdf -bibtex -interaction=nonstopmode -halt-on-error -file-line-error
+      - name: Audit WWW 2027 page budget and render checkpoints
+        run: |
+          python -m pip install --quiet pymupdf
+          python3 ServeSID-www/scripts/check_www_layout.py ServeSID-www/main.pdf
+          python3 ServeSID-www/scripts/check_www_layout.py ServeSID-www/submission.pdf
+          cp ServeSID-www/layout_audit.txt ServeSID-www/submission_layout_audit.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ServeSID-revised-PDFs
+          path: |
+            ServeSID-www/main.pdf
+            ServeSID-www/supplement.pdf
+            ServeSID-www/submission.pdf
+            ServeSID-www/submission_layout_audit.txt
+            ServeSID-www/metric_invariant_audit.txt
+            ServeSID-www/layout_audit.txt
+            ServeSID-www/layout_previews/*.png
+          if-no-files-found: error
+      - name: Commit generated mean-SD ablation LaTeX sources
+        if: github.ref == 'refs/heads/servesid-ablation-sd-provenance-20261011' || github.ref == 'refs/heads/servesid-main-results-sd-20261011'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ServeSID-www/Figures/table_main_results.tex ServeSID-www/Figures/table_supp_main.tex ServeSID-www/Figures/table_ablation.tex ServeSID-www/Figures/table_supp_ablation.tex
+          if ! git diff --cached --quiet; then
+            git commit -m "Regenerate published ablation tables from provided mean-SD CSV"
+            git push
+          fi
+      - name: Commit regenerated publication figures
+        if: github.ref == 'refs/heads/servesid-visual-skills-polish-20261011'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ServeSID-www/Figures/diag_hierarchy.pdf ServeSID-www/Figures/fig_stat_h1.pdf ServeSID-www/Figures/fig_stat_d12.pdf ServeSID-www/Figures/diag_replace.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh publication figure PDFs after vector-layout refinement"
+            git push
+          fi
