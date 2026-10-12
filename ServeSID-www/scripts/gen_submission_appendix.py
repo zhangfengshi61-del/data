@@ -134,28 +134,8 @@ lines += [
     "Toys and Video Games teacher export times are 26.7 and "
     "38.6 minutes, respectively (the latter uses four shards).",
 ]
-lines.extend([
-    r"\section{Depth-wise Optimization and Baseline Protocol}",
-    r"\label{sec:appendix-protocol}",
-    "Let $D_t$ be the conditional teacher--student KL contribution "
-    "at SID depth $t$, weighted by teacher prefix probability. "
-    "The chain rule yields "
-    "$K_d=\\sum_{t\\leq d}D_t$ for the prefix KL at depth $d$. "
-    "Thus HServe with four equally weighted depths assigns "
-    "$4D_1+3D_2+2D_3+D_4$, while leaf-only KL gives "
-    "$D_1+D_2+D_3+D_4$. "
-    "HServe therefore changes the optimization emphasis within "
-    "the same candidate-support teacher distribution.",
-    "All students use a frozen T5 history encoder and MLP, GRU, "
-    "or CNN SID heads. Ranking baselines use teacher-ranked "
-    "candidates (RD/RRD/RCE-KD); LOHRec-style adapts "
-    "order and hierarchical-ranking objectives; GKD uses "
-    "off-/on-policy prefix supervision; DistiLLM-2 combines "
-    "skew divergence and contrastive SID sampling; SmartGR "
-    "combines hierarchical SID and beam-level supervision. "
-    "They share the SID inventory and validation-NDCG@10 "
-    "checkpoint selection protocol."
-])
+# Keep submission and expanded Supplement terminology identical.
+lines.append(r"\\input{Figures/protocol_shared.tex}")
 
 OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
 print(f"Generated {OUT}: {count} nonduplicate SD entries across 3 datasets")
