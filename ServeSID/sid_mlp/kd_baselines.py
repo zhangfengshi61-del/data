@@ -1,7 +1,7 @@
 """Unified distillation baselines for the ServeSID A/B study (Amazon2014).
 
-Implements, on the SAME SID-MLP student (cross-attn context + 4 prefix-conditioned
-MLP heads) and the SAME TIGER teacher / packed cache / beam dump:
+Implements the baseline losses on the SAME chosen SID student architecture
+(MLP/GRU/CNN within each comparison) and TIGER teacher / packed cache / beam dump:
 
   - RD         (Ranking Distillation, Tang & Wang KDD'18)   [ported from RCE-KD repo baseline.py]
   - RRD        (Relaxed Ranking Distillation, CIKM'20)      [ported from RCE-KD repo baseline.py]
@@ -12,8 +12,10 @@ MLP heads) and the SAME TIGER teacher / packed cache / beam dump:
 
 Every method keeps the standard digit distillation as its base ("combined" loss,
 alpha=0.7), mirroring how ServeSID adds its serving-list losses on top.
-Validation is the same factorized beam search (R@10/NDCG@10) every 5 epochs.
-Checkpoints are saved in the SID-MLP format so scripts/run_infer.sh works as-is.
+Checkpoint selection uses complete validation beam NDCG@10 every 5 epochs
+and on the final epoch. Test is never a selection fallback.
+Each checkpoint stores the architecture and its hyperparameters, and
+can be loaded by sid_mlp.inference.build_sidmlp_from_checkpoint.
 
 Usage:
   python -m sid_mlp.kd_baselines --method rd \
@@ -55,7 +57,11 @@ from sid_mlp.losses import (
     student_list_scores_steps,
     topk_correct,
 )
-from sid_mlp.models import SIDMLP
+from sid_mlp.models import SIDMLP, SIDGRU, SIDCNN
+from sid_mlp.validation_selection import (
+    require_validation_split, validate_selection_settings,
+    should_beam_validate, save_if_best_val_ndcg10,
+)
 
 OFF = torch.tensor(DIGIT_OFFSETS, dtype=torch.long)
 
@@ -552,10 +558,23 @@ def _fmt_float(value):
 
 
 def _save_prefix(args):
-    return (f"{args.category}_{args.method}_k0_xattn"
-            f"_h{args.num_heads}_f{args.ffn_dim}_ad{args.attn_dim}"
-            f"_hhid{args.head_hidden}_hl{args.head_layers}"
-            f"_lr{_fmt_float(args.lr)}_{args.run_tag}")
+    arch = str(getattr(args, "arch", "mlp")).lower()
+    fields = [args.category, args.method, arch, "k0"]
+    if arch == "mlp":
+        fields.extend((f"h{args.num_heads}", f"f{args.ffn_dim}", f"ad{args.attn_dim}"))
+    elif arch == "gru":
+        fields.extend((f"gh{args.gru_hidden}", f"gl{args.gru_layers}"))
+    elif arch == "cnn":
+        fields.extend((f"cd{args.conv_dim}", f"ck{args.conv_kernel}", f"cl{args.conv_layers}"))
+    else:
+        raise ValueError(f"Unsupported student architecture: {arch}")
+    fields.extend((f"hhid{args.head_hidden}", f"hl{args.head_layers}",
+                   f"lr{_fmt_float(args.lr)}", f"seed{args.seed}"))
+    if args.test:
+        fields.append("debug")
+    if args.run_tag:
+        fields.append(args.run_tag)
+    return "_".join(str(x) for x in fields)
 
 
 def _checkpoint_args(args):
@@ -589,6 +608,7 @@ def _validate_digits(args, model, loader):
 
 
 def train_baseline(args):
+    validate_selection_settings(args)
     if not getattr(args, "graph_dir", None):
         raise SystemExit("--graph_dir is required")
     graph_dir = os.path.abspath(args.graph_dir)
@@ -642,23 +662,38 @@ def train_baseline(args):
 
     teacher_pipe = None
     t5 = None
-    if method in NEEDS_TEACHER or args.epochs >= 5:
+    # Validation NDCG@10 always requires the teacher history encoder and
+    # the same SID candidate support, including short (<5-epoch) runs.
+    if True:
         teacher_pipe = build_tiger_pipeline(args)
         t5 = teacher_pipe.model.t5.to(device).eval()
         for p in t5.parameters():
             p.requires_grad_(False)
 
-    model = SIDMLP(
-        embedding_weight,
-        embed_dim=embedding_weight.shape[1],
-        d_model=128,
-        num_heads=args.num_heads,
-        ffn_dim=args.ffn_dim,
-        dropout=args.dropout,
-        head_hidden=args.head_hidden,
-        head_layers=args.head_layers,
-        attn_dim=args.attn_dim,
-    ).to(device)
+    arch = str(getattr(args, "arch", "mlp")).lower()
+    if arch == "gru":
+        model = SIDGRU(
+            embedding_weight, embed_dim=embedding_weight.shape[1],
+            gru_hidden=args.gru_hidden, gru_layers=args.gru_layers,
+            dropout=args.dropout, head_hidden=args.head_hidden,
+            head_layers=args.head_layers,
+        ).to(device)
+    elif arch == "cnn":
+        model = SIDCNN(
+            embedding_weight, embed_dim=embedding_weight.shape[1],
+            conv_dim=args.conv_dim, kernel_size=args.conv_kernel,
+            conv_layers=args.conv_layers, dropout=args.dropout,
+            head_hidden=args.head_hidden, head_layers=args.head_layers,
+        ).to(device)
+    elif arch == "mlp":
+        model = SIDMLP(
+            embedding_weight, embed_dim=embedding_weight.shape[1],
+            d_model=128, num_heads=args.num_heads, ffn_dim=args.ffn_dim,
+            dropout=args.dropout, head_hidden=args.head_hidden,
+            head_layers=args.head_layers, attn_dim=args.attn_dim,
+        ).to(device)
+    else:
+        raise ValueError(f"Unsupported student architecture: {arch}")
     # stash ctx for the on-policy samplers
     _orig_forward = model.forward
     def _fwd_with_ctx(enc_seq, enc_mask, d1_ids=None, d2_ids=None, d3_ids=None):
@@ -694,15 +729,18 @@ def train_baseline(args):
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False,
                             num_workers=0, pin_memory=False, collate_fn=make_collate(val_ds))
 
-    beam_t5 = beam_loader = beam_vt = None
-    if args.epochs >= 5:
-        beam_t5 = t5
-        split = "val" if "val" in teacher_pipe.tokenized_datasets else "test"
-        beam_loader = DataLoader(teacher_pipe.tokenized_datasets[split], batch_size=args.val_batch_size,
-                                 shuffle=False, collate_fn=teacher_pipe.tokenizer.collate_fn[split], num_workers=0)
-        beam_vt = vt
+    split = require_validation_split(teacher_pipe.tokenized_datasets)
+    beam_t5 = t5
+    beam_loader = DataLoader(teacher_pipe.tokenized_datasets[split],
+                             batch_size=args.val_batch_size, shuffle=False,
+                             collate_fn=teacher_pipe.tokenizer.collate_fn[split],
+                             num_workers=0)
+    beam_vt = vt
+    best_val_ndcg10 = float("-inf")
+    best_val_epoch = None
+    best_path = os.path.join(ckpt_dir, f"{save_prefix}_best_val_ndcg10.pth")
 
-    log(f"Training baseline method={method} on {args.dataset}/{args.category}")
+    log(f"Training baseline method={method} arch={arch} on {args.dataset}/{args.category}")
     log(f"train={len(train_ds)} val={len(val_ds)} ckpt_dir={ckpt_dir}")
 
     loss_impl = LOSS_FN[method]
@@ -741,13 +779,26 @@ def train_baseline(args):
         scheduler.step()
         digit_metrics = _validate_digits(args, model, val_loader)
         beam_metrics = {}
-        if beam_t5 is not None and epoch % 5 == 0:
+        if should_beam_validate(epoch, args.epochs, 5):
             beam_metrics = evaluate_loader(
                 model, beam_t5, beam_loader, beam_vt, device,
                 beam_size=args.beam_size, final_top_n=args.final_top_n,
                 max_batches=(5 if args.test else None)
                 if not getattr(args, "beam_val_max_batches", None)
                 else int(args.beam_val_max_batches))
+            best_val_ndcg10, improved = save_if_best_val_ndcg10(
+                metrics=beam_metrics, epoch=epoch,
+                previous_best=best_val_ndcg10, path=best_path,
+                payload={
+                    "model_state_dict": model.state_dict(),
+                    "args": _checkpoint_args(args),
+                    "model_type": f"SID-{arch.upper()}",
+                },
+                save=torch.save,
+            )
+            if improved:
+                best_val_epoch = epoch
+                log(f"BEST_VAL epoch={epoch} ndcg10={best_val_ndcg10:.6f} checkpoint={best_path}")
         comp_str = " ".join(f"{k}={comp_sums[k] / max(comp_counts[k], 1):.4f}" for k in sorted(comp_sums))
         log(f"epoch={epoch} train_loss={np.mean(train_losses):.6f} "
             f"val_loss={digit_metrics['loss']:.6f} "
@@ -761,9 +812,14 @@ def train_baseline(args):
         "epoch": epoch,
         "model_state_dict": model.state_dict(),
         "args": _checkpoint_args(args),
-        "model_type": "SID-MLP",
+        "model_type": f"SID-{arch.upper()}",
+        "checkpoint_role": "final_not_selected",
     }, final_path)
-    log(f"Saved final checkpoint: {final_path}")
+    log(f"Saved final checkpoint (not used for paper evaluation): {final_path}")
+    if best_val_epoch is None:
+        raise RuntimeError("No best-validation checkpoint saved; reportable training failed.")
+    log(f"Best validation checkpoint: {best_path}, "
+        f"epoch={best_val_epoch}, Val NDCG@10={best_val_ndcg10:.6f}")
 
 
 # ----------------------------------------------------------------------------
@@ -771,7 +827,7 @@ def train_baseline(args):
 # ----------------------------------------------------------------------------
 
 def main():
-    ap = argparse.ArgumentParser(description="KD baselines on the SID-MLP student")
+    ap = argparse.ArgumentParser(description="KD baselines on MLP, GRU or CNN SID students")
     ap.add_argument("--method", required=True, choices=METHODS)
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--sem_ids", required=True)
@@ -790,6 +846,13 @@ def main():
     ap.add_argument("--epochs", type=int, default=200)
     ap.add_argument("--lr", type=float, default=5e-5)
     ap.add_argument("--weight_decay", type=float, default=1e-4)
+    ap.add_argument("--arch", type=str.lower, default="mlp",
+                    choices=["mlp", "gru", "cnn"])
+    ap.add_argument("--gru_hidden", type=int, default=384)
+    ap.add_argument("--gru_layers", type=int, default=1)
+    ap.add_argument("--conv_dim", type=int, default=256)
+    ap.add_argument("--conv_kernel", type=int, default=3)
+    ap.add_argument("--conv_layers", type=int, default=2)
     ap.add_argument("--num_heads", type=int, default=4)
     ap.add_argument("--attn_dim", type=int, default=384)
     ap.add_argument("--ffn_dim", type=int, default=1024)
