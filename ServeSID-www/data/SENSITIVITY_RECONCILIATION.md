@@ -1,3 +1,55 @@
+# Sensitivity-reference reconciliation (2026-10-12)
+
+**Decision:** For a sensitivity row corresponding to the same named
+arm and default parameter setting as Table 2, the author instructed
+that the main ablation mean is authoritative. The 15 aligned rows
+are explicitly marked with a dagger in `supplement.tex`. They are
+**reference anchors copied from Table 2**, not additional measurements
+at those sweep settings. The original values are recorded in the
+historical discrepancy section below; no prior reported measurements
+are silently deleted.
+
+| Table | Anchored setting | Source (MLP main ablation) |
+|---|---|---|
+| M sensitivity | M=64 | HServe only |
+| B sensitivity | B=40 | HServe + Plain Pair |
+| beta sensitivity | beta=0 | HServe only, because no direct Pair Loss |
+| beta sensitivity | beta=31.42 | Full ServeSID |
+| tau sensitivity | tau=1 | HServe only |
+
+The M, B, beta and tau results for all other settings retain the
+independently supplied values. This means these comparisons are
+**reference-anchored summaries**, not matched-seed controlled
+hyperparameter scans. Original training/evaluation logs are needed
+before presenting differences as rigorous sensitivity effects.
+
+## Original provided reference-row values (before paper precedence)
+
+All vectors below are in dataset order Beauty / Toys / Video Games.
+M and B vectors have metric order R@5, NDCG@5, R@10, NDCG@10;
+beta and tau have metric order R@10, NDCG@10.
+
+| Parameter | Original separately supplied row | Authoritative paper row |
+|---|---|---|
+| M=64 Beauty | .0437 .0288 .0670 .0364 | .0436 .0287 .0670 .0363 |
+| M=64 Toys | .0393 .0246 .0637 .0324 | .0390 .0245 .0633 .0323 |
+| M=64 Video Games | .0598 .0391 .0932 .0498 | .0597 .0390 .0935 .0499 |
+| B=40 Beauty | .0440 .0290 .0675 .0366 | .0435 .0288 .0668 .0363 |
+| B=40 Toys | .0400 .0250 .0640 .0328 | .0388 .0246 .0631 .0322 |
+| B=40 Video Games | .0601 .0393 .0940 .0501 | .0595 .0389 .0936 .0497 |
+| beta=0 Beauty | .0675 .0366 | .0670 .0363 |
+| beta=0 Toys | .0640 .0328 | .0633 .0323 |
+| beta=0 Video Games | .0940 .0501 | .0935 .0499 |
+| tau=1 Beauty | .0670 .0364 | .0670 .0363 |
+| tau=1 Toys | .0637 .0324 | .0633 .0323 |
+| tau=1 Video Games | .0932 .0498 | .0935 .0499 |
+
+The beta=31.42 row matched Full before reconciliation (no numerical
+change). The cross-table trend narratives were revised to avoid
+unsupported monotonicity or 'optimal B' claims.
+
+---
+
 # Sensitivity vs. Main Ablation: Protocol Reconciliation
 
 This is an audit note for the author's 2026-10-12 four sensitivity tables.
