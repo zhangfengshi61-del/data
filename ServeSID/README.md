@@ -112,6 +112,59 @@ training-only beam dumps.
 reported checkpoint results or regenerate experiments. Re-evaluation
 requires the actual training data, seeds and corresponding checkpoints.
 
+## Reproducible validation checkpointing and multi-backbone KD baselines
+
+Both `sid_mlp.cli.train` and `sid_mlp.kd_baselines` now select the
+`*_best_val_ndcg10.pth` checkpoint from **complete validation** ranking
+evaluations (every five epochs plus the last epoch). The validation loader
+**never falls back to test**. If a validation split is absent or empty,
+training fails instead of reporting a test-selected result. If
+`--beam_val_max_batches` is supplied outside the debug `--test` mode,
+training also fails; debug-selected artifacts are explicitly marked
+`selection_scope=debug_subset` and stored with a `_debug` suffix.
+Use the Best-Val checkpoint, not `*_final.pth`, to evaluate a
+reportable result. Each best checkpoint records its epoch, NDCG@10
+value, validation request count, selected split, seed, backbone
+architecture and corresponding hyperparameters.
+
+The external KD runner supports all three backbone families for
+`rd`, `rrd`, `rcek`, `lohrec`, `gkd`, `distillm2`, and `smartgr`.
+Its `--arch` choice uses the same `SIDMLP`, `SIDGRU` and
+`SIDCNN` classes as Full training, and its checkpoints load via
+`sid_mlp.inference.build_sidmlp_from_checkpoint`. GKD and
+DistiLLM-2 share the same on-policy context-caching interface across
+the three backbones.
+
+To run a single baseline:
+
+```bash
+python -m sid_mlp.kd_baselines --method rrd --arch gru \
+  --checkpoint "$TEACHER_CKPT" --sem_ids "$SEM_IDS" \
+  --dataset Amazon2014 --category Beauty \
+  --dataset_tag Amazon2014_Beauty \
+  --val_dataset_tag Amazon2014_Beauty_val \
+  --graph_dir "$GRAPH_DIR" --beam_dump "$BEAM_DUMP" \
+  --seed 42 --epochs 200 --beam_size 50
+```
+
+To sequentially run seven baseline methods on all architectures and
+seeds 42/43/44, set the above path variables plus `CATEGORY`,
+`DATASET_TAG`, and `VAL_DATASET_TAG`, then use
+`bash scripts/train_kd_baselines_all_arches.sh`. The script uses
+consistent beam and validation settings and names every checkpoint
+by method, architecture, hyperparameters, and seed. It does not
+change any previously reported metrics.
+
+The PyTorch CPU CI smoke test trains a synthetic batch through each
+architecture and verifies strict, identical checkpoint reload by the
+real inference loader. Full-scale reproduction of the published
+tables still requires the authors' datasets, teacher dumps, actual
+configurations, original seeds, and GPU checkpoints; these tests do
+not establish that historical paper scores were generated with the
+newly corrected Full Loss or selected checkpoints. In particular,
+published GRU parameter counts must be re-checked against the exact
+training configuration/checkpoint.
+
 ## Cost and M/B audit (J4)
 
 The current Full objective has **M=64 cached candidate slots**,
