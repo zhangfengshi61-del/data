@@ -2,9 +2,13 @@
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.945\textwidth]{Figures/diag_hierarchy.pdf}
-\caption{Hierarchical candidate-preference mismatch. Teacher and student
-assign different probability mass to shared SID prefix groups
-(illustrative example).}
-\Description{Two Semantic-ID prefix trees share the same branching structure, but teacher and student allocate different probability mass to several colored branches and consequently return different Top-K item orders.}
+\caption{Illustrative teacher--student SID candidate ranking mismatch.
+Tree nodes display cumulative SID log-scores, whereas HServe obtains
+prefix-group probabilities by normalizing the complete-candidate scores
+over a common support and summing descendant probabilities.
+Selected paths are shown.}
+\Description{Teacher and student SID trees show selected paths, cumulative
+log-scores and candidate orders. The displayed node scores are not
+normalized HServe prefix marginals.}
 \label{fig:hierarchical}
 \end{figure*}
