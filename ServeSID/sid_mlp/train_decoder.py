@@ -35,6 +35,10 @@ from .losses import (
     topk_correct,
 )
 from .models import SIDMLP, SIDMLPJP, SIDMLPPD, SIDGRU, SIDCNN  # s23/s24 + GRU/CNN students
+from .validation_selection import (
+    require_validation_split, validate_selection_settings,
+    should_beam_validate, save_if_best_val_ndcg10,
+)
 
 import torch.nn.functional as F
 
@@ -58,6 +62,14 @@ def _save_prefix(args):
         f"_hhid{args.head_hidden}_hl{args.head_layers}"
         f"_lr{_fmt_float(args.lr)}"
     )
+    arch = str(getattr(args, "arch", "mlp") or "mlp").lower()
+    if arch != "mlp":
+        base += f"_{arch}"
+        if arch == "gru":
+            base += f"_h{int(args.gru_hidden)}_l{int(args.gru_layers)}"
+        elif arch == "cnn":
+            base += f"_c{int(args.conv_dim)}_k{int(args.conv_kernel)}_l{int(args.conv_layers)}"
+    base += f"_seed{int(args.seed)}"
     if args.run_tag:
         base += f"_{args.run_tag}"
     return base
@@ -329,7 +341,7 @@ def _setup_beam_validation(args, device):
             raise RuntimeError("SID-MLP++ validation failed to patch the TIGER teacher encoder.")
         print(f"Patched TIGER teacher encoder with SID-MLP++ encoder for validation: {args.encoder_ckpt}", flush=True)
 
-    split = "val" if "val" in pipeline.tokenized_datasets else "test"
+    split = require_validation_split(pipeline.tokenized_datasets)
     loader = DataLoader(
         pipeline.tokenized_datasets[split],
         batch_size=args.val_batch_size,
@@ -363,6 +375,7 @@ def _check_sidmlp_pp_training_tags(args):
 
 
 def train_sidmlp(args):
+    validate_selection_settings(args)
     validate_full_paper_objective(args)
     _check_sidmlp_pp_training_tags(args)
     if not getattr(args, "graph_dir", None):
@@ -535,8 +548,15 @@ def train_sidmlp(args):
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     beam_t5 = beam_loader = beam_valid_tensors = None
-    if args.epochs >= BEAM_VAL_INTERVAL and variant != "jp":  # s24: JP evals via frontier only
-        beam_t5, beam_loader, beam_valid_tensors = _setup_beam_validation(args, device)
+    if variant == "jp":
+        raise ValueError(
+            "JP frontier-only evaluation is not yet compatible with "
+            "validation-NDCG@10 checkpoint selection; use a standard MLP/GRU/CNN student."
+        )
+    beam_t5, beam_loader, beam_valid_tensors = _setup_beam_validation(args, device)
+    best_val_ndcg10 = float("-inf")
+    best_val_epoch = None
+    best_path = os.path.join(ckpt_dir, f"{save_prefix}_best_val_ndcg10.pth")
 
     log(f"Training {'SID-MLP++' if args.encoder_ckpt else 'SID-MLP'}")
     log(f"train={len(train_ds)} val={len(val_ds)} checkpoint_dir={ckpt_dir}")
@@ -590,7 +610,7 @@ def train_sidmlp(args):
         scheduler.step()
         digit_metrics = _validate_digits(args, model, val_loader, device)
         beam_metrics = {}
-        if beam_t5 is not None and epoch % BEAM_VAL_INTERVAL == 0:
+        if should_beam_validate(epoch, args.epochs, BEAM_VAL_INTERVAL):
             beam_metrics = evaluate_loader(
                 model,
                 beam_t5,
@@ -603,6 +623,20 @@ def train_sidmlp(args):
                 if not getattr(args, "beam_val_max_batches", None)
                 else int(args.beam_val_max_batches),
             )
+            best_val_ndcg10, improved = save_if_best_val_ndcg10(
+                metrics=beam_metrics, epoch=epoch,
+                previous_best=best_val_ndcg10, path=best_path,
+                payload={
+                    "model_state_dict": model.state_dict(),
+                    "args": _checkpoint_args(args),
+                    "model_type": "SID-MLP++" if args.encoder_ckpt else
+                                  f"SID-{str(getattr(args, 'arch', 'mlp')).upper()}",
+                },
+                save=torch.save,
+            )
+            if improved:
+                best_val_epoch = epoch
+                log(f"BEST_VAL epoch={epoch} ndcg10={best_val_ndcg10:.6f} checkpoint={best_path}")
 
         train_loss = float(np.mean(train_losses)) if train_losses else float("inf")
         comp_str = " ".join(
@@ -644,3 +678,7 @@ def train_sidmlp(args):
             if device.type == "cuda" else
             f"TRAINTIME total_sec={_time.perf_counter() - _t_all:.1f} CPU")
     log(f"Saved final checkpoint: {final_path}")
+    if best_val_epoch is None:
+        raise RuntimeError("No best-validation checkpoint saved; a reportable run requires it.")
+    log(f"Best validation checkpoint: {best_path} "
+        f"epoch={best_val_epoch} Val NDCG@10={best_val_ndcg10:.6f}")
