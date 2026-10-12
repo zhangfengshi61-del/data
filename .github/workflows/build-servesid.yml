@@ -17,6 +17,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Regenerate manuscript tables
         run: python3 ServeSID-www/scripts/gen_tables.py
+      - name: Verify sensitivity anchors against published ablation
+        run: python3 ServeSID-www/scripts/check_sensitivity_references.py
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
