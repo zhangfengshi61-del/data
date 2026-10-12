@@ -190,15 +190,14 @@ Unlike direct prefix-survival objectives, HServe distills probability
 marginals induced by a shared distribution over complete SID items.
 
 \subsection{Efficient Generative Recommendation}
-Speculative and blockwise decoding amortize autoregressive inference
-through parallel proposals or verification
-\citep{specdec,specsample,blockwise}; recommendation-specific systems
-explore speculative retrieval and faster inference
-\citep{specgr,atspeed}. Compact students instead reduce per-step
-computation without requiring a verifier. SID-MLP \citep{sidmlp} supports verify-free SID prediction with
-lightweight heads. \method\ retains the same serving architecture:
-teacher lists and structural supervision are training-only. We
-distinguish those offline costs from inference efficiency.
+Speculative decoding \citep{specdec,specsample} and blockwise
+prediction \citep{blockwise} reduce autoregressive decoding cost.
+Recommendation-specific approaches further study accelerated
+retrieval \citep{specgr,atspeed}. Another direction uses compact
+students to reduce per-step computation without verification.
+SID-MLP \citep{sidmlp} predicts SIDs using lightweight heads;
+\method\ preserves its serving architecture, applying structural
+supervision during training only.
 
 \subsection{Knowledge Distillation for Recommendation}
 Knowledge distillation transfers predictions or sequences from
@@ -309,7 +308,10 @@ coincide with externally defined semantic product categories.
 candidates $i^+$ and $i^-$, define the score gap for
 $m\in\{T,S\}$ as
 \begin{equation}
-G_m=s_m(i^+\mid u)-s_m(i^-\mid u)=\sum_{d=1}^{L}\Delta G_m^{(d)},
+\begin{aligned}
+G_m &= s_m(i^+\mid u)-s_m(i^-\mid u)\\
+&=\sum_{d=1}^{L}\Delta G_m^{(d)},
+\end{aligned}
 \label{eq:gap-decomp}
 \end{equation}
 where $\Delta G_m^{(d)}$ is the difference between their conditional
