@@ -46,10 +46,14 @@ or combined numerically with Beauty/Toys/VG results.
 
 - Training: 131,413 packed rows, 131,221 mapped rows; test 22,363
   packed / 22,171 mapped rows.
-- J4 training probe uses **40 teacher candidates x 4 SID depths**, while
-  current Full paper specifies **M=64**; B remains 40 in both. As a
-  result, J4 training time/memory are illustrative costs for M=40,
-  not the confirmed per-epoch overhead of M=64.
+- **Author correction (2026-10-12): J4 training cost used M=64
+  teacher candidate support across four SID depths.** The initial J4
+  report's phrase "40 teacher candidates x 4 depths" was incorrect;
+  the cost table numbers themselves are unchanged. The outsider bound
+  is independently B=40 and the cache-export beam width was recorded
+  as 40. These are separate controls, not evidence that M=40 was used.
+  This corrected protocol is author-reported; original GPU logs and
+  candidate-dump metadata are not present here for independent audit.
 - Shared cache: Beauty teacher export 26.2 min, beam-dump 105.4 MB,
   teacher-top-K 8.5 MB, fp32 k0 hidden-state cache 5.7 GB.
   This is shared **in the J4 paired-run protocol**, not required for
@@ -98,8 +102,10 @@ one ordinary inference throughput run and one synchronized,
 post-warmup per-phase and full-resident-memory audit. It does not
 automatically reproduce historical teacher timing.
 
-For paper-aligned **M=64** cost measurements, first regenerate the
-full-width teacher beam dump and run Full (without direct Pair Loss)
-with `BENCH_COST=1`. Compare training with the exact same dataset,
-epoch and validation schedule, rather than comparing 3-epoch
-train-step probes to total 200-epoch walls.
+The supplied J4 training numbers are now attributed to **M=64**
+following the author's correction; there is no basis to relabel them
+as M=40 or to invent replacement timings. To independently reproduce
+them, check the recorded beam dump has at least 64 candidate slots,
+run Full without direct Pair Loss using `BENCH_COST=1`, and match the
+data, epochs, hardware and validation schedule. The cached beam-export
+width of 40 must not be conflated with the HServe support size.
