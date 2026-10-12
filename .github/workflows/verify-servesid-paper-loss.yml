@@ -1,4 +1,4 @@
-name: Verify ServeSID paper loss
+name: Verify ServeSID paper loss and reproducibility
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - ".github/workflows/verify-servesid-paper-loss.yml"
 
 jobs:
-  verify:
+  policy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,5 +20,25 @@ jobs:
           python-version: "3.11"
       - name: Python syntax
         run: python -m compileall -q ServeSID/sid_mlp ServeSID/tests
-      - name: Paper objective contract tests
-        run: python -m unittest discover -s ServeSID/tests -p "test_*.py" -v
+      - name: Stdlib loss, cost, and validation policy tests
+        run: |
+          python -m unittest discover -s ServeSID/tests -p "test_paper_loss_contract.py" -v
+          python -m unittest discover -s ServeSID/tests -p "test_cost_audit_contract.py" -v
+          python -m unittest discover -s ServeSID/tests -p "test_validation_selection.py" -v
+
+  cpu-backbone-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy tqdm
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Actual MLP/GRU/CNN forward-backward and checkpoint inference replay
+        env:
+          PYTHONPATH: ServeSID
+        run: python -m unittest discover -s ServeSID/tests -p "test_backbone_cpu_smoke.py" -v
