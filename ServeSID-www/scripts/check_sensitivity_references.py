@@ -40,8 +40,6 @@ for label, value, method, metrics in tables:
                  for c in line.split("&")]
         if cells[0] in domains:
             current = cells[0]
-        if r"\textsuperscript" not in line:
-            continue
         if len(cells) < len(metrics) + 2:
             continue
         if cells[0] and cells[0] not in domains:
