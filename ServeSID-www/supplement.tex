@@ -120,6 +120,20 @@ student-sampled SID losses. SmartGR combines SID-level KL
 with beam-prefix preference constraints. Each baseline
 uses validation NDCG@10 for checkpoint selection.
 
+\paragraph{Reference reproduction settings.}
+The common external-baseline training entrypoint defaults to 200
+epochs, batch size 512, learning rate $5\times10^{-5}$, and
+base digit KD with coefficient $\alpha=0.7$ on teacher KL
+(and $0.3$ on digit CE). Its objective-specific defaults are:
+RD top-$K=50$, rank temperature $2$, decay $0.01$,
+and 100 dynamically sampled negatives;
+RRD $K=10$, $L=40$; RCE-KD $K=L=50$,
+$\tau=1$, $T=10$, $\beta=5$; GKD mixture $0.5$;
+DistiLLM-2 skew coefficient $0.9$, contrastive coefficient
+$0.1$, eight sampled SIDs, and on-policy mixture $0.5$.
+These are executable entrypoint defaults, not a claim of
+an independently verified tuning-search budget.
+
 \section{Full Main-Result Tables}
 \label{sec:sup-main}
 
