@@ -34,15 +34,17 @@ for label, value, method, metrics in tables:
     current = ""
     seen = set()
     for line in text[start:end].splitlines():
-        if "&" not in line or r"\textsuperscript" not in line:
+        if "&" not in line:
             continue
         cells = [c.strip().rstrip("\\").strip()
                  for c in line.split("&")]
-        if len(cells) < len(metrics) + 2:
-            continue
         if cells[0] in domains:
             current = cells[0]
-        elif cells[0] != "":
+        if r"\textsuperscript" not in line:
+            continue
+        if len(cells) < len(metrics) + 2:
+            continue
+        if cells[0] and cells[0] not in domains:
             continue
         param = cells[1].split("\\", 1)[0].strip()
         if param != value:
