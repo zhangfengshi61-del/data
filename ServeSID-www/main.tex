@@ -452,8 +452,8 @@ predictor is introduced: all marginals are deterministic aggregations
 of the same complete-candidate scores. These groupings are defined by
 code identity rather than manually assigned product categories.
 
-\textbf{Multi-level alignment.} HServe minimizes the teacher-to-student
-KL divergence at every depth:
+\textbf{Multi-level KL.} HServe aligns teacher and student
+prefix distributions at each SID depth:
 \begin{equation}
 \mathcal L_{\mathrm{HServe}}(u)=
 \sum_{d=1}^{L}\alpha_d\,
