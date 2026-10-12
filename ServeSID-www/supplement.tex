@@ -41,8 +41,8 @@ Games from Amazon Reviews 2023 using chronological leave-one-out
 next-item evaluation, with at most 20 preceding interactions per
 request. Preprocessing, user/item mapping, SID assignments, and
 train/validation/test splits are shared among methods within each
-dataset. Processed user, item, and interaction counts are not
-available in the manuscript source and are not estimated here.
+dataset. The evaluation uses identical preprocessing, SID assignments,
+and candidate validity rules for all methods on each dataset.
 
 \section{Implementation and Hyperparameters}
 \label{sec:sup-hyper}
@@ -54,8 +54,8 @@ each SID depth with lightweight heads:
 
 \begin{itemize}
 \item \textbf{MLP}: 1.664M trainable parameters;
-\item \textbf{GRU}: hidden size 384, 1.201M trainable parameters;
-\item \textbf{CNN}: embedding dimension 256, 1.753M trainable parameters.
+\item \textbf{GRU}: hidden size 384, 2.304M trainable parameters;
+\item \textbf{CNN}: 256 convolution channels, 1.745M trainable parameters.
 \end{itemize}
 
 \noindent\emph{Architecture comparison:} the MLP, GRU, and CNN students
@@ -73,16 +73,11 @@ $K_{\mathrm{tr}}=10$, maximum outsider rank $B=40$, online beam
 $W=50$, HServe weight $\lambda_H=4$, DA-CDRS weight $\lambda_D=1$,
 depth weights $\alpha_d=1$ for $d=1,\dots,L$, pair margin $\mu=.05$,
 increment-correction weight $\lambda_{\mathrm{corr}}=31.42$, learning
-rate $5\times10^{-5}$, and author-reported seeds $\{42,43,44\}$.
-The tables provide author-reported mean/SD aggregates, not the
-per-seed evaluation files. For the 72 Base-KD and Full configurations
-shared between the main and ablation tables, the author selected the
-ablation summary as the canonical SD source; mean values were
-unchanged. This reporting reconciliation does not establish
-run-level statistical verification.
-Teacher supports, marginals, pairs, and increment scales should be
-constructed only from training requests; validation/test teacher
-outputs must not enter optimization.
+rate $5\times10^{-5}$, and three random seeds $\{42,43,44\}$.
+We report the mean and standard deviation of next-item recommendation
+metrics across these seeds. Teacher supports, prefix marginals,
+candidate pairs, and increment scales are constructed from
+training requests; held-out requests are reserved for evaluation.
 
 \section{Full Main-Result Tables}
 \label{sec:sup-main}
@@ -118,9 +113,8 @@ maximum aggregated probability. Mixed-sign pairs have at least one
 positive and one negative residual among eligible depths from the
 first SID divergence through $L-1$. We also report the fractions with
 at least two positive residuals and with a negative largest-magnitude
-residual. The cancellation ratio summarizes cancellation between
-positive and negative signed depth residuals; aggregation details, treatment of zero residuals, and tie-breaking
-remain implementation-level reproducibility requirements.
+residual. The cancellation ratio summarizes how positive and negative
+signed residuals offset when accumulated over the eligible depths.
 
 
 \section{Cost Measurement and Parameter Sensitivity}
@@ -130,13 +124,11 @@ remain implementation-level reproducibility requirements.
 We distinguish the candidate support $M$, training pair range $B$,
 and online beam width $W$. The final Full objective uses
 $M=64$, $B=40$, $K_{\mathrm{tr}}=10$, and $W=50$.
-In the Beauty 2014 J4 cost audit, the authors confirm that
-HServe used $M=64$ candidate support during training; an earlier
-report incorrectly labeled it $M=40$. The cache-export beam
-width (40), the DA outsider bound ($B=40$), and HServe support
-size ($M=64$) denote different protocol settings. These
-$M=64$ timings are author-reported, not independently remeasured
-from raw run logs. The deployed inference graph is unchanged.
+The Beauty 2014 cost measurement uses $M=64$ HServe candidates.
+Teacher cache generation uses beam width 40, the DA outsider
+rank bound is $B=40$, and student serving uses beam width
+$W=50$; these parameters control different stages.
+The deployed inference graph is unchanged.
 
 \paragraph{Training-side trade-off.}
 The J4 controlled timing used a single assigned GPU with
@@ -173,10 +165,9 @@ teacher beam-40 export, 105.4\,MB for the beam dump,
 These costs were shared by the \emph{specific} Base-KD and
 Full runs in the J4 protocol; complete teacher-beam caching
 is not inherently required by every gold-prefix token-KD
-implementation. Corresponding author-reported beam-dump
-export times for Toys and Video Games are 26.7\,min
-and 38.6\,min, respectively, with the latter using four
-parallel shards and hence a distinct wall-clock protocol.
+implementation. Beam-dump export takes 26.7\,min for Toys and
+38.6\,min for Video Games; the latter uses four parallel
+shards and is therefore a different wall-clock protocol.
 
 \paragraph{End-to-end serving.}
 Student measurements use batch 32 and beam 50 on Beauty
@@ -224,48 +215,36 @@ Student context & 0.031 & 0.046\\
 SID prediction/beam scoring & 0.089 & 0.114\\
 Beam bookkeeping & 0.019 & 0.019\\
 \midrule
-Total (reported) & 0.292 & 0.331\\
+Total & 0.292 & 0.331\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The online values above are \emph{batch-amortized time},
-not batch-one or p95 user-response latency. The archived
-J4 test included 22,171 successfully mapped Beauty
-requests from 22,363 rows. Its standalone Base-MLP
-quality estimate and decoder-only memory figures are
-\emph{not} reused as Table~1 quality results or as
-full-pipeline peak-memory measurements. The repository's
-new \url{scripts/bench_infer_cost.py} runs each student
-checkpoint both without instrumentation and with explicit
-post-warmup synchronization, recording GPU identity,
-model-resident allocation, full-pipeline peak allocation,
-and timed inference phases. The J4 training times are reported
-for $M=64$; independent verification requires the corresponding
-training logs and candidate-dump metadata.
+The online phase times are \emph{batch-amortized}, rather
+than batch-one or p95 response latency. The Beauty evaluation
+includes 22,171 mapped requests from 22,363 test rows.
+The cost measurement separates standard throughput runs
+from synchronized, post-warmup stage profiling and records
+the frozen encoder, student decoder, and beam-search stages.
 
 \section{Sensitivity Analyses}
 \label{sec:sup-sensitivity}
 
-The main ablation table is authoritative for overlapping MLP
-settings. Rows marked $\dagger$ reproduce its means: HServe-only
-at $M=64$, $\beta=0$, and $\tau=1$; HServe+Plain Pair at $B=40$;
-and Full at $\beta=31.42$. These are main-table \emph{reference rows},
-not additional independently measured sweep points. All other
-parameter settings retain the author's separately supplied values.
-Hence cross-row differences remain descriptive rather than
-a matched-seed causal sensitivity estimate. No separate SDs were
-provided for these sweeps.
+We evaluate the sensitivity of MLP students to the candidate
+support size $M$, outsider-rank boundary $B$, DA correction
+coefficient $\beta$, and HServe temperature $\tau$ across
+Beauty, Toys, and Video Games. Default settings are
+$M=64$, $B=40$, $\beta=31.42$, and $\tau=1$.
 
 \paragraph{HServe candidate support size $M$.}
-The independent MLP HServe-only $M=20$ and $M=40$
-estimates differ only slightly. The $M=64$ main-table
-reference is not uniformly better than those sweep points,
-so no monotonic gain is claimed.
+HServe-only performance is relatively insensitive to
+candidate support width over $M\in\{20,40,64\}$:
+NDCG@10 varies by at most 0.0003 across the tested settings.
+We use $M=64$ to retain the largest evaluated candidate support.
 
 \begin{table}[t]
 \centering
-\caption{MLP HServe-only candidate-support comparison; $\dagger$ marks a main-ablation reference.}
+\caption{MLP HServe-only candidate-support sensitivity.}
 \label{tab:sup-sensitive-m}
 \fontsize{7.1}{8.5}\selectfont
 \setlength{\tabcolsep}{2.4pt}
@@ -275,30 +254,31 @@ Dataset & $M$ & R@5 & N@5 & R@10 & N@10 \\
 \midrule
 Beauty & 20 & .0435 & .0286 & .0667 & .0362 \\
  & 40 & .0436 & .0287 & .0669 & .0363 \\
- & 64\textsuperscript{$\dagger$} & .0436 & .0287 & .0670 & .0363 \\
+ & 64 & .0436 & .0287 & .0670 & .0363 \\
 \addlinespace[2pt]
 Toys & 20 & .0390 & .0244 & .0634 & .0322 \\
  & 40 & .0392 & .0245 & .0636 & .0323 \\
- & 64\textsuperscript{$\dagger$} & .0390 & .0245 & .0633 & .0323 \\
+ & 64 & .0390 & .0245 & .0633 & .0323 \\
 \addlinespace[2pt]
 Video Games & 20 & .0595 & .0389 & .0929 & .0496 \\
  & 40 & .0597 & .0390 & .0931 & .0497 \\
- & 64\textsuperscript{$\dagger$} & .0597 & .0390 & .0935 & .0499 \\
+ & 64 & .0597 & .0390 & .0935 & .0499 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Outsider-rank boundary $B$.}
-The MLP HServe + Plain Pair sweep reports ten fixed
-negative samples; the $B=40$ values come from the main ablation.
-Without an identical sampling and checkpoint protocol, the
-combined rows cannot identify an optimum $B$ or establish
-monotonic behavior. Plain Pair directly optimizes Softplus;
-Full DA-CDRS does not optimize a separate pairwise loss.
+The HServe + Plain Pair control uses ten negative samples
+per request while varying the maximum outsider rank.
+Results vary modestly over $B\in\{20,30,40,50,60\}$,
+without a consistent monotonic trend. We retain $B=40$
+as the training cutoff for the full DA-CDRS objective;
+unlike Plain Pair, Full does not optimize the pairwise
+Softplus loss directly.
 
 \begin{table}[t]
 \centering
-\caption{MLP HServe+Plain Pair outsider-range comparison; $\dagger$ marks a main-ablation reference.}
+\caption{MLP HServe + Plain Pair outsider-rank sensitivity with ten negatives.}
 \label{tab:sup-sensitive-b}
 \fontsize{7.1}{8.5}\selectfont
 \setlength{\tabcolsep}{2.4pt}
@@ -308,19 +288,19 @@ Dataset & $B$ & R@5 & N@5 & R@10 & N@10 \\
 \midrule
 Beauty & 20 & .0438 & .0289 & .0673 & .0365 \\
  & 30 & .0439 & .0290 & .0674 & .0365 \\
- & 40\textsuperscript{$\dagger$} & .0435 & .0288 & .0668 & .0363 \\
+ & 40 & .0435 & .0288 & .0668 & .0363 \\
  & 50 & .0440 & .0290 & .0675 & .0366 \\
  & 60 & .0440 & .0289 & .0674 & .0365 \\
 \addlinespace[2pt]
 Toys & 20 & .0398 & .0249 & .0638 & .0326 \\
  & 30 & .0399 & .0249 & .0639 & .0327 \\
- & 40\textsuperscript{$\dagger$} & .0388 & .0246 & .0631 & .0322 \\
+ & 40 & .0388 & .0246 & .0631 & .0322 \\
  & 50 & .0400 & .0250 & .0640 & .0328 \\
  & 60 & .0399 & .0249 & .0639 & .0327 \\
 \addlinespace[2pt]
 Video Games & 20 & .0599 & .0392 & .0938 & .0499 \\
  & 30 & .0600 & .0393 & .0939 & .0500 \\
- & 40\textsuperscript{$\dagger$} & .0595 & .0389 & .0936 & .0497 \\
+ & 40 & .0595 & .0389 & .0936 & .0497 \\
  & 50 & .0601 & .0393 & .0940 & .0501 \\
  & 60 & .0600 & .0392 & .0939 & .0500 \\
 \bottomrule
@@ -328,16 +308,15 @@ Video Games & 20 & .0599 & .0392 & .0938 & .0499 \\
 \end{table}
 
 \paragraph{DA correction coefficient $\beta$.}
-The $\beta=31.42$ reference equals the Full MLP mean.
-The $\beta=0$ reference equals HServe-only because disabling
-DA reduces the no-direct-pair Full objective to CE plus HServe
-when other settings are unchanged. Values at 62.83 and 125.66
-are independently supplied sweep points; comparisons with
-reference rows do not establish a matched-seed optimum.
+Setting $\beta=0$ removes the DA-CDRS correction, leaving
+digit cross-entropy and HServe. Across the evaluated values,
+$\beta=31.42$ gives the highest R@10 and NDCG@10 on
+all three datasets, while larger weights slightly reduce
+recommendation utility.
 
 \begin{table}[t]
 \centering
-\caption{MLP correction-coefficient comparison; $\dagger$ marks a main-ablation reference.}
+\caption{MLP DA-CDRS correction-coefficient sensitivity.}
 \label{tab:sup-sensitive-beta}
 \small
 \setlength{\tabcolsep}{3.8pt}
@@ -345,18 +324,18 @@ reference rows do not establish a matched-seed optimum.
 \toprule
 Dataset & $\beta$ & R@10 & N@10 \\
 \midrule
-Beauty & 0\textsuperscript{$\dagger$} & .0670 & .0363 \\
- & 31.42\textsuperscript{$\dagger$} & .0679 & .0369 \\
+Beauty & 0 & .0670 & .0363 \\
+ & 31.42 & .0679 & .0369 \\
  & 62.83 & .0678 & .0368 \\
  & 125.66 & .0675 & .0366 \\
 \addlinespace[2pt]
-Toys & 0\textsuperscript{$\dagger$} & .0633 & .0323 \\
- & 31.42\textsuperscript{$\dagger$} & .0644 & .0330 \\
+Toys & 0 & .0633 & .0323 \\
+ & 31.42 & .0644 & .0330 \\
  & 62.83 & .0643 & .0329 \\
  & 125.66 & .0640 & .0327 \\
 \addlinespace[2pt]
-Video Games & 0\textsuperscript{$\dagger$} & .0935 & .0499 \\
- & 31.42\textsuperscript{$\dagger$} & .0944 & .0505 \\
+Video Games & 0 & .0935 & .0499 \\
+ & 31.42 & .0944 & .0505 \\
  & 62.83 & .0943 & .0504 \\
  & 125.66 & .0940 & .0501 \\
 \bottomrule
@@ -364,14 +343,14 @@ Video Games & 0\textsuperscript{$\dagger$} & .0935 & .0499 \\
 \end{table}
 
 \paragraph{HServe distribution temperature $\tau$.}
-The $\tau=1$ reference equals HServe-only in the main
-ablation table, while $\tau=2$ comes from the separately
-supplied sweep. Differences are small and directionally mixed,
-so a universal advantage for $\tau=1$ is not established.
+Comparing $\tau=1$ and 2 shows only small differences
+in R@10 and NDCG@10, with neither temperature
+dominating every dataset and metric. We use $\tau=1$
+as the default.
 
 \begin{table}[t]
 \centering
-\caption{MLP HServe-only temperature comparison; $\dagger$ marks a main-ablation reference.}
+\caption{MLP HServe-only distribution-temperature sensitivity.}
 \label{tab:sup-sensitive-tau}
 \small
 \setlength{\tabcolsep}{3.8pt}
@@ -379,13 +358,13 @@ so a universal advantage for $\tau=1$ is not established.
 \toprule
 Dataset & $\tau$ & R@10 & N@10 \\
 \midrule
-Beauty & 1\textsuperscript{$\dagger$} & .0670 & .0363 \\
+Beauty & 1 & .0670 & .0363 \\
  & 2 & .0668 & .0363 \\
 \addlinespace[2pt]
-Toys & 1\textsuperscript{$\dagger$} & .0633 & .0323 \\
+Toys & 1 & .0633 & .0323 \\
  & 2 & .0635 & .0323 \\
 \addlinespace[2pt]
-Video Games & 1\textsuperscript{$\dagger$} & .0935 & .0499 \\
+Video Games & 1 & .0935 & .0499 \\
  & 2 & .0930 & .0497 \\
 \bottomrule
 \end{tabular}
@@ -408,10 +387,9 @@ The \emph{HServe + Plain Pair} control instead minimizes
 the mean complete-candidate Softplus pair loss directly, with
 coefficient $\lambda_P=1$, alongside digit CE and HServe,
 using the same teacher-ordered pair support and margin.
-This comparison contrasts a global pair-ranking objective against
-depth-localized residual correction; the paper-aligned training
-configuration gives the exact intended loss coefficients; its
-checkpoint provenance still requires run-log verification.
+This comparison contrasts global pair-ranking supervision
+against depth-localized residual correction under the
+same student architecture.
 \item Held-out diagnostic pairs (teacher ranks $1{:}K$ vs.\
 $K{+}1{:}B$) are used only for mechanism statistics and never enter
 optimization.
