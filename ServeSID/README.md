@@ -218,3 +218,38 @@ The full provenance is in `verification/J4_COST_AND_BM_PROVENANCE.md`.
 This code is built on top of the open-source
 [SID-MLP](https://github.com/ztguo715/SID-MLP) repository and the
 GenRec (TIGER) teacher pipeline.
+
+
+### 2026-10-12 review follow-up: code-first loss and baseline checks
+
+The versioned paper implementation is the corrected PR branch
+`servesid-full-loss-no-direct-pair-20261011`, not the earlier `main`
+snapshot. `configs/servesid_final.yaml` fixes the Full training objective
+to digit CE + 4 HServe + 31.42 DA-CDRS, with no separate gold-prefix
+token KL or direct Pair Loss; the detached CF evaluator is
+`softplus(0.05 - G)`. HServe + Plain Pair instead requires
+`--da_w 0 --pair_w 1 --pair_margin 0.05`.
+
+DistiLLM-2 student candidate scores now stay in the autograd graph:
+only sampled SID identities, teacher scoring and comparison labels are
+detached. `tests/test_distillm2_cpu.py` checks that the contrastive
+term actually changes student parameter gradients. On-policy
+teacher conditionals for GKD and DistiLLM-2 are normalized over their
+corresponding 256-token SID codebooks; the test also checks the
+distribution sums and zero JSD under identical codebook conditionals.
+
+**Empirical scope:** these are real implementation corrections.
+Historical GKD/DistiLLM-2 table entries have not been re-evaluated on
+the corrected implementation. If those entries were generated from
+the prior buggy functions, rerun the affected baselines (using
+`scripts/train_kd_baselines_all_arches.sh`) before treating those
+figures as matched comparisons. No other methods require a rerun
+*solely* due to this baseline-specific change.
+
+The beam-dump loader now refuses `list_topm` larger than the
+physical dump width, checks valid counts and `step_logp` shape, and
+reports the candidate-dependent remainder between cached complete
+teacher scores and the sum of four SID log-probabilities. This
+remainder may include EOS. The loader does not silently reinterpret
+historical scores. True request identity alignment and actual
+candidate availability still require the original cache metadata.
