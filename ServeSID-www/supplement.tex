@@ -232,7 +232,7 @@ requests from 22,363 rows. Its standalone Base-MLP
 quality estimate and decoder-only memory figures are
 \emph{not} reused as Table~1 quality results or as
 full-pipeline peak-memory measurements. The repository's
-new \texttt{scripts/bench\_infer\_cost.py} runs each student
+new \url{scripts/bench_infer_cost.py} runs each student
 checkpoint both without instrumentation and with explicit
 post-warmup synchronization, recording GPU identity,
 model-resident allocation, full-pipeline peak allocation,
@@ -400,14 +400,14 @@ cross-entropy plus gold-prefix token KL (Eq.~2 of the main paper).
 ServeSID replaces token KL with HServe and DA-CDRS. The
 complete-pair Softplus function is used only to calculate detached
 DA attribution weights; no direct pairwise anchor loss is optimized.
-The \emph{HServe + Plain Pair} control instead directly minimizes
-$\lambda_P\,|\mathcal B(u)|^{-1}\sum_{b\in\mathcal B(u)}
-\operatorname{softplus}(\mu-G_S(b))$ alongside digit CE and HServe,
+The \emph{HServe + Plain Pair} control instead minimizes
+the mean complete-candidate Softplus pair loss directly, with
+coefficient $\lambda_P=1$, alongside digit CE and HServe,
 using the same teacher-ordered pair support and margin.
 This comparison contrasts a global pair-ranking objective against
 depth-localized residual correction; the paper-aligned training
-configuration specifies $\lambda_P=1$, while its actual checkpoint
-provenance still requires run-log verification.
+configuration gives the exact intended loss coefficients; its
+checkpoint provenance still requires run-log verification.
 \item Held-out diagnostic pairs (teacher ranks $1{:}K$ vs.\
 $K{+}1{:}B$) are used only for mechanism statistics and never enter
 optimization.
