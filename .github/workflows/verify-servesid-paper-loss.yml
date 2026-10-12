@@ -43,7 +43,7 @@ jobs:
       - name: Actual MLP/GRU/CNN forward-backward and checkpoint inference replay
         env:
           PYTHONPATH: ServeSID
-        run: python -m unittest discover -s ServeSID/tests -p "test_backbone_cpu_smoke.py" -v
+        run: python -m unittest discover -s ServeSID/tests -p "test_*cpu*.py" -v
       - name: Confirm manuscript student parameter counts
         env:
           PYTHONPATH: ServeSID
