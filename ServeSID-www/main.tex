@@ -683,19 +683,24 @@ These comparisons support the tested weighting design but do
 not isolate its advantage over an untested positive-residual
 weighting control or establish statistical significance.
 
-\subsection{Training Cost and Scope}
+\subsection{Measured Cost and Serving Scope}
 \label{sec:exp-cost}
 
-\method\ changes only offline training. The deployed student retains
-its encoder, SID heads, validity mask, and beam search without
-teacher queries or reranking. Any serving-time speedup over TIGER
-comes from the lightweight architecture, not a new decoder.
-Offline costs include teacher candidate caching, student candidate
-scoring, pair construction, and depth attribution; matching hardware
-is necessary for numeric latency comparisons. Our study uses one
-frozen TIGER teacher, one tokenizer, and three Amazon domains.
-HServe is limited to teacher-proposed supports, and DA-CDRS weights
-are an operational, not causal, proxy for depth importance.
+On Beauty, an independent-run serving audit (student beam 50,
+batch 32) reports Base/Full throughput of 3445/3423 requests/s
+for GRU and 3028/3024 for CNN; the small differences are
+consistent with an unchanged inference graph. Student timings
+include the frozen T5 history encoder, not just SID heads.
+A separate MLP training-cost audit at \emph{M=40} reports
+4.6/11.5\,s per training epoch and 27/49\,min for complete
+200-epoch Base/Full runs; peak allocated training memory rises
+from 7.4 to 9.2--9.5\,GB. These offline timings are
+configuration-specific: the final paper uses $M=64$, while
+DA-CDRS forms pairs only through $B=40$. Full-width cost
+reproduction requires an $M=64$ teacher dump. The Supplement
+documents the cache, timing phases, and distinct measurement
+boundaries. No new online decoder, teacher-scoring stage, or
+reranker is introduced by \method.
 
 \section{Conclusion and Limitations}
 \label{sec:conclusion}
