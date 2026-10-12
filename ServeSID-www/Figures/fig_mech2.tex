@@ -2,11 +2,12 @@
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.945\textwidth]{Figures/diag_replace.pdf}
-\caption{Illustrative single-depth replacement of a student's
-local log-probability increments by teacher increments, keeping the
-other depths fixed. Item scores sum the local increments; a check
-indicates recovery of the teacher-preferred pairwise order, not a
-measured NDCG gain or a training update.}
+\caption{Single-depth score-replacement illustration for a
+teacher-ordered item pair. Each node value is a local log-probability
+increment, and each full-item log-score is their sum.
+Green checks and the red cross indicate whether substituting one
+teacher increment restores the teacher-preferred ordering;
+these are surrogate comparisons, not measured NDCG gains.}
 \Description{A candidate-pair schematic compares three single-SID-depth
 replacements. A check means the teacher-preferred pairwise order
 is restored; a cross means the order remains reversed.}
