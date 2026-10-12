@@ -112,6 +112,49 @@ training-only beam dumps.
 reported checkpoint results or regenerate experiments. Re-evaluation
 requires the actual training data, seeds and corresponding checkpoints.
 
+## Cost and M/B audit (J4)
+
+The current Full objective has **M=64 cached candidate slots**,
+`K_train=10`, **B=40 outsider cutoff**, and **W=50 online beam**.
+The training loader now refuses a teacher dump whose candidate width
+is smaller than M: an M=40 cached dump cannot be reported as
+paper-configured M=64 merely because `list_topm=64` is set.
+For training timers, use `BENCH_COST=1`; logs distinguish
+`train_step_sec` (gradient updates only) and
+`epoch_total_sec` (includes validation). This permits matched-cost
+comparison across Full and Base checkpoints.
+
+To measure the **full student serving pipeline**, with and without
+synchronized stage profiling:
+
+```bash
+python scripts/bench_infer_cost.py \
+  --checkpoint "$MODEL_DIR/Beauty/checkpoint.pth" \
+  --lens_path "$STUDENT_CKPT" \
+  --dataset Amazon2014 --category Beauty \
+  --dataset_tag Amazon2014_Beauty \
+  --sem_ids "$SEM_IDS" --graph_dir "$GRAPH_DIR" \
+  --batch_size 32 --beam_size 50 --repeats 3 \
+  --output_dir "$RESULTS_DIR"
+```
+
+The output `benchmark_summary.json` reports uninstrumented
+amortized requests/second **separately** from the slower synchronized
+per-phase timing. GPU identity and total device memory are read from
+CUDA at runtime. `full_pipeline_peak_allocated_gib` includes all
+resident model tensors in the current inference process, including the
+frozen T5 encoder; it is not a decoder-only memory increment.
+The benchmark does not measure teacher autoregressive decoding,
+does not infer batch-one p95 latency from throughput, and does not
+claim that correcting Full Loss changes its inference graph.
+
+The author's J4 historical training results use **M=40** and therefore
+are not treated as M=64 Full measurements. The previous anonymous
+Scientific (2023) HServe-only M-sweep and HServe+Plain-Pair B-sweep
+used a different objective. Numerical results and their scopes are
+preserved in `verification/J4_COST_AND_BM_PROVENANCE.md`; they
+must not be relabeled as present-day Full-loss sensitivity tests.
+
 ## Acknowledgments
 
 This code is built on top of the open-source
