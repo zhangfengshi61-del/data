@@ -72,6 +72,19 @@ METHODS = ("rd", "rrd", "rcek", "lohrec", "gkd", "distillm2", "smartgr")
 # helpers
 # ----------------------------------------------------------------------------
 
+def teacher_codebook_logp(logits):
+    """Normalize teacher logits on the four 256-token SID codebooks."""
+    if logits.ndim != 3 or logits.shape[1] < 4:
+        raise ValueError("Expected (batch, >=4 decoder steps, vocabulary) teacher logits")
+    parts = []
+    for d, offset in enumerate(DIGIT_OFFSETS[:4]):
+        chunk = logits[:, d, offset:offset + CODEBOOK_SIZE].float()
+        if chunk.shape[-1] != CODEBOOK_SIZE:
+            raise ValueError(f"Missing 256-token codebook at SID position {d+1}")
+        parts.append(F.log_softmax(chunk, dim=-1))
+    return tuple(parts)
+
+
 @torch.inference_mode()
 def teacher_digit_logp(t5, enc, attn, d1, d2, d3):
     """Teacher per-digit log-softmax given teacher-forced prefixes (codebook space).
@@ -88,14 +101,10 @@ def teacher_digit_logp(t5, enc, attn, d1, d2, d3):
     ], 1)
     eo = BaseModelOutput(last_hidden_state=enc)
     out = t5(encoder_outputs=eo, attention_mask=attn, decoder_input_ids=dec_in, return_dict=True)
-    # Match cached gold-prefix logits and student 256-way codebook distributions.
-    # Normalizing across the full vocabulary before slicing gives sub-probabilities.
-    logits = out.logits.float()
-    p1 = F.log_softmax(logits[:, 0, OFF[0]:OFF[0] + CODEBOOK_SIZE], dim=-1)
-    p2 = F.log_softmax(logits[:, 1, OFF[1]:OFF[1] + CODEBOOK_SIZE], dim=-1)
-    p3 = F.log_softmax(logits[:, 2, OFF[2]:OFF[2] + CODEBOOK_SIZE], dim=-1)
-    p4 = F.log_softmax(logits[:, 3, OFF[3]:OFF[3] + CODEBOOK_SIZE], dim=-1)
-    return p1, p2, p3, p4
+    # Use the same 256-way conditional space as cached gold-prefix
+    # logits; full-vocabulary probabilities sliced afterwards do not
+    # sum to one and would invalidate on-policy JSD/skew-KL.
+    return teacher_codebook_logp(out.logits)
 
 
 def sample_valid_quads(valid_quads, batch, k, device):
