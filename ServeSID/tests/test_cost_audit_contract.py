@@ -14,7 +14,7 @@ class TestCostAudit(unittest.TestCase):
         spec = importlib.util.spec_from_file_location("bench_cost", SCRIPT)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        metrics = module.extract_metrics('before\\nMETRICS_JSON {"total": 25, "ndcg10": 0.1}\\n')
+        metrics = module.extract_metrics('before\nMETRICS_JSON {"total": 25, "ndcg10": 0.1}\n')
         self.assertEqual(metrics["total"], 25)
         self.assertEqual(module.summarize([2, 4])["mean"], 3)
         self.assertIsNotNone(module.summarize([2, 4])["sd"])
