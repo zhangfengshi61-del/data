@@ -151,8 +151,8 @@ A second SID property motivates DA-CDRS: complete-candidate score gaps
 decompose into depth-wise relative-score increments. Teacher--student
 residuals can have opposing signs and partially cancel; correcting a
 large absolute error need not favor the teacher-preferred ordering
-(Motivation 3). A direct complete-pair margin supervises only their
-sum, without identifying which SID depth caused the mismatch.
+(Motivation 3). A direct complete-pair margin supervises the summed gap,
+without distinguishing the local increments contributing to it.
 DA-CDRS instead allocates detached, gap-sensitive depth weights
 through single-depth teacher replacements.
 
@@ -210,12 +210,10 @@ RCE-KD \citep{rcekd} exemplify these alternatives. Generative
 distillation includes on-policy GKD \citep{gkd} and contrastive
 DistiLLM-2 \citep{distillm}. More directly, SID-MLP \citep{sidmlp}
 distills SID teachers into compact architectures, while SmartGR
-\citep{smartgr} already uses hierarchy-aware and beam-aware SID
-distillation. Thus hierarchy and ranking are not new to this setting.
-Our distinction is the joint use of hierarchically consistent
-complete-candidate marginals and detached depth weights derived from
-single-depth reductions in a complete-pair evaluation function; that
-pairwise function is not an independent optimization term.
+\citep{smartgr} distills SID hierarchy and beam-level ranking.
+\method\ instead derives prefix marginals from a shared distribution
+over complete candidates and weights increment matching by detached
+single-depth changes to a complete-pair evaluation.
 
 \section{Preliminaries}
 \label{sec:prelim}
@@ -466,9 +464,11 @@ addressing the local-to-candidate gap. Shallower terms align probability
 mass over shared-prefix groups, addressing hierarchical drift.
 Exact leaf-level matching implies agreement at all shallower depths;
 these terms provide explicit multi-granularity optimization constraints
-rather than independent teacher information. The same student candidate
-scores receive gradients from every level, with depth weights
-$\alpha_d$ controlling their relative emphasis.
+rather than independent teacher information. For equal depth weights, the KL chain rule assigns conditional
+prefix divergences at depths 1--4 effective weights $(4,3,2,1)$,
+rather than the leaf-only $(1,1,1,1)$; these are KL terms induced
+by the \emph{supported candidate distribution}, not the decoder's
+untruncated token KL.
 
 \subsection{DA-CDRS: Decision-Attributed Cross-Depth
 Relative-Score Distillation}
@@ -567,9 +567,8 @@ across its training requests; requests without eligible pairs
 contribute no term. If all eligible attributions vanish, the pair
 adds no DA correction. The complete-pair Softplus is used \emph{only} to
 compute detached weights, never as an independent training loss.
-A direct pair-ranking objective is evaluated separately as an
-ablation; improvement over that control does not establish superiority
-over every pairwise or positive-residual weighting alternative.
+The Plain Pair ablation instead directly optimizes the same
+Softplus evaluation on teacher-ordered candidates.
 
 \subsection{Offline Training and Verify-Free Inference}
 \label{sec:method-train-inf}
@@ -580,10 +579,9 @@ and teacher increment statistics from training requests only. The frozen teacher
 At deployment, all teacher-dependent caches and distillation
 computations are discarded. The student encodes history once and retains
 depth-wise SID prediction, validity masking, and constrained
-beam expansion. Consequently, the deployed student retains the original verify-free inference graph without introducing teacher-dependent scoring, auxiliary prediction heads, or reranking stages. The proposed objectives modify only the offline training procedure and do not constitute a new decoding algorithm. Offline cache
-generation, storage, and additional student scoring nevertheless
-increase training-side cost; they should be reported separately from
-serving latency. The method targets recommendation quality under an
+beam expansion. Consequently, the deployed student retains the original verify-free inference graph without introducing teacher-dependent scoring, auxiliary prediction heads, or reranking stages. The proposed objectives modify only the offline training procedure and do not constitute a new decoding algorithm. Cache construction, additional student scoring, and their storage
+costs are reported separately from online serving in
+Section~\ref{sec:exp-cost}. The method targets recommendation quality under an
 unchanged verify-free inference graph, not a guaranteed preservation
 of every teacher Top-$K$ item.
 
@@ -611,10 +609,10 @@ history. All methods within a dataset share identical preprocessing, splits, SID
 
 \textbf{Teacher and students.} A frozen TIGER teacher provides
 supervision in an RQ-VAE SID space with four codes per item and
-codebook size 256. We distill the teacher into three lightweight
-students: an MLP (1.664M trainable parameters), a GRU with hidden size
-384 (2.304M), and a CNN with 256 convolution channels (1.745M). These
-are distinct architectures, not an ordered capacity series. Students
+codebook size 256. We distill the teacher into three light context modules on shared frozen T5 features:
+attention-based MLP (1.664M trainable parameters), GRU with hidden
+size 384 (2.304M), and CNN with 256 channels (1.745M).
+All use prefix-conditioned MLP prediction heads. Students
 share the teacher's SID inventory and employ constrained beam search
 with width 50; the teacher's beam-20 results are reference measurements rather than matched-cost comparisons. Fixing the SID inventory and validity constraints ensures that differences among training objectives are not attributable to changes in item tokenization or admissible candidate sequences. Student beam width is held constant within each architecture.  
 
@@ -638,12 +636,10 @@ independent diagnostics. The base KD objective combines digit CE with
 gold-prefix token KL, whereas the \method\ objective combines digit CE
 with HServe and DA-CDRS without an additional token-KL term. Checkpoint selection uses validation NDCG@10, without selecting on test metrics.
 
-\textbf{Baselines.} We compare with ranking distillation
-(RD, RRD, RCE-KD), generative distillation (GKD, DistiLLM-2),
-and SID-structured objectives (SmartGR and LOHRec-style).
-All are adapted to the same teacher, SID inventory and selected
-MLP, GRU or CNN backbone; implementation details are in the
-Supplement.
+\textbf{Baselines.} Table~\ref{tab:main-all} evaluates adapted
+RD, RRD, RCE-KD, GKD, DistiLLM-2, and SmartGR objectives on
+the same frozen teacher, SID inventory, and student backbones.
+The Supplement details these supervised adaptations.
 
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
@@ -654,17 +650,17 @@ mean/SD summaries appear in the Supplement. Compared with base KD,
 3.7\%, 2.8\%, and 15.4\% for Beauty MLP/GRU/CNN; 4.8\%, 12.8\%,
 and 18.8\% for Toys; and 3.5\%, 2.6\%, and 10.4\% for Video Games.
 Recall@10 also increases from 0.0580 to 0.0686 on Beauty--CNN and
-0.0870 to 0.0944 on Video Games--CNN. Gains across other distillation
-baselines vary by architecture and dataset. Larger gains on CNN do
-not establish a general dependence on model capacity. The aggregate
-SDs alone do not substantiate statistical significance.
+0.0870 to 0.0944 on Video Games--CNN. Against the strongest reported non-\method\ NDCG@10 baseline
+in each setting, the relative gain is 1.61\%--5.13\%.
+The largest base-KD gains occur with CNN students.
+Aggregate SDs alone do not establish paired significance.
 
 \subsection{Ablation Study}
 \label{sec:exp-ablation}
 
 Table~\ref{tab:ablation} isolates the two structural objectives.
 HServe-only outperforms leaf-only KL in all 36 reported metric
-comparisons (e.g., Toys--CNN NDCG@10: 0.0320 vs.\ 0.0305).
+comparisons (e.g., Toys--CNN NDCG@10: 0.0320 vs.\ 0.0297).
 Direct Softplus optimization (\emph{HServe + Plain Pair}) does not
 consistently improve HServe-only: 10 metrics improve, 4 tie, and 22
 decline. Full \method\ exceeds both Plain Pair and uniform depth
@@ -680,11 +676,12 @@ weighting and direct pairwise supervision in the tested settings.
 \subsection{Measured Cost and Serving Scope}
 \label{sec:exp-cost}
 
-On Beauty, an independent-run serving audit (student beam 50,
-batch 32) reports Base/Full throughput of 3445/3423 requests/s
-for GRU and 3028/3024 for CNN; the small differences are
-consistent with an unchanged inference graph. Student timings
-include the frozen T5 history encoder, not just SID heads.
+On Beauty, Base/Full serving throughput is 2769/3036,
+3445/3423, and 3028/3024 requests/s for MLP, GRU, and CNN
+(batch 32, beam 50). Despite the shared inference graph,
+MLP differs by 9.6\% across the independent runs; measured
+throughput is not an architectural invariant. Timings include
+the frozen T5 history encoder, not just SID heads.
 The MLP training-cost measurement at $M=64$ gives
 4.6/11.5\,s per training epoch and 27/49\,min for complete
 200-epoch Base/Full runs; peak allocated training memory rises
