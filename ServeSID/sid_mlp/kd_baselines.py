@@ -582,6 +582,35 @@ def _checkpoint_args(args):
             if not k.startswith("_") and not callable(v)}
 
 
+def build_baseline_student(args, embedding_weight, device):
+    """Build identical student backbones across external KD baselines."""
+    arch = str(getattr(args, "arch", "mlp")).lower()
+    if arch == "gru":
+        model = SIDGRU(
+            embedding_weight, embed_dim=embedding_weight.shape[1],
+            gru_hidden=args.gru_hidden, gru_layers=args.gru_layers,
+            dropout=args.dropout, head_hidden=args.head_hidden,
+            head_layers=args.head_layers,
+        ).to(device)
+    elif arch == "cnn":
+        model = SIDCNN(
+            embedding_weight, embed_dim=embedding_weight.shape[1],
+            conv_dim=args.conv_dim, kernel_size=args.conv_kernel,
+            conv_layers=args.conv_layers, dropout=args.dropout,
+            head_hidden=args.head_hidden, head_layers=args.head_layers,
+        ).to(device)
+    elif arch == "mlp":
+        model = SIDMLP(
+            embedding_weight, embed_dim=embedding_weight.shape[1],
+            d_model=128, num_heads=args.num_heads, ffn_dim=args.ffn_dim,
+            dropout=args.dropout, head_hidden=args.head_hidden,
+            head_layers=args.head_layers, attn_dim=args.attn_dim,
+        ).to(device)
+    else:
+        raise ValueError(f"Unsupported student architecture: {arch}")
+    return model
+
+
 @torch.no_grad()
 def _validate_digits(args, model, loader):
     model.eval()
@@ -669,30 +698,8 @@ def train_baseline(args):
     for param in t5.parameters():
         param.requires_grad_(False)
 
+    model = build_baseline_student(args, embedding_weight, device)
     arch = str(getattr(args, "arch", "mlp")).lower()
-    if arch == "gru":
-        model = SIDGRU(
-            embedding_weight, embed_dim=embedding_weight.shape[1],
-            gru_hidden=args.gru_hidden, gru_layers=args.gru_layers,
-            dropout=args.dropout, head_hidden=args.head_hidden,
-            head_layers=args.head_layers,
-        ).to(device)
-    elif arch == "cnn":
-        model = SIDCNN(
-            embedding_weight, embed_dim=embedding_weight.shape[1],
-            conv_dim=args.conv_dim, kernel_size=args.conv_kernel,
-            conv_layers=args.conv_layers, dropout=args.dropout,
-            head_hidden=args.head_hidden, head_layers=args.head_layers,
-        ).to(device)
-    elif arch == "mlp":
-        model = SIDMLP(
-            embedding_weight, embed_dim=embedding_weight.shape[1],
-            d_model=128, num_heads=args.num_heads, ffn_dim=args.ffn_dim,
-            dropout=args.dropout, head_hidden=args.head_hidden,
-            head_layers=args.head_layers, attn_dim=args.attn_dim,
-        ).to(device)
-    else:
-        raise ValueError(f"Unsupported student architecture: {arch}")
     # stash ctx for the on-policy samplers
     _orig_forward = model.forward
     def _fwd_with_ctx(enc_seq, enc_mask, d1_ids=None, d2_ids=None, d3_ids=None):
