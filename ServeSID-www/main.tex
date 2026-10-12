@@ -711,4 +711,10 @@ tests remain future work.
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{refs,extra-refs}
 
+% Enabled only by submission.tex to produce the single-PDF WWW version.
+\ifdefined\BuildSubmissionAppendix
+  \appendix
+  \input{Figures/submission_appendix.tex}
+\fi
+
 \end{document}
