@@ -70,7 +70,8 @@ ARCH=cnn GRAPH_DIR="$GRAPH_DIR" MODEL_DIR="$MODEL_DIR" BEAM_DUMP="$BEAM_DUMP" \
 # of the Full loss. They are experiment arms, not separate code versions.
 
 # 3. evaluate the best-Val checkpoint with constrained beam search
-bash scripts/infer.sh
+# Replace the path with the checkpoint saved by step 2.
+bash scripts/infer.sh sidmlp Beauty 0 "$STUDENT_BEST_VAL_CHECKPOINT"
 ```
 
 See `scripts/*.sh` and `configs/*.yaml` for dataset paths and hyperparameters
