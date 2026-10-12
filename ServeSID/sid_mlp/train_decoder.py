@@ -70,6 +70,8 @@ def _save_prefix(args):
         elif arch == "cnn":
             base += f"_c{int(args.conv_dim)}_k{int(args.conv_kernel)}_l{int(args.conv_layers)}"
     base += f"_seed{int(args.seed)}"
+    if getattr(args, "test", False):
+        base += "_debug"
     if args.run_tag:
         base += f"_{args.run_tag}"
     return base
