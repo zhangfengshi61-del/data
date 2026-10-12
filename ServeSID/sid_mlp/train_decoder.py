@@ -140,6 +140,12 @@ def validate_full_paper_objective(args):
             "DA-CDRS/Full must not optimize direct Pair Loss: set pair_w=0. "
             "Use da_w=0 with pair_w>0 for HServe + Plain Pair."
         )
+    if hserve > 0 and pair > 0 and da <= 0:
+        if getattr(args, "pair_margin", None) is None:
+            raise ValueError(
+                "HServe + Plain Pair requires pair_margin for softplus(mu-G); "
+                "the legacy gamma-scaled loss is not the paper's Plain Pair control."
+            )
     if hserve > 0 and da > 0:
         if (str(getattr(args, "loss", "")).lower() != "ce"
                 or str(getattr(args, "d4_teacher", "")).lower() != "ce"):
