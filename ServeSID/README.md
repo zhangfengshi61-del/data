@@ -72,11 +72,13 @@ bash scripts/infer.sh
 
 See `scripts/*.sh` and `configs/*.yaml` for dataset paths and hyperparameters
 (candidate support `M`, training cutoff `K_tr`, pair range `B`, loss weights
-`lambda_H`, `lambda_D`, `lambda_corr`, learning rate, and seeds). The GRU
-(`gru_hidden`, `gru_layers`) and CNN (`conv_dim`, `conv_kernel`,
-`conv_layers`) student sizes are also configurable; with the shared
-512-wide prediction heads the defaults give roughly 2.8M and 2.3M
-parameters, and smaller `head_hidden` values reduce the total budget.
+`lambda_H`, `lambda_D`, `lambda_corr`, learning rate, and seeds).
+The paper-aligned model definitions have **1,663,744 MLP**,
+**2,304,000 GRU**, and **1,744,896 CNN** trainable parameters, excluding
+the shared frozen encoder and SID embedding. Re-check these counts with
+`PYTHONPATH=. python scripts/count_student_parameters.py` from `ServeSID/`.
+Different `--arch` values select backbones within the **same** codebase,
+not separate implementation versions.
 
 ## Paper-aligned loss configuration
 
@@ -220,14 +222,13 @@ This code is built on top of the open-source
 GenRec (TIGER) teacher pipeline.
 
 
-### 2026-10-12 review follow-up: code-first loss and baseline checks
+### Implementation integrity checks
 
-The versioned paper implementation is the corrected PR branch
-`servesid-full-loss-no-direct-pair-20261011`, not the earlier `main`
-snapshot. `configs/servesid_final.yaml` fixes the Full training objective
-to digit CE + 4 HServe + 31.42 DA-CDRS, with no separate gold-prefix
-token KL or direct Pair Loss; the detached CF evaluator is
-`softplus(0.05 - G)`. HServe + Plain Pair instead requires
+The maintained implementation is on **`main`**.
+`configs/servesid_final.yaml` sets the paper Full loss to
+digit CE + 4 HServe + 31.42 DA-CDRS, with no separate gold-prefix
+token KL or direct Pair Loss. The detached CF evaluator is
+`softplus(0.05 - G)`. HServe + Plain Pair requires
 `--da_w 0 --pair_w 1 --pair_margin 0.05`.
 
 DistiLLM-2 student candidate scores now stay in the autograd graph:
