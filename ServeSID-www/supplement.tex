@@ -118,6 +118,167 @@ residual. The cancellation ratio summarizes cancellation between
 positive and negative signed depth residuals; aggregation details, treatment of zero residuals, and tie-breaking
 remain implementation-level reproducibility requirements.
 
+
+\section{Cost Measurement and Parameter Sensitivity}
+\label{sec:sup-cost}
+
+\paragraph{Distinct measurement scopes.}
+We distinguish the candidate support $M$, training pair range $B$,
+and online beam width $W$. The final Full objective uses
+$M=64$, $B=40$, $K_{\mathrm{tr}}=10$, and $W=50$.
+A separate J4 cost audit, reported by the authors on Beauty 2014,
+used a \emph{40-slot teacher candidate dump} during the training
+timing probe. The following offline numbers therefore characterize
+the \emph{$M=40$ cost configuration}, not a measured $M=64$ Full
+run. Serving-time execution is independent of the offline teacher
+support size and retains the corresponding Base student's
+inference graph.
+
+\paragraph{Training-side trade-off.}
+The J4 controlled timing used a single assigned GPU with
+PyTorch 2.7.1 and bf16 autocast; pure training-step epochs
+were timed separately from periodic beam validation. The
+200-epoch wall-clock measurements include additional
+evaluation and management costs.
+
+\begin{table}[t]
+\centering\small
+\caption{Beauty training cost in the separately timed
+$M=40$ audit. Epoch timings exclude beam validation;
+complete-run walls include it. Dashes indicate unreported
+matched quantities, not zero.}
+\label{tab:sup-cost-train}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrr}
+\toprule
+Student/run & s/epoch & 200-ep min & Peak GB\\
+\midrule
+MLP Base KD & 4.6 & 27 & 7.4\\
+MLP Full & 11.5 & 49 & 9.2--9.5\\
+GRU Base KD & 5.5 & -- & --\\
+GRU Full & 11.9 & -- & --\\
+CNN Full & 14.5 & 65 & --\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Beauty shared-cache measurements are 26.2\,min for
+teacher beam-40 export, 105.4\,MB for the beam dump,
+8.5\,MB for the separate teacher Top-$K$ lists, and
+5.7\,GB for the fp32 frozen-encoder hidden-state cache.
+These costs were shared by the \emph{specific} Base-KD and
+Full runs in the J4 protocol; complete teacher-beam caching
+is not inherently required by every gold-prefix token-KD
+implementation. Corresponding author-reported beam-dump
+export times for Toys and Video Games are 26.7\,min
+and 38.6\,min, respectively, with the latter using four
+parallel shards and hence a distinct wall-clock protocol.
+
+\paragraph{End-to-end serving.}
+Student measurements use batch 32 and beam 50 on Beauty
+test requests, including frozen-T5 history encoding,
+the student context computation, SID beam scoring,
+masking, and item lookup. Teacher factorized-beam
+throughput was measured with batch 64 and beam 50;
+it is shown as a separate reference rather than
+a matched-batch speedup claim.
+
+\begin{table}[t]
+\centering\small
+\caption{J4 Beauty serving throughput (requests/s).
+Base and Full are independently executed for each
+student architecture; small run-to-run differences are
+not attributed to the distillation objective.}
+\label{tab:sup-cost-online}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrr}
+\toprule
+Architecture & Base KD & Full\\
+\midrule
+MLP (batch 32) & 2769 & 3036\\
+GRU (batch 32) & 3445 & 3423\\
+CNN (batch 32) & 3028 & 3024\\
+\midrule
+TIGER (batch 64) & \multicolumn{2}{c}{1346}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\caption{J4 synchronized phase times (ms per request,
+batch-amortized), with rounded figures. The frozen
+encoder remains on the student serving path.}
+\label{tab:sup-cost-phases}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lrr}
+\toprule
+Phase & GRU Full & CNN Full\\
+\midrule
+Frozen T5 encoder & 0.154 & 0.151\\
+Student context & 0.031 & 0.046\\
+SID prediction/beam scoring & 0.089 & 0.114\\
+Beam bookkeeping & 0.019 & 0.019\\
+\midrule
+Total (reported) & 0.292 & 0.331\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The online values above are \emph{batch-amortized time},
+not batch-one or p95 user-response latency. The archived
+J4 test included 22,171 successfully mapped Beauty
+requests from 22,363 rows. Its standalone Base-MLP
+quality estimate and decoder-only memory figures are
+\emph{not} reused as Table~1 quality results or as
+full-pipeline peak-memory measurements. The repository's
+new \texttt{scripts/bench\_infer\_cost.py} runs each student
+checkpoint both without instrumentation and with explicit
+post-warmup synchronization, recording GPU identity,
+model-resident allocation, full-pipeline peak allocation,
+and timed inference phases. Fully matched $M=64$
+training timings require a fresh cache and corresponding
+run logs.
+
+\paragraph{Earlier exploratory sensitivity scans.}
+For completeness, earlier anonymous supplementary
+experiments on \emph{Amazon Reviews 2023 Scientific}
+(seed 42) provide the following distinct controls.
+They inform the chosen ranges but do \emph{not} establish
+robustness of the present no-direct-Pair-Loss Full model.
+
+\begin{table}[t]
+\centering\small
+\caption{Earlier Scientific HServe-\emph{only} support
+sweep (not current Full).}
+\label{tab:sup-legacy-m}
+\begin{tabular}{crrr}
+\toprule
+$M$ & Jac@10 & R@10 & N@10\\
+\midrule
+20 & .6451 & .0457 & .0242\\
+40 & .6668 & .0461 & .0244\\
+64 & .6731 & .0459 & .0244\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\caption{Earlier Scientific HServe+\emph{Plain Pair}
+outsider-range scan with ten fixed negative samples
+(not current Full).}
+\label{tab:sup-legacy-b}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{crrrrr}
+\toprule
+$B$ & 20 & 30 & 40 & 50 & 60\\
+\midrule
+Jac@10 & .6633 & .6715 & .6739 & .6755 & .6757\\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Reproducibility Notes}
 \label{sec:sup-repro}
 
