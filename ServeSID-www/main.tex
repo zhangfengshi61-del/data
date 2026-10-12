@@ -241,13 +241,11 @@ s_S(i\mid u)&=\sum_{d=1}^{L}\log q_S(z_d^i\mid u,z_{<d}^i).
 \label{eq:serving-scores}
 \end{equation}
 
-Recommendations are obtained by expanding valid SID prefixes with
-constrained beam search and ranking completed candidates by these
-scores. Unlike the Transformer teacher, the verify-free student
-encodes the history once and uses lightweight prediction heads for
-successive SID positions. It requires neither teacher evaluation nor
-an additional verifier during serving. Both models operate in the same
-SID space and obey identical prefix-validity constraints. We keep the
+Recommendations use constrained beam search over valid SID prefixes.
+A frozen T5 history encoder first produces representations; the
+lightweight student heads then score SID positions without invoking
+the teacher's autoregressive decoder or an additional verifier.
+Both models use the same SID space and prefix constraints. We keep the
 teacher and SID assignment fixed, so differences among trained
 students reflect their learned conditional scoring functions rather
 than changes to identifier construction.
@@ -314,13 +312,12 @@ G_m &= s_m(i^+\mid u)-s_m(i^-\mid u)\\
 \end{aligned}
 \label{eq:gap-decomp}
 \end{equation}
-where $\Delta G_m^{(d)}$ is the difference between their conditional
-log-probabilities at position $d$. Here depth denotes the SID
-position, not a neural-network layer. Increments before the
-candidates' first divergent code cancel exactly; later increments may
-have opposite signs. The sum, rather than any individual increment,
-determines the final relative ordering. Shared-prefix aggregation and additive depth-wise scoring motivate
-HServe and DA-CDRS, respectively.
+where $\Delta G_m^{(d)}$ is the conditional log-probability
+difference at SID position $d$, not a network layer.
+Scores for a shared prefix cancel in deterministic evaluation,
+while later increments can have opposite signs.
+Their sum determines the final ordering. These two structures
+motivate HServe and DA-CDRS.
 
 \section{Diagnosis: Structural Limitations of Token-Level Distillation}
 \label{sec:diagnosis}
@@ -460,9 +457,8 @@ KL divergence at every depth:
 \begin{equation}
 \mathcal L_{\mathrm{HServe}}(u)=
 \sum_{d=1}^{L}\alpha_d\,
-\KL\!\left(
-\pi_{T,M}^{(d)}(\cdot\mid u)\|\pi_{S,M}^{(d)}(\cdot\mid u)
-\right),\;\alpha_d\ge0.
+\KL\!\left(\pi_{T,M}^{(d)}\,\|\,\pi_{S,M}^{(d)}\right),
+\quad \alpha_d\ge0.
 \label{eq:hserve}
 \end{equation}
 The leaf term ($d=L$) directly aligns complete-item preferences,
@@ -566,9 +562,10 @@ w_d(b)\,\rho_H\!\left(
 \right).
 \label{eq:correction}
 \end{equation}
-The request loss averages over $\mathcal B(u)$ and is zero if this
-set is empty. If all eligible attributions vanish, that pair adds no
-DA correction. The complete-pair Softplus is used \emph{only} to
+The minibatch DA loss averages over all valid candidate pairs
+across its training requests; requests without eligible pairs
+contribute no term. If all eligible attributions vanish, the pair
+adds no DA correction. The complete-pair Softplus is used \emph{only} to
 compute detached weights, never as an independent training loss.
 A direct pair-ranking objective is evaluated separately as an
 ablation; improvement over that control does not establish superiority
@@ -641,10 +638,12 @@ independent diagnostics. The base KD objective combines digit CE with
 gold-prefix token KL, whereas the \method\ objective combines digit CE
 with HServe and DA-CDRS without an additional token-KL term. Checkpoint selection uses validation NDCG@10, without selecting on test metrics.
 
-\textbf{Baselines.} We compare against representative distillation
-objectives: RD and RRD transfer ranking structure; GKD and DistiLLM-2
-provide generation-aware distillation; RCE-KD adapts cross-entropy
-distillation to ranking objectives; SmartGR exploits SID-specific distillation signals. Each method keeps its core supervision principle under the same teacher, tokenizer, backbone, and protocol; adaptations are detailed in the supplementary material. Within each student architecture, comparisons retain the same evaluation protocol and backbone.
+\textbf{Baselines.} We compare with ranking distillation
+(RD, RRD, RCE-KD), generative distillation (GKD, DistiLLM-2),
+and SID-structured objectives (SmartGR and LOHRec-style).
+All are adapted to the same teacher, SID inventory and selected
+MLP, GRU or CNN backbone; implementation details are in the
+Supplement.
 
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
@@ -704,8 +703,8 @@ We study structured preference distillation for lightweight SID
 recommendation. HServe directly aligns complete-candidate and
 consistent shared-prefix distributions; DA-CDRS allocates depth-wise
 Huber matching through detached complete-pair evaluation
-improvements. The jointly trained student retains verify-free
-inference. Current evaluation is restricted to one teacher family,
+improvements. The jointly trained student retains frozen-encoder,
+verify-free-decoder inference. Current evaluation is restricted to one teacher family,
 one SID tokenizer, and three product domains. Teacher-proposed
 supports may omit relevant items, and the attribution is not causal;
 comparison with positive-residual weighting and broader deployment
