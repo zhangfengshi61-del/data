@@ -88,11 +88,13 @@ def teacher_digit_logp(t5, enc, attn, d1, d2, d3):
     ], 1)
     eo = BaseModelOutput(last_hidden_state=enc)
     out = t5(encoder_outputs=eo, attention_mask=attn, decoder_input_ids=dec_in, return_dict=True)
-    lp = F.log_softmax(out.logits.float(), dim=-1)
-    p1 = lp[:, 0, OFF[0]:OFF[0] + CODEBOOK_SIZE]
-    p2 = lp[:, 1, OFF[1]:OFF[1] + CODEBOOK_SIZE]
-    p3 = lp[:, 2, OFF[2]:OFF[2] + CODEBOOK_SIZE]
-    p4 = lp[:, 3, OFF[3]:OFF[3] + CODEBOOK_SIZE]
+    # Match cached gold-prefix logits and student 256-way codebook distributions.
+    # Normalizing across the full vocabulary before slicing gives sub-probabilities.
+    logits = out.logits.float()
+    p1 = F.log_softmax(logits[:, 0, OFF[0]:OFF[0] + CODEBOOK_SIZE], dim=-1)
+    p2 = F.log_softmax(logits[:, 1, OFF[1]:OFF[1] + CODEBOOK_SIZE], dim=-1)
+    p3 = F.log_softmax(logits[:, 2, OFF[2]:OFF[2] + CODEBOOK_SIZE], dim=-1)
+    p4 = F.log_softmax(logits[:, 3, OFF[3]:OFF[3] + CODEBOOK_SIZE], dim=-1)
     return p1, p2, p3, p4
 
 
@@ -351,6 +353,22 @@ def _skew_kl(p_t_log, p_s_log, alpha=0.9):
     return (p_s * (p_s_log - torch.log(m.clamp_min(1e-10)))).sum(-1)
 
 
+def contrastive_student_sid_loss(s_seq, t_seq, temperature=1.0):
+    """Contrast sampled SID sequences against gold with student gradients.
+
+    Teacher scores and membership labels are detached, not student logits.
+    """
+    if temperature <= 0:
+        raise ValueError("contrastive temperature must be positive")
+    with torch.no_grad():
+        phi = (t_seq.detach() - s_seq.detach()) / 4.0
+        pos_mask = phi >= phi.median(1, keepdim=True).values
+        pos_mask[:, 0] = True  # gold SID is always a positive
+    logits = s_seq / temperature
+    pos_logits = logits.masked_fill(~pos_mask, float("-inf"))
+    return (torch.logsumexp(logits, 1) - torch.logsumexp(pos_logits, 1)).mean()
+
+
 def loss_distillm2(args, model, enc, msk, batch, extras, list_masks, t5, valid_quads, theta_raw=None):
     d1, d2, d3, _d4, tl1, tl2, tl3, tl4, gd1, gd2, gd3, gd4 = batch[3:15]
     B = enc.shape[0]
@@ -426,26 +444,24 @@ def loss_distillm2(args, model, enc, msk, batch, extras, list_masks, t5, valid_q
         ar = torch.arange(Bn * Mn, device=flat.device)
         t_seq = (tp1[ar, flat[:, 0]] + tp2[ar, flat[:, 1]]
                  + tp3[ar, flat[:, 2]] + tp4[ar, flat[:, 3]]).view(Bn, Mn)
-        ctx_r = ctx0.repeat_interleave(Mn, 0)
-        ef1 = model.embedding(flat[:, 0] + OFF[0])
-        ef2 = model.embedding(flat[:, 1] + OFF[1])
-        ef3 = model.embedding(flat[:, 2] + OFF[2])
-        lf1 = logits1.repeat_interleave(Mn, 0)
-        lf2 = model.head2(torch.cat([ctx_r, ef1], 1))
-        lf3 = model.head3(torch.cat([ctx_r, ef1, ef2], 1))
-        lf4 = model.head4(torch.cat([ctx_r, ef1, ef2, ef3], 1))
-        s_seq = (F.log_softmax(lf1, -1)[torch.arange(Bn * Mn), flat[:, 0]]
-                 + F.log_softmax(lf2, -1)[torch.arange(Bn * Mn), flat[:, 1]]
-                 + F.log_softmax(lf3, -1)[torch.arange(Bn * Mn), flat[:, 2]]
-                 + F.log_softmax(lf4, -1)[torch.arange(Bn * Mn), flat[:, 3]])
-        s_seq = s_seq.view(Bn, Mn)
-    phi = (t_seq - s_seq) / 4.0
-    pos_mask = phi >= phi.median(1, keepdim=True).values
-    pos_mask[:, 0] = True
-    tau_c = float(getattr(args, "d2_ctr_temp", 1.0))
-    logits_c = s_seq / tau_c
-    neg_inf = torch.where(pos_mask, logits_c, torch.full_like(logits_c, float("-inf")))
-    ctr = -(torch.logsumexp(neg_inf, 1) - torch.logsumexp(logits_c, 1)).mean()
+    # Student candidate scores MUST remain connected to autograd;
+    # computing these under no_grad disables the contrastive training term.
+    ctx_r = ctx0.repeat_interleave(Mn, 0)
+    ef1 = model.embedding(flat[:, 0] + OFF[0])
+    ef2 = model.embedding(flat[:, 1] + OFF[1])
+    ef3 = model.embedding(flat[:, 2] + OFF[2])
+    lf1 = logits1.repeat_interleave(Mn, 0)
+    lf2 = model.head2(torch.cat([ctx_r, ef1], 1))
+    lf3 = model.head3(torch.cat([ctx_r, ef1, ef2], 1))
+    lf4 = model.head4(torch.cat([ctx_r, ef1, ef2, ef3], 1))
+    ar = torch.arange(Bn * Mn, device=flat.device)
+    s_seq = (F.log_softmax(lf1, -1)[ar, flat[:, 0]]
+             + F.log_softmax(lf2, -1)[ar, flat[:, 1]]
+             + F.log_softmax(lf3, -1)[ar, flat[:, 2]]
+             + F.log_softmax(lf4, -1)[ar, flat[:, 3]]).view(Bn, Mn)
+    ctr = contrastive_student_sid_loss(
+        s_seq, t_seq, temperature=float(getattr(args, "d2_ctr_temp", 1.0))
+    )
 
     loss = skew_off + lam_on * (skew_on - skew_off) + beta * ctr
     return loss, {"skew_off": float(skew_off), "skew_on": float(skew_on), "ctr": float(ctr)}
