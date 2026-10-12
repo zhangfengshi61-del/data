@@ -135,7 +135,7 @@ lines += [
     "38.6 minutes, respectively (the latter uses four shards).",
 ]
 # Keep submission and expanded Supplement terminology identical.
-lines.append(r"\\input{Figures/protocol_shared.tex}")
+lines.append(r"\input{Figures/protocol_shared.tex}")
 
 OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
 print(f"Generated {OUT}: {count} nonduplicate SD entries across 3 datasets")
