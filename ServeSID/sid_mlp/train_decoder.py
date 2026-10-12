@@ -402,6 +402,20 @@ def train_sidmlp(args):
     jp_pairs = None
     if use_s24:
         attach_beam_dump(train_ds, args.beam_dump, device, topm=int(getattr(args, 'list_topm', 0) or 0))  # s36
+        # A teacher beam-40 file cannot silently masquerade as M=64.
+        # The DA outsider cutoff B is distinct from support size M.
+        if (float(getattr(args, "serve_kl", 0.0) or 0.0) > 0
+                and float(getattr(args, "da_w", 0.0) or 0.0) > 0):
+            requested_m = int(getattr(args, "list_topm", 0) or 0)
+            actual_m = int(train_ds.bm_codes.shape[1])
+            outsider_b = int(getattr(args, "cdrs_neg_end", 40))
+            if requested_m <= 0 or actual_m != requested_m or outsider_b > requested_m:
+                raise RuntimeError(
+                    f"Full ServeSID requires the configured candidate width M: "
+                    f"requested M={requested_m}, dump width={actual_m}, B={outsider_b}. "
+                    "Use a teacher dump with at least M candidate slots or "
+                    "explicitly declare a smaller-M sensitivity experiment."
+                )
         if float(getattr(args, 'cdrs_w', 0.0) or 0.0) > 0:  # s41 CDRS
             args._cdrs_scale = getattr(train_ds, 'bm_score_scale', None)
             if args._cdrs_scale is None:
@@ -534,9 +548,23 @@ def train_sidmlp(args):
 
     import os as _os, time as _time
     _bench = _os.environ.get("BENCH_COST") == "1"
-    _t_all = _time.time()
+    if _bench and device.type == "cuda":
+        torch.cuda.synchronize(device)
+        torch.cuda.reset_peak_memory_stats(device)
+    _t_all = _time.perf_counter()
+    if _bench:
+        log("BENCH_PROTOCOL arch={} M={} B={} train_rows={} batch_size={} "
+            "beam_val_interval={} definition=train_step_sec_excludes_validation "
+            "epoch_total_sec_includes_validation".format(
+                str(getattr(args, "arch", "mlp")),
+                int(getattr(args, "list_topm", 0) or 0),
+                int(getattr(args, "cdrs_neg_end", 40)),
+                len(train_ds), args.batch_size, BEAM_VAL_INTERVAL))
     for epoch in range(1, args.epochs + 1):
-        _t0 = _time.time()
+        if _bench and device.type == "cuda":
+            torch.cuda.synchronize(device)
+            torch.cuda.reset_peak_memory_stats(device)
+        _t0 = _time.perf_counter()
         model.train()
         train_losses = []
         comp_sums, comp_counts = {}, {}
@@ -556,6 +584,9 @@ def train_sidmlp(args):
                 comp_sums[k] = comp_sums.get(k, 0.0) + v
                 comp_counts[k] = comp_counts.get(k, 0) + 1
 
+        if _bench and device.type == "cuda":
+            torch.cuda.synchronize(device)
+        _train_steps_done = _time.perf_counter()
         scheduler.step()
         digit_metrics = _validate_digits(args, model, val_loader, device)
         beam_metrics = {}
@@ -585,8 +616,17 @@ def train_sidmlp(args):
             + (f" {comp_str}" if comp_str else "")
         )
         if _bench:
-            log(f"EPOCHTIME epoch={epoch} sec={_time.time() - _t0:.1f} "
-                f"peak_gb={torch.cuda.max_memory_allocated() / 1e9:.2f}")
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+                peak_gb = torch.cuda.max_memory_allocated(device) / 1e9
+                persistent_gb = torch.cuda.memory_allocated(device) / 1e9
+            else:
+                peak_gb, persistent_gb = 0.0, 0.0
+            log(f"EPOCHTIME epoch={epoch} "
+                f"train_step_sec={_train_steps_done - _t0:.2f} "
+                f"epoch_total_sec={_time.perf_counter() - _t0:.2f} "
+                f"peak_allocated_gb={peak_gb:.3f} "
+                f"resident_allocated_gb={persistent_gb:.3f}")
 
     final_path = os.path.join(ckpt_dir, f"{save_prefix}_final.pth")
     torch.save({
@@ -596,6 +636,11 @@ def train_sidmlp(args):
         "model_type": "SID-MLP++" if args.encoder_ckpt else "SID-MLP",
     }, final_path)
     if _bench:
-        log(f"TRAINTIME total_sec={_time.time() - _t_all:.1f} "
-            f"peak_gb={torch.cuda.max_memory_allocated() / 1e9:.2f}")
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        log(f"TRAINTIME total_sec={_time.perf_counter() - _t_all:.1f} "
+            f"last_epoch_peak_allocated_gb="
+            f"{torch.cuda.max_memory_allocated(device) / 1e9:.3f}"
+            if device.type == "cuda" else
+            f"TRAINTIME total_sec={_time.perf_counter() - _t_all:.1f} CPU")
     log(f"Saved final checkpoint: {final_path}")
