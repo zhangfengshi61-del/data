@@ -130,13 +130,13 @@ remain implementation-level reproducibility requirements.
 We distinguish the candidate support $M$, training pair range $B$,
 and online beam width $W$. The final Full objective uses
 $M=64$, $B=40$, $K_{\mathrm{tr}}=10$, and $W=50$.
-A separate J4 cost audit, reported by the authors on Beauty 2014,
-used a \emph{40-slot teacher candidate dump} during the training
-timing probe. The following offline numbers therefore characterize
-the \emph{$M=40$ cost configuration}, not a measured $M=64$ Full
-run. Serving-time execution is independent of the offline teacher
-support size and retains the corresponding Base student's
-inference graph.
+In the Beauty 2014 J4 cost audit, the authors confirm that
+HServe used $M=64$ candidate support during training; an earlier
+report incorrectly labeled it $M=40$. The cache-export beam
+width (40), the DA outsider bound ($B=40$), and HServe support
+size ($M=64$) denote different protocol settings. These
+$M=64$ timings are author-reported, not independently remeasured
+from raw run logs. The deployed inference graph is unchanged.
 
 \paragraph{Training-side trade-off.}
 The J4 controlled timing used a single assigned GPU with
@@ -148,7 +148,7 @@ evaluation and management costs.
 \begin{table}[t]
 \centering\small
 \caption{Beauty training cost in the separately timed
-$M=40$ audit. Epoch timings exclude beam validation;
+$M=64$ audit. Epoch timings exclude beam validation;
 complete-run walls include it. Dashes indicate unreported
 matched quantities, not zero.}
 \label{tab:sup-cost-train}
@@ -240,9 +240,9 @@ new \url{scripts/bench_infer_cost.py} runs each student
 checkpoint both without instrumentation and with explicit
 post-warmup synchronization, recording GPU identity,
 model-resident allocation, full-pipeline peak allocation,
-and timed inference phases. Fully matched $M=64$
-training timings require a fresh cache and corresponding
-run logs.
+and timed inference phases. The J4 training times are reported
+for $M=64$; independent verification requires the corresponding
+training logs and candidate-dump metadata.
 
 \section{Sensitivity Analyses}
 \label{sec:sup-sensitivity}
