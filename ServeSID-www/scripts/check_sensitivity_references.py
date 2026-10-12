@@ -36,7 +36,7 @@ for label, value, method, metrics in tables:
     for line in text[start:end].splitlines():
         if "&" not in line or r"\textsuperscript" not in line:
             continue
-        cells = [c.strip().removesuffix("\\").strip()
+        cells = [c.strip().rstrip("\\").strip()
                  for c in line.split("&")]
         if len(cells) < len(metrics) + 2:
             continue
