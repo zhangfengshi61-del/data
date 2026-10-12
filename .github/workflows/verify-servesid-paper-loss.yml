@@ -44,3 +44,7 @@ jobs:
         env:
           PYTHONPATH: ServeSID
         run: python -m unittest discover -s ServeSID/tests -p "test_backbone_cpu_smoke.py" -v
+      - name: Confirm manuscript student parameter counts
+        env:
+          PYTHONPATH: ServeSID
+        run: python ServeSID/scripts/count_student_parameters.py
