@@ -1,0 +1,67 @@
+% Shared between the expanded supplementary source and official submission appendix.
+% Update only this file when decoder/scoring/baseline protocol changes.
+\section{Decoder and Training Protocol}
+\label{sec:appendix-protocol}
+
+\paragraph{Teacher and student modules.}
+The teacher is a fixed TIGER T5 encoder--autoregressive-decoder model.
+Students retain its frozen history encoder and SID embeddings.
+A trainable context reader processes the encoder's history states:
+SID-MLP uses attention, GRU uses recurrent readout, and CNN uses
+temporal convolution and pooled features. All three feed four
+prefix-conditioned \emph{MLP} SID prediction heads. The reported
+trainable budgets (1.664M/2.304M/1.745M) include readers
+\emph{and heads}, excluding the frozen encoder and embeddings.
+
+\paragraph{Raw conditionals, valid paths, and complete scores.}
+Digit CE and teacher-forced token KD operate on raw position-wise
+256-token codebook distributions. Student candidate scores apply a
+legal-extension mask and renormalize positions 2--4; the first
+position uses the raw codebook softmax. Student serving and
+candidate-scoring paths share this convention. HServe uses a
+softmax over the finite teacher-proposed set ($M=64$ at training)
+of cached teacher complete-item scores and corresponding student
+valid-path scores. Its depth marginals sum \emph{these same}
+candidate probabilities over shared-prefix groups.
+DA-CDRS instead uses four per-position teacher log-probability
+increments and four valid-path student increments to form local
+gaps. The teacher cache's completed-candidate score may contain
+an EOS contribution beyond four SID increments; equality of
+the two teacher score conventions requires that remainder
+to be constant across candidates of a request.
+On-policy GKD/DistiLLM-2 teacher conditionals are normalized
+within the selected 256-token codebook at each SID position.
+
+\paragraph{Objectives and candidate sampling.}
+The Full objective is digit CE plus $4$ times HServe and
+$31.42$ times DA increment matching, without direct Pair Loss.
+HServe uses four unit-weighted prefix KL terms from the shared
+complete-candidate distribution, yielding effective conditional
+KL weights $(4,3,2,1)$ by the chain rule. Temperature $\tau$
+scales supported candidate scores before softmax and multiplies
+the resulting HServe KL by $\tau^2$.
+DA forms teacher-ranked cross-cutoff pairs between positions
+1--10 and 11--40; by default all eligible pairs are used.
+Its pairwise Softplus evaluation
+$\operatorname{softplus}(0.05-G_S)$ determines \emph{detached}
+weights, while valid-pair-averaged normalized Huber losses
+supply the gradient. The independent Plain Pair ablation
+directly optimizes the same Softplus instead of DA.
+The sensitivity sweep's $\beta=31.42$ equals
+$\lambda_D\lambda_{\mathrm{corr}}$ with $\lambda_D=1$.
+
+\paragraph{Adapted KD comparisons.}
+RD uses rank-decayed teacher preferences and dynamic student
+ranks; RRD samples catalog negatives; RCE-KD matches candidate
+rankings with cross-entropy. GKD mixes teacher-forced and
+student-sampled SID-prefix supervision. DistiLLM-2 combines
+skew-divergence matching with contrastive sampled SIDs:
+teacher labels are detached, but sampled student scores
+remain differentiable. SmartGR combines token-level and
+beam-prefix objectives. The external KD entrypoint uses
+a common $0.3$ digit CE plus $0.7$ token-KL base before each
+objective-specific term; the Full method instead uses digit CE
+as its base. Each method selects its checkpoint by
+validation NDCG@10. These are objective adaptations on the
+same student backbones, not reimplementations of every
+original method's full architecture.
