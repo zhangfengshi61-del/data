@@ -643,9 +643,10 @@ but replace the teacher decoder with an attention-based SID-MLP,
 GRU (hidden 384), or CNN (256-channel) context reader and
 four prefix-conditioned MLP heads. The \emph{total trainable}
 reader-plus-head budgets are 1.664M, 2.304M, and 1.745M,
-respectively; the frozen modules are excluded. Students
-share the teacher's SID inventory and employ constrained beam search
-with width 50; the teacher's beam-20 results are reference measurements rather than matched-cost comparisons. Fixing the SID inventory and validity constraints ensures that differences among training objectives are not attributable to changes in item tokenization or admissible candidate sequences. Student beam width is held constant within each architecture.  
+respectively; frozen modules are excluded. Student decoding
+uses the shared SID inventory and beam width 50 for every
+training objective within each backbone. The teacher beam-20
+reference is not a matched-batch cost baseline.
 
 \textbf{Training configuration.} For every training request, the
 offline teacher cache contains up to $M=64$ valid complete SIDs and
