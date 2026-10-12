@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "ServeSID-www/**"
+      - "ServeSID/**"
       - ".github/workflows/build-servesid.yml"
       - "README.md"
   pull_request:
     paths:
       - "ServeSID-www/**"
+      - "ServeSID/**"
       - ".github/workflows/build-servesid.yml"
   workflow_dispatch:
 
