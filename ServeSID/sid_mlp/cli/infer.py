@@ -93,6 +93,10 @@ def main(argv=None):
     parser.add_argument("--save_ranks", type=str, default=None)
     parser.add_argument("--test", action="store_true")
     parser.add_argument("--fp32", action="store_true", help="Use fp32 inference instead of default native bf16")
+    parser.add_argument("--cost_json", type=str, default=None,
+                        help="Optional synchronized inference phase and GPU allocation audit JSON")
+    parser.add_argument("--cost_warmup_batches", type=int, default=3,
+                        help="Warmup batches excluded from phase timing and peak-memory stats")
 
     _apply_config_defaults(parser, config)
     args = parser.parse_args(argv)
