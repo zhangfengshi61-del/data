@@ -1,58 +1,90 @@
 #!/usr/bin/env bash
-# Portable launcher for the ServeSID final-method overlay.
+# Canonical Full ServeSID trainer; uses ONLY this checkout's sid_mlp package.
 #
-# Usage:
-#   train.sh [mode] [category] [cuda_device]
+# From ServeSID/:
+#   GRAPH_DIR=/data/cache MODEL_DIR=/data/teacher BEAM_DUMP=/data/beam.pt \
+#     bash scripts/train.sh.servesid sidmlp Beauty 0
 #
-#   mode         sidmlp | sidmlp-pp-stage1 | sidmlp-pp-stage2   (default: sidmlp)
-#   category     e.g. Industrial_and_Scientific
-#   cuda_device  GPU index (default: 0)
-#
-# Paths are supplied through environment variables (no machine-specific
-# defaults). The model assets directory is expected to contain, per category:
-#   $MODEL_DIR/<category>/checkpoint.pth   (TIGER teacher checkpoint)
-#   $MODEL_DIR/<category>/sem_ids.pt       (semantic IDs)
-# Override either with CHECKPOINT / SEM_IDS directly.
-
+# Optional: ARCH=gru|cnn (default mlp), SEEDS="42 43 44", DATASET=...,
+# CONFIG=..., TIGER_CKPT=..., SEM_IDS=..., DATASET_TAG=...,
+# VAL_DATASET_TAG=..., VALID_SET=..., CKPT_DIR=..., LOG_DIR=....
+# The script trains once per seed and creates best-Val checkpoints;
+# it does not claim to reproduce historical GPU numbers automatically.
 set -euo pipefail
 
+SERVESID_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODE="${1:-sidmlp}"
-CATEGORY="${2:-}"
+CATEGORY="${2:-${CATEGORY:-Beauty}}"
 CUDA_DEVICE="${3:-${CUDA_DEVICE:-0}}"
+ARCH="${ARCH:-mlp}"
+SEEDS="${SEEDS:-42 43 44}"
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-export SERVESID_ROOT="${SERVESID_ROOT:-$ROOT}"
+if [[ "$MODE" != "sidmlp" ]]; then
+  echo "This entrypoint trains Full ServeSID only (mode sidmlp)." >&2
+  exit 2
+fi
+case "$ARCH" in mlp|gru|cnn) ;; *) echo "Unknown ARCH=$ARCH; use mlp, gru, or cnn" >&2; exit 2;; esac
 
-SID_MLP_DIR="${SID_MLP_DIR:-$SERVESID_ROOT/repos/SID-MLP}"
-CONFIG="${CONFIG:-$SERVESID_ROOT/code/sid-mlp-distill/configs/servesid_final.yaml}"
-GRAPH_DIR="${GRAPH_DIR:-${SID_MLP_GRAPH_DIR:-}}"
-MODEL_DIR="${MODEL_DIR:-}"
-BEAM_DUMP="${BEAM_DUMP:-}"
+: "${GRAPH_DIR:?Set GRAPH_DIR to the prepared encoder/cache directory}"
+: "${MODEL_DIR:?Set MODEL_DIR to the teacher checkpoint/semantic-ID directory}"
+: "${BEAM_DUMP:?Set BEAM_DUMP to the TRAIN-request teacher candidate dump}"
 
-: "${CATEGORY:?Set CATEGORY via the second argument (e.g. Industrial_and_Scientific).}"
-: "${GRAPH_DIR:?Set GRAPH_DIR to the packed teacher cache directory.}"
-: "${MODEL_DIR:?Set MODEL_DIR to the public model assets directory.}"
-: "${BEAM_DUMP:?Set BEAM_DUMP to the augmented teacher beam dump (.pt).}"
+if [[ -z "${DATASET:-}" ]]; then
+  if [[ "$CATEGORY" == "Video_Games" ]]; then
+    DATASET="AmazonReviews2023"
+  else
+    DATASET="Amazon2014"
+  fi
+fi
 
-CHECKPOINT="${CHECKPOINT:-$MODEL_DIR/$CATEGORY/checkpoint.pth}"
+CONFIG="${CONFIG:-$SERVESID_DIR/configs/servesid_final.yaml}"
+TIGER_CKPT="${TIGER_CKPT:-${CHECKPOINT:-$MODEL_DIR/$CATEGORY/checkpoint.pth}}"
 SEM_IDS="${SEM_IDS:-$MODEL_DIR/$CATEGORY/sem_ids.pt}"
+DATASET_TAG="${DATASET_TAG:-${DATASET}_${CATEGORY}}"
+VAL_DATASET_TAG="${VAL_DATASET_TAG:-${DATASET_TAG}_val}"
+CKPT_DIR="${CKPT_DIR:-$GRAPH_DIR/ServeSID/ckpt}"
+LOG_DIR="${LOG_DIR:-$GRAPH_DIR/ServeSID/logs}"
 
-for path in "$CONFIG" "$CHECKPOINT" "$SEM_IDS" "$BEAM_DUMP"; do
-    if [[ ! -e "$path" ]]; then
-        echo "error: required path does not exist: $path" >&2
-        exit 1
-    fi
+for path in "$CONFIG" "$TIGER_CKPT" "$SEM_IDS" "$BEAM_DUMP"; do
+  if [[ ! -f "$path" ]]; then
+    echo "Missing file: $path" >&2
+    exit 3
+  fi
+done
+[[ -d "$GRAPH_DIR" ]] || { echo "GRAPH_DIR is missing: $GRAPH_DIR" >&2; exit 3; }
+# Absolute paths avoid ambiguity after changing the working directory.
+CONFIG="$(realpath "$CONFIG")"
+TIGER_CKPT="$(realpath "$TIGER_CKPT")"
+SEM_IDS="$(realpath "$SEM_IDS")"
+BEAM_DUMP="$(realpath "$BEAM_DUMP")"
+GRAPH_DIR="$(realpath "$GRAPH_DIR")"
+mkdir -p "$CKPT_DIR" "$LOG_DIR"
+CKPT_DIR="$(realpath "$CKPT_DIR")"
+LOG_DIR="$(realpath "$LOG_DIR")"
+
+export PYTHONPATH="$SERVESID_DIR${PYTHONPATH:+:$PYTHONPATH}"
+export CUDA_VISIBLE_DEVICES="$CUDA_DEVICE"
+cd "$SERVESID_DIR"
+
+extra_args=()
+if [[ -n "${VALID_SET:-}" ]]; then
+  extra_args=(--valid_set "$VALID_SET")
+fi
+
+for seed in $SEEDS; do
+  case "$seed" in
+    42|43|44) ;;
+    *) echo "Unexpected seed $seed; paper protocol uses 42, 43, 44" >&2; exit 4 ;;
+  esac
+  tag="${RUN_TAG_PREFIX:-servesid_full}_${DATASET}_${CATEGORY}_${ARCH}_seed${seed}"
+  echo "Full ServeSID: dataset=$DATASET category=$CATEGORY arch=$ARCH seed=$seed"
+  python -m sid_mlp.cli.train sidmlp \
+    --config "$CONFIG" --checkpoint "$TIGER_CKPT" \
+    --dataset "$DATASET" --category "$CATEGORY" \
+    --dataset_tag "$DATASET_TAG" --val_dataset_tag "$VAL_DATASET_TAG" \
+    --sem_ids "$SEM_IDS" --graph_dir "$GRAPH_DIR" --beam_dump "$BEAM_DUMP" \
+    --ckpt_dir "$CKPT_DIR" --log_dir "$LOG_DIR" \
+    --arch "$ARCH" --seed "$seed" --run_tag "$tag" "${extra_args[@]}"
 done
 
-if [[ -z "${PYTHONPATH:-}" ]]; then
-    export PYTHONPATH="$SID_MLP_DIR"
-else
-    export PYTHONPATH="$SID_MLP_DIR:$PYTHONPATH"
-fi
-export CUDA_VISIBLE_DEVICES="$CUDA_DEVICE"
-
-ARGS=( "$MODE" --config "$CONFIG" --category "$CATEGORY" \
-       --checkpoint "$CHECKPOINT" --sem_ids "$SEM_IDS" \
-       --graph_dir "$GRAPH_DIR" --beam_dump "$BEAM_DUMP" )
-
-exec python -m sid_mlp.cli.train "${ARGS[@]}"
+echo "Done. Use the *_best_val_ndcg10.pth checkpoint for evaluation."
