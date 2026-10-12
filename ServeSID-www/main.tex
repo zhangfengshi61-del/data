@@ -677,68 +677,56 @@ candidate protocol and adaptation choices for these baselines.
 \subsection{Overall Recommendation Performance}
 \label{sec:exp-results}
 
-Table~\ref{tab:main-all} reports held-out recommendation metrics; full
-mean/SD summaries appear in the Supplement. Compared with base KD,
-\method\ improves NDCG@10 for all nine dataset--student settings:
-3.7\%, 2.8\%, and 15.4\% for Beauty MLP/GRU/CNN; 4.8\%, 12.8\%,
-and 18.8\% for Toys; and 3.5\%, 2.6\%, and 10.4\% for Video Games.
-Recall@10 also increases from 0.0580 to 0.0686 on Beauty--CNN and
-0.0870 to 0.0944 on Video Games--CNN. Against the strongest reported non-\method\ NDCG@10 baseline
-in each setting, the relative gain is 1.61\%--5.13\%.
-The largest base-KD gains occur with CNN students.
-Aggregate SDs alone do not establish paired significance.
+Table~\ref{tab:main-all} reports held-out recommendation means;
+the appendix gives the complete three-seed SDs.
+Across all nine dataset--student settings, Full \method\ raises
+NDCG@10 by 2.6\%--18.8\% relative to base KD; the largest
+gain is on Toys--CNN (0.0276 to 0.0328). Compared with the
+strongest reported non-\method\ NDCG@10 baseline in each
+setting, gains are 1.61\%--5.13\%. These mean differences
+do not establish paired statistical significance.
 
 \subsection{Ablation Study}
 \label{sec:exp-ablation}
 
-Table~\ref{tab:ablation} isolates the two structural objectives.
-HServe-only outperforms leaf-only KL in all 36 reported metric
-comparisons (e.g., Toys--CNN NDCG@10: 0.0320 vs.\ 0.0297).
-Direct Softplus optimization (\emph{HServe + Plain Pair}) does not
-consistently improve HServe-only: 10 metrics improve, 4 tie, and 22
-decline. Full \method\ exceeds both Plain Pair and uniform depth
-weighting in all 36 comparisons; Video Games--GRU NDCG@10 is
-0.0506, 0.0510, and 0.0512, respectively. Unlike Plain Pair,
-DA-CDRS uses Softplus only for detached attribution weights and
-optimizes depth-wise Huber correction, not a direct pairwise loss.
-Full \method\ also exceeds both single-objective variants.
-Together, these comparisons demonstrate that the
-decision-attributed depth weighting improves upon uniform
-weighting and direct pairwise supervision in the tested settings.
+In Table~\ref{tab:ablation}, HServe-only exceeds leaf-only
+KL in all 36 metric comparisons, e.g., Toys--CNN NDCG@10:
+0.0320 versus 0.0297. Plain Pair improves on HServe-only
+in 10 comparisons, ties 4, and declines in 22.
+Full \method\ exceeds Plain Pair, uniform weighting, and
+both single-objective variants in all 36 comparisons;
+on Video Games--GRU, NDCG@10 is 0.0506 (Plain Pair),
+0.0510 (Uniform), and 0.0512 (Full).
+Only Plain Pair directly optimizes Softplus; Full uses
+the same surrogate to choose detached depth weights
+for Huber increment matching.
 
 \subsection{Measured Cost and Serving Scope}
 \label{sec:exp-cost}
 
 On Beauty, Base/Full serving throughput is 2769/3036,
-3445/3423, and 3028/3024 requests/s for MLP, GRU, and CNN
-(batch 32, beam 50). Despite the shared inference graph,
-MLP differs by 9.6\% across the independent runs; measured
-throughput is not an architectural invariant. Timings include
-the frozen T5 history encoder, not just SID heads.
-The MLP training-cost measurement at $M=64$ gives
-4.6/11.5\,s per training epoch and 27/49\,min for complete
-200-epoch Base/Full runs; peak allocated training memory rises
-from 7.4 to 9.2--9.5\,GB. These offline timings are
-measured at the stated $M=64$ support width; $B=40$
-is the separate DA-CDRS outsider cutoff. Cache-export
-beam width 40 is a distinct generation setting. The Supplement
-documents the cache, timing phases, and distinct measurement
-boundaries. No new online decoder, teacher-scoring stage, or
-reranker is introduced by \method.
+3445/3423, and 3028/3024 requests/s for MLP/GRU/CNN
+(batch 32, beam 50, including frozen T5 history encoding).
+The 9.6\% MLP difference between runs is measured variability,
+not a change in inference architecture.
+At $M=64$, Base/Full MLP training takes 4.6/11.5\,s
+per training epoch and 27/49\,min for 200 epochs;
+peak training memory is 7.4 versus 9.2--9.5\,GB.
+The DA outsider bound $B=40$ and teacher cache-export beam
+width 40 are different from HServe support width $M$.
+The appendix details measurement boundaries. Both objectives
+are discarded at inference, adding no online model component.
 
 \section{Conclusion and Limitations}
 \label{sec:conclusion}
 
-We study structured preference distillation for lightweight SID
-recommendation. HServe directly aligns complete-candidate and
-consistent shared-prefix distributions; DA-CDRS allocates depth-wise
-Huber matching through detached complete-pair evaluation
-improvements. The jointly trained student retains frozen-encoder,
-verify-free-decoder inference. Current evaluation is restricted to one teacher family,
-one SID tokenizer, and three product domains. Teacher-proposed
-supports may omit relevant items, and the attribution is not causal;
-comparison with positive-residual weighting and broader deployment
-tests remain future work.
+\method\ aligns complete-candidate and prefix preferences
+with HServe and uses local score-replacement gains to weight
+DA-CDRS increment matching. The student retains its frozen
+history encoder and lightweight SID decoding heads.
+Evaluation covers one teacher family and three product
+domains; candidate-support coverage and comparisons with
+simpler residual weighting merit further investigation.
 
 \par\label{www:body-end}
 \bibliographystyle{ACM-Reference-Format}
