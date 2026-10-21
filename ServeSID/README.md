@@ -22,6 +22,16 @@ Both objectives operate only during training; the deployed student keeps the
 original verify-free inference graph (one history-encoding pass, depth-wise
 SID prediction heads, valid-prefix masking, and constrained beam search).
 
+## SID-RAD paper-alignment patches (2026-10-21)
+
+The manuscript renames ServeSID/HServe/DA-CDRS to SID-RAD/HCDA/RRDA.
+Paper-specific controls, the processed Steam100K adapter, teacher-score
+convention audit, nine-metric mechanism evaluator, and experiment-artifact
+manifest verifier are described in
+[verification/PAPER_CODE_ALIGNMENT.md](verification/PAPER_CODE_ALIGNMENT.md).
+**The implementation update does not validate or change historical result
+numbers.** New ablations must be linked to original run records or rerun.
+
 ## Layout
 
 - `sid_mlp/` — the ServeSID implementation (losses, models, KD baselines,
