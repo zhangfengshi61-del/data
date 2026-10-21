@@ -29,6 +29,7 @@ from .losses import (
     student_list_scores_steps,
     cross_depth_relative_score_loss,
     serve_kl_loss,
+    shuffle_hcda_candidate_scores,
     da_cdrs_loss,
     student_list_scores_jp,
     student_list_scores_pd,
@@ -135,6 +136,8 @@ def validate_full_paper_objective(args):
     hserve = float(getattr(args, "serve_kl", 0.0) or 0.0)
     da = float(getattr(args, "da_w", 0.0) or 0.0)
     pair = float(getattr(args, "pair_w", 0.0) or 0.0)
+    if getattr(args, "hcda_shuffle", False) and hserve <= 0:
+        raise ValueError("HCDA+Shuffled requires serve_kl>0.")
     if da > 0 and pair > 0:
         raise ValueError(
             "DA-CDRS/Full must not optimize direct Pair Loss: set pair_w=0. "
@@ -294,7 +297,11 @@ def _batch_loss(args, model, batch, list_masks=None):
             loss = loss + lam_cdrs * l_cdrs
             comps["cdrs"] = float(l_cdrs.item())
         if lam_serve > 0:  # s43e E1 unified serving-KL
-            l_serve = serve_kl_loss(s_S, bm_sc, bm_cb, valid, temperature=args.list_temp,
+            hcda_student, hcda_teacher = s_S, bm_sc
+            if getattr(args, "hcda_shuffle", False):
+                hcda_student, hcda_teacher = shuffle_hcda_candidate_scores(
+                    s_S, bm_sc, valid)
+            l_serve = serve_kl_loss(hcda_student, hcda_teacher, bm_cb, valid, temperature=args.list_temp,
                                     w1=float(getattr(args, "serve_w1", 1.0)), w2=float(getattr(args, "serve_w2", 1.0)),
                                     w3=float(getattr(args, "serve_w3", 1.0)), w4=float(getattr(args, "serve_w4", 1.0)))
             loss = loss + lam_serve * l_serve
