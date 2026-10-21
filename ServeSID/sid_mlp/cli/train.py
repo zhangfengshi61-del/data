@@ -130,10 +130,12 @@ def _add_decoder_args(parser):
     parser.add_argument("--da_w", type=float, default=0.0)          # s43e DA-CDRS correction weight
     parser.add_argument("--da_mode", type=str, default="cf")
     parser.add_argument("--corr_mode", type=str, default="cf",
-                        choices=["cf", "uniform_valid", "posres"])        # s43e cf|uniform
+                        choices=["cf", "uniform_valid", "posres", "absres", "posuni", "collapsed"])        # s43e cf|uniform
     parser.add_argument("--da_gamma", type=float, default=0.05)     # legacy temperature scaling
     parser.add_argument("--da_margin", type=float, default=None)   # softplus(mu - G) for detached weights
     parser.add_argument("--da_corr_w", type=float, default=1.0)   # lambda_corr; da_w=lambda_D
+    parser.add_argument("--hcda_shuffle", action="store_true",
+                        help="HCDA+Shuffled: jointly permute scores but keep candidate SID positions fixed")
     parser.add_argument("--da_huber", type=float, default=1.0)      # s43e Huber delta
     parser.add_argument("--da_negs", type=int, default=0)           # s53 fixed negatives shared with pair anchor
     parser.add_argument("--ckpt_dir", type=str, default=None)
