@@ -10,7 +10,7 @@ from sid_mlp.losses import da_cdrs_loss, shuffle_hcda_candidate_scores, serve_kl
 class PaperAblationTests(unittest.TestCase):
     def setUp(self):
         self.codes = torch.tensor([[
-            [1, 1, 1, 0], [1, 2, 1, 0], [2, 1, 2, 0], [3, 1, 1, 0],
+            [1, 1, 1, 0], [2, 2, 1, 0], [3, 1, 2, 0], [4, 1, 1, 0],
         ]], dtype=torch.long)
         self.teacher = torch.tensor([[
             [-0.3, -0.2, -0.4, -0.2],
