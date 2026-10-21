@@ -19,11 +19,12 @@ jobs:
         with:
           python-version: "3.11"
       - name: Python syntax
-        run: python -m compileall -q ServeSID/sid_mlp ServeSID/tests
+        run: python -m compileall -q ServeSID/sid_mlp ServeSID/genrec/datasets/Steam100K ServeSID/scripts ServeSID/tests
       - name: Canonical Full and baseline Bash syntax
         run: |
           bash -n ServeSID/scripts/train.sh.servesid
           bash -n ServeSID/scripts/train_kd_baselines_all_arches.sh
+          bash -n ServeSID/scripts/train_paper_ablation.sh
           # The Full launcher must load this checkout's canonical sid_mlp module.
           ! grep -q 'repos/SID-MLP\|code/sid-mlp-distill' ServeSID/scripts/train.sh.servesid
       - name: Stdlib loss, cost, and validation policy tests

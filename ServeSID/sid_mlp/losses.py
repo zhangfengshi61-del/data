@@ -392,6 +392,20 @@ def cross_depth_relative_score_loss(t_steplp, s_steplp, cand_cb, valid_mask, sco
     return (raw * active).sum() / active.sum().clamp_min(1.0)
 
 
+def shuffle_hcda_candidate_scores(s_student, s_teacher, valid_mask, generator=None):
+    """Paper HCDA+Shuffled: permute corresponding score SLOTS, not SID identities.
+
+    A single random within-request permutation moves BOTH score vectors to
+    other fixed SID slots. Only nonpadding candidates are permuted. Gradients
+    still flow from the permuted student scores; RRDA step scores are untouched.
+    """
+    if s_student.shape != s_teacher.shape or s_student.shape != valid_mask.shape:
+        raise ValueError("HCDA shuffle requires matching (batch, candidate) shapes")
+    noise = torch.rand(s_student.shape, device=s_student.device, generator=generator)
+    order = noise.masked_fill(~valid_mask, float("inf")).argsort(dim=-1)
+    return s_student.gather(1, order), s_teacher.gather(1, order)
+
+
 def serve_kl_loss(s_student, s_teacher, cand_cb, valid_mask, temperature=1.0,
                   w1=1.0, w2=1.0, w3=1.0, w4=1.0):
     """s43e E1: unified hierarchical serving-KL over the code-prefix tree. ONE loss = weighted sum
@@ -445,7 +459,7 @@ def da_cdrs_loss(t_steplp, s_steplp, cand_cb, valid_mask, step_scale,
     (not cumulative) gaps -> no double-supervision; pairwise ranking is not optimized; the
     attribution concentrates the correction on the depth(s) that actually flip THIS boundary.
     counterfactual=False -> uniform depth weights (the control that isolates the attribution)."""
-    if weight_mode not in ("cf", "uniform_valid", "posres"):
+    if weight_mode not in ("cf", "uniform_valid", "posres", "absres", "posuni", "collapsed"):
         raise ValueError(
             f"Unknown DA-CDRS weight_mode={weight_mode!r}; "
             "choose cf, uniform_valid, or posres."
@@ -481,7 +495,35 @@ def da_cdrs_loss(t_steplp, s_steplp, cand_cb, valid_mask, step_scale,
     has_div = diff_codes.any(-1)
     depths = torch.arange(Dc, device=s_steplp.device).view(1, 1, 1, Dc)
     eligible = (depths >= first_div.unsqueeze(-1)) & has_div.unsqueeze(-1)
-    if weight_mode == "uniform_valid":
+    if weight_mode == "collapsed":
+        # Paper HCDA+Collapsed: aggregate raw eligible depth residuals FIRST,
+        # then normalize by the detached current-minibatch collapsed std.
+        # This deliberately changes both granularity and scale estimation.
+        raw_residual = dG_S[..., :Dc] - dG_T[..., :Dc]
+        collapsed = (raw_residual * eligible.to(raw_residual.dtype)).sum(-1)
+        active = (pm > 0) & eligible.any(-1)
+        if active.any():
+            batch_scale = collapsed.detach()[active].std(unbiased=False).clamp_min(1e-4)
+        else:
+            batch_scale = collapsed.new_tensor(1e-4)
+        value = F.smooth_l1_loss(collapsed / batch_scale,
+                                 torch.zeros_like(collapsed),
+                                 beta=huber_delta, reduction="none")
+        return (value * pm).sum() / pm.sum().clamp_min(1.0)
+    if weight_mode == "absres":
+        # Paper HCDA+AbsRes: gate whole pairs lacking ANY beneficial residual;
+        # on retained pairs, all eligible |r_d| (including negative r_d) count.
+        r = (dG_T - dG_S)[..., :Dc]
+        eligible_f = eligible.to(r.dtype)
+        positive_pair = ((r > 0) & eligible).any(-1, keepdim=True)
+        magnitude = r.abs() * eligible_f * positive_pair.to(r.dtype)
+        w = (magnitude / magnitude.sum(-1, keepdim=True).clamp_min(1e-9)).detach()
+    elif weight_mode == "posuni":
+        # Paper HCDA+PosUni: uniform only at strictly positive residual depths.
+        r = (dG_T - dG_S)[..., :Dc]
+        positives = ((r > 0) & eligible).to(r.dtype)
+        w = (positives / positives.sum(-1, keepdim=True).clamp_min(1.0)).detach()
+    elif weight_mode == "uniform_valid":
         # U: uniform over post-divergence non-final depths (v_d / sum v_t)
         v_d = eligible.to(dG_S.dtype)
         w = (v_d / v_d.sum(-1, keepdim=True).clamp_min(1.0)).detach()

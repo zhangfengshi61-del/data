@@ -1,0 +1,6 @@
+# Explicitly provide --steam100k_root or STEAM100K_ROOT.
+# This adapter accepts *preprocessed* chronological, per-user sequences.
+category: Steam100K
+metadata: sentence
+split: last_out
+steam100k_root: null
