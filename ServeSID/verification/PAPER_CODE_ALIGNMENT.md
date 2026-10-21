@@ -82,9 +82,17 @@ See the script docstring for required arrays, units and shape. It fails on
 unsorted teacher support, duplicate SIDs, missing Base-KD reference increments,
 or missing training-derived Huber scales; it never inserts synthetic metric
 values. A matching NPZ export needs the actual teacher cache, evaluated
-student and Base-KD checkpoints, and their common support. Figure 1's
-gold-prefix interpolation still needs the original per-prefix conditionals and
-the experimental interpolation/evaluation script.
+student and Base-KD checkpoints, and their common support. For Figure 1, the supplied *ground-truth-prefix conditional distributions*
+must be normalized on the same valid continuations as candidate scoring:
+```bash
+python scripts/recompute_gold_prefix_interpolation.py /path/to/gold_prefix_aligned.npz \
+  --alphas 0,0.25,0.5 --output-json /path/to/fig1_verified.json
+```
+The script changes **only** ground-truth-prefix conditionals and recomputes
+token KL, complete-candidate KL and cross-cutoff disagreement. It does not
+infer missing teacher/student prefix probabilities from existing figures.
+The original ground-truth-prefix conditionals and checkpoints are still
+needed to verify the Figure 1 numbers.
 
 Use the manifest verifier to pin five **existing real files** to each
 dataset–architecture–method–seed result:
